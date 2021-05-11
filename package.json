@@ -1,0 +1,91 @@
+{
+    "name": "catfish-in-space",
+    "version": "1.0.0",
+    "description": "Catfish in Space",
+    "browserslist": "> 0.25%, not dead",
+    "scripts": {
+        "webpack": "webpack",
+        "webpack-dev-server": "webpack-dev-server ",
+        "build": "npx del-cli dist --force  && npm run webpack -- --env mode=production",
+        "start": "npm run webpack-dev-server -- --env mode=development",
+        "test": "npx jest",
+        "code-coverage": "jest --coverage",
+        "prettier": "npx prettier",
+        "prettier:format": "npm run prettier -- --write src/**/*.ts",
+        "prettier:check": "npm run prettier -- -c ./src/**/*.ts",
+        "lint-check": "npx eslint ./src/**/*.ts",
+        "code-style-check": "npm run lint-check && npm run prettier:check",
+        "prepare": "husky install"
+    },
+    "author": "jkanchelov",
+    "license": "MIT",
+    "dependencies": {
+        "core-js": "^3.11.2",
+        "pixi.js": "^6.0.2"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.13.16",
+        "@babel/plugin-proposal-class-properties": "^7.13.0",
+        "@babel/plugin-proposal-decorators": "^7.13.15",
+        "@babel/plugin-transform-modules-commonjs": "^7.13.8",
+        "@babel/plugin-transform-runtime": "^7.13.15",
+        "@babel/preset-env": "^7.13.15",
+        "@babel/preset-typescript": "^7.13.0",
+        "@babel/runtime": "^7.13.17",
+        "@types/copy-webpack-plugin": "^8.0.0",
+        "@types/html-webpack-plugin": "^3.2.5",
+        "@types/jest": "^26.0.23",
+        "@types/mini-css-extract-plugin": "^1.4.2",
+        "@types/node": "^15.0.1",
+        "@types/optimize-css-assets-webpack-plugin": "^5.0.3",
+        "@types/terser-webpack-plugin": "^5.0.3",
+        "@types/webpack": "^5.28.0",
+        "@types/webpack-merge": "^4.1.5",
+        "@typescript-eslint/eslint-plugin": "^4.22.0",
+        "@typescript-eslint/parser": "^4.22.0",
+        "babel-loader": "^8.2.2",
+        "babel-register": "^6.26.0",
+        "copy-webpack-plugin": "^8.1.1",
+        "css-loader": "^5.2.4",
+        "del-cli": "^3.0.1",
+        "eslint": "^7.25.0",
+        "eslint-config-prettier": "^8.3.0",
+        "eslint-loader": "^4.0.2",
+        "eslint-plugin-prettier": "^3.4.0",
+        "html-webpack-plugin": "^5.3.1",
+        "identity-obj-proxy": "^3.0.0",
+        "jest": "^26.6.3",
+        "jest-canvas-mock": "^2.3.1",
+        "jsdom": "^16.5.3",
+        "mini-css-extract-plugin": "^1.6.0",
+        "optimize-css-assets-webpack-plugin": "^5.0.4",
+        "prettier": "^2.2.1",
+        "pretty-quick": "^3.1.0",
+        "terser-webpack-plugin": "^5.1.1",
+        "ts-jest": "^26.5.5",
+        "ts-loader": "^9.1.1",
+        "ts-node": "^9.1.1",
+        "typescript": "^4.2.4",
+        "webpack": "^5.36.2",
+        "webpack-cli": "^4.6.0",
+        "webpack-dev-server": "^4.0.0-beta.0",
+        "webpack-merge": "^5.7.3"
+    },
+    "jest": {
+        "transform": {
+            ".(ts|tsx)": "ts-jest"
+        },
+        "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+        "moduleFileExtensions": [
+            "ts",
+            "tsx",
+            "js"
+        ],
+        "moduleNameMapper": {
+            ".+\\.(css|styl|less|sass|scss|png|jpg|ttf|woff|woff2)$": "identity-obj-proxy"
+        },
+        "setupFiles": [
+            "jest-canvas-mock"
+        ]
+    }
+}
