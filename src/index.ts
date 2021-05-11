@@ -1,34 +1,69 @@
 import * as PIXI from "pixi.js";
 import "./style.css";
 
+/**
+ * Types.
+ */
+
+interface CallbackThreeParam<T1, T2, T3, T4 = void> {
+    (param1: T1, param2: T2, param3: T3): T4;
+}
+
+type Renderer = PIXI.Renderer | PIXI.AbstractRenderer;
+
 declare const VERSION: string;
 
 const gameWidth = 800;
 const gameHeight = 600;
 
-console.log(`Welcome from pixi-typescript-boilerplate ${VERSION}`);
+startGame();
 
-const app = new PIXI.Application({
-    backgroundColor: 0xd3d3d3,
-    width: gameWidth,
-    height: gameHeight,
-});
+function startGame() {
+    const app = createApp();
 
-const stage = app.stage;
+    const { stage, view, renderer } = app;
 
-window.onload = async (): Promise<void> => {
+    setupWindowHooks(stage, view, renderer, onload);
+
+    console.log(`Welcome to Catfish in Space v${VERSION}`);
+}
+
+function setupWindowHooks(
+    stage: PIXI.Container,
+    view: HTMLCanvasElement,
+    renderer: Renderer,
+    onload: CallbackThreeParam<PIXI.Container, HTMLCanvasElement, Renderer>
+) {
+    window.onload = async (): Promise<void> => {
+        onload(stage, view, renderer);
+    };
+}
+
+/**
+ * Helpers.
+ */
+
+function createApp() {
+    return new PIXI.Application({
+        backgroundColor: 0xd3d3d3,
+        width: gameWidth,
+        height: gameHeight,
+    });
+}
+
+async function onload(stage: PIXI.Container, view: HTMLCanvasElement, renderer: Renderer) {
     await loadGameAssets();
 
-    document.body.appendChild(app.view);
+    document.body.appendChild(view);
 
-    resizeCanvas();
+    resizeCanvas(renderer);
 
     const birdFromSprite = getBird();
     birdFromSprite.anchor.set(0.5, 0.5);
     birdFromSprite.position.set(gameWidth / 2, gameHeight / 2);
 
     stage.addChild(birdFromSprite);
-};
+}
 
 async function loadGameAssets(): Promise<void> {
     return new Promise((res, rej) => {
@@ -47,11 +82,14 @@ async function loadGameAssets(): Promise<void> {
     });
 }
 
-function resizeCanvas(): void {
+function resizeCanvas(renderer: Renderer): void {
     const resize = () => {
-        app.renderer.resize(window.innerWidth, window.innerHeight);
-        app.stage.scale.x = window.innerWidth / gameWidth;
-        app.stage.scale.y = window.innerHeight / gameHeight;
+        renderer.resize(gameWidth, gameHeight);
+
+        // Currently a noop, but could redefine to scale to browser width/height.
+        //app.renderer.resize(window.innerWidth, window.innerHeight);
+        //app.stage.scale.x = window.innerWidth / gameWidth;
+        //app.stage.scale.y = window.innerHeight / gameHeight;
     };
 
     resize();
