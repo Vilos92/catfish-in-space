@@ -59,7 +59,7 @@ function startGame() {
 
   // The coordinates of our Viewport begin negative, as our centered player
   // begins at (0, 0).
-  const initialViewportCoordinate = viewportPositionFromBird(bird, {
+  const initialViewportCoordinate = viewportCoordinateFromBird(bird, {
     width: window.innerWidth,
     height: window.innerHeight
   });
@@ -134,7 +134,7 @@ function createApp(stageState: StageState) {
 
 async function onResize(renderer: Renderer, stageState: StageState) {
   // We should re-arrange the viewport to be centered on our humble bird.
-  stageState.viewport.coordinate = viewportPositionFromBird(stageState.bird, stageState.viewport.getDimension());
+  stageState.viewport.coordinate = viewportCoordinateFromBird(stageState.bird, stageState.viewport.getDimension());
 
   if (stageState.bird.sprite) {
     const position = positionFromCoordinate(stageState.bird.coordinate, stageState.viewport);
@@ -219,7 +219,11 @@ function positionFromCoordinate(coordinate: Coordinate, viewport: Viewport): Coo
   };
 }
 
-function viewportPositionFromBird(bird: Bird, dimension: Dimension): Coordinate {
+/**
+ * Determine the current viewport position, which should always have the
+ * bird centered when accounting for the canvas dimension.
+ */
+function viewportCoordinateFromBird(bird: Bird, dimension: Dimension): Coordinate {
   const x = bird.coordinate.x - dimension.width / 2;
   const y = bird.coordinate.y - dimension.height / 2;
 
