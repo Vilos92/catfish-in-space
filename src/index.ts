@@ -1,9 +1,9 @@
 import * as PIXI from 'pixi.js';
 import './style.css';
-import {Coordinate, GameSprite} from './type';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
 import {State, store} from './state/store';
-import {updateCoordinateAction} from './state/viewport/action';
+import {updateCoordinateAction, UpdateCoordinateAction} from './state/viewport/action';
+import {CallbackWithArg, Coordinate, GameSprite, makePayloadActionCallback} from './type';
 import {getViewportCoordinate} from './state/viewport/selector';
 import {createApp, onResize, onLoad} from './createApp';
 import {setupWindowHooks} from './createApp';
@@ -45,10 +45,16 @@ function startGame() {
     height: window.innerHeight
   });
 
-  store.dispatch(updateCoordinateAction(initialViewportCoordinate));
-  const stageState: StageState = {bird};
-
   const state = store.getState();
+
+  const updateCoordinate = makePayloadActionCallback<UpdateCoordinateAction, Coordinate>(
+    store.dispatch,
+    updateCoordinateAction
+  );
+
+  updateCoordinate(initialViewportCoordinate);
+
+  const stageState: StageState = {bird};
 
   // Create a PixiJS application.
   const app = createApp();
@@ -56,7 +62,7 @@ function startGame() {
   const {renderer, stage, ticker, view} = app;
 
   // Hook for browser window resizes.
-  const resize = async (): Promise<void> => onResize(renderer, stageState, state);
+  const resize = async (): Promise<void> => onResize(renderer, stageState, state, updateCoordinate);
   resize();
 
   // Hook for initial loading of assets.
@@ -66,7 +72,7 @@ function startGame() {
   setupWindowHooks(onload, resize);
 
   // Callback for game loop.
-  const onGameLoop = () => gameLoop(renderer, stage, stageState, state);
+  const onGameLoop = () => gameLoop(renderer, stage, stageState, state, updateCoordinate);
 
   // Attach and start game loop.
   ticker.add(onGameLoop);
@@ -79,7 +85,13 @@ function startGame() {
  * Primary game loop function, which is responsible for
  * making changes to the current stage.
  */
-function gameLoop(renderer: Renderer, stage: PIXI.Container, stageState: StageState, state: State) {
+function gameLoop(
+  renderer: Renderer,
+  stage: PIXI.Container,
+  stageState: StageState,
+  state: State,
+  updateCoordinate: CallbackWithArg<Coordinate>
+) {
   const {bird} = stageState;
 
   if (stageState.bird && stageState.bird.sprite) {
@@ -97,7 +109,7 @@ function gameLoop(renderer: Renderer, stage: PIXI.Container, stageState: StageSt
     y: state.viewport.coordinate.y + 1
   };
 
-  store.dispatch(updateCoordinateAction(coordinate));
+  updateCoordinate(coordinate);
 
   renderer.render(stage);
 }

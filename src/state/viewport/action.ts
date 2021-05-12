@@ -4,7 +4,7 @@ export enum ActionTypesEnum {
   UPDATE_COORDINATE_ACTION = 'update_coordinate_action'
 }
 
-interface UpdateCoordinateAction {
+export interface UpdateCoordinateAction {
   type: ActionTypesEnum;
   coordinate: Coordinate;
 }

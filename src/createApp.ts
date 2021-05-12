@@ -1,10 +1,9 @@
 import * as PIXI from 'pixi.js';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
-import {State, store} from './state/store';
-import {updateCoordinateAction} from './state/viewport/action';
+import {State} from './state/store';
 import {getViewportCoordinate, getViewportDimension} from './state/viewport/selector';
 import {Renderer, StageState} from './index';
-import {Callback} from './type';
+import {Callback, CallbackWithArg, Coordinate} from './type';
 
 /**
  * Helpers.
@@ -27,12 +26,17 @@ export function setupWindowHooks(onload: Callback, resize: Callback): void {
   window.addEventListener('resize', resize);
 }
 
-export async function onResize(renderer: Renderer, stageState: StageState, state: State): Promise<void> {
+export async function onResize(
+  renderer: Renderer,
+  stageState: StageState,
+  state: State,
+  updateCoordinate: CallbackWithArg<Coordinate>
+): Promise<void> {
   const viewportDimension = getViewportDimension();
 
   // We should re-arrange the viewport to be centered on our humble bird.
   const viewportCoordinate = calculateViewportCoordinate(stageState.bird, viewportDimension);
-  store.dispatch(updateCoordinateAction(viewportCoordinate));
+  updateCoordinate(viewportCoordinate);
 
   if (stageState.bird.sprite) {
     const position = calculatePositionRelativeToViewport(
