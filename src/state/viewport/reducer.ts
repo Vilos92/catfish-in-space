@@ -1,4 +1,4 @@
-import {Coordinate} from '../../index';
+import {Coordinate} from '../../type';
 import {ActionTypesEnum, ViewportAction} from './action';
 
 export interface ViewportState {

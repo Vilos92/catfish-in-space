@@ -1,5 +1,9 @@
 import * as PIXI from 'pixi.js';
 import './style.css';
+import {Coordinate, Dimension} from './type';
+import {State, store} from './state/store';
+import {updateCoordinateAction} from './state/viewport/action';
+import {getViewportCoordinate, getViewportDimension} from './state/viewport/selector';
 
 /**
  * Types.
@@ -11,32 +15,13 @@ interface Callback {
 
 type Renderer = PIXI.Renderer | PIXI.AbstractRenderer;
 
-// TODO:
-// First graduate this to having helper functions, to update value of bird and sprites (create class?)
-// Eventually upgrade to redux.
 interface StageState {
-  bird: Bird;
-  viewport: Viewport;
+  bird: GameObject;
 }
 
-interface Bird {
+interface GameObject {
   sprite?: PIXI.AnimatedSprite;
   coordinate: Coordinate;
-}
-
-interface Viewport {
-  getDimension: () => Dimension;
-  coordinate: Coordinate;
-}
-
-export interface Coordinate {
-  x: number;
-  y: number;
-}
-
-interface Dimension {
-  width: number;
-  height: number;
 }
 
 /**
@@ -53,7 +38,7 @@ startGame();
 
 function startGame() {
   // Initialize the game state.
-  const bird: Bird = {
+  const bird: GameObject = {
     coordinate: {x: 0, y: 0}
   };
 
@@ -64,35 +49,28 @@ function startGame() {
     height: window.innerHeight
   });
 
-  const viewport: Viewport = {
-    // Viewport is maintained as the size of the window.
-    getDimension: (): Dimension => ({
-      width: window.innerWidth,
-      height: window.innerHeight
-    }),
-    // Top-left corner of the current canvas.
-    coordinate: initialViewportCoordinate
-  };
+  store.dispatch(updateCoordinateAction(initialViewportCoordinate));
+  const stageState: StageState = {bird};
 
-  const stageState: StageState = {bird, viewport};
+  const state = store.getState();
 
   // Create a PixiJS application.
-  const app = createApp(stageState);
+  const app = createApp();
 
   const {renderer, stage, ticker, view} = app;
 
   // Hook for browser window resizes.
-  const resize = async (): Promise<void> => onResize(renderer, stageState);
+  const resize = async (): Promise<void> => onResize(renderer, stageState, state);
   resize();
 
   // Hook for initial loading of assets.
-  const onload = async (): Promise<void> => onLoad(stage, view, stageState);
+  const onload = async (): Promise<void> => onLoad(stage, view, stageState, state);
 
   // Attach hooks to window.
   setupWindowHooks(onload, resize);
 
   // Callback for game loop.
-  const onGameLoop = () => gameLoop(renderer, stage, stageState);
+  const onGameLoop = () => gameLoop(renderer, stage, stageState, state);
 
   // Attach and start game loop.
   ticker.add(onGameLoop);
@@ -110,10 +88,25 @@ function setupWindowHooks(onload: Callback, resize: Callback) {
  * Primary game loop function, which is responsible for
  * making changes to the current stage.
  */
-function gameLoop(renderer: Renderer, stage: PIXI.Container, stageState: StageState) {
+function gameLoop(renderer: Renderer, stage: PIXI.Container, stageState: StageState, state: State) {
+  const {bird} = stageState;
+
   if (stageState.bird && stageState.bird.sprite) {
     stageState.bird.sprite.rotation += 0.1;
   }
+
+  const birdPosition = positionFromViewportCoordinate(bird.coordinate, getViewportCoordinate(state.viewport));
+
+  if (bird.sprite) {
+    bird.sprite.position.set(birdPosition.x, birdPosition.y);
+  }
+
+  const coordinate: Coordinate = {
+    x: state.viewport.coordinate.x + 1,
+    y: state.viewport.coordinate.y + 1
+  };
+
+  store.dispatch(updateCoordinateAction(coordinate));
 
   renderer.render(stage);
 }
@@ -122,36 +115,41 @@ function gameLoop(renderer: Renderer, stage: PIXI.Container, stageState: StageSt
  * Helpers.
  */
 
-function createApp(stageState: StageState) {
+function createApp() {
+  const {width, height} = getViewportDimension();
+
   return new PIXI.Application({
     backgroundColor: 0xd3d3d3,
-    width: stageState.viewport.getDimension().width,
-    height: stageState.viewport.getDimension().height,
+    width,
+    height,
     resolution: window.devicePixelRatio,
     autoDensity: true
   });
 }
 
-async function onResize(renderer: Renderer, stageState: StageState) {
+async function onResize(renderer: Renderer, stageState: StageState, state: State) {
+  const viewportDimension = getViewportDimension();
+
   // We should re-arrange the viewport to be centered on our humble bird.
-  stageState.viewport.coordinate = viewportCoordinateFromBird(stageState.bird, stageState.viewport.getDimension());
+  const viewportCoordinate = viewportCoordinateFromBird(stageState.bird, viewportDimension);
+  store.dispatch(updateCoordinateAction(viewportCoordinate));
 
   if (stageState.bird.sprite) {
-    const position = positionFromCoordinate(stageState.bird.coordinate, stageState.viewport);
+    const position = positionFromViewportCoordinate(stageState.bird.coordinate, getViewportCoordinate(state.viewport));
 
     stageState.bird.sprite.position.set(position.x, position.y);
   }
 
-  renderer.resize(stageState.viewport.getDimension().width, stageState.viewport.getDimension().height);
+  renderer.resize(viewportDimension.width, viewportDimension.height);
 }
 
-async function onLoad(stage: PIXI.Container, view: HTMLCanvasElement, stageState: StageState) {
+async function onLoad(stage: PIXI.Container, view: HTMLCanvasElement, stageState: StageState, state: State) {
   // Do not append the game view to the DOM, until the assets are loaded.
   await loadGameAssets();
 
   document.body.appendChild(view);
 
-  setupStage(stage, stageState);
+  setupStage(stage, stageState, state);
 }
 
 /**
@@ -178,8 +176,11 @@ async function loadGameAssets(): Promise<void> {
 /**
  * Setup the stage of the game, by adding initial elements.
  */
-function setupStage(stage: PIXI.Container, stageState: StageState) {
-  const birdPosition = positionFromCoordinate(stageState.bird.coordinate, stageState.viewport);
+function setupStage(stage: PIXI.Container, stageState: StageState, state: State) {
+  const birdPosition = positionFromViewportCoordinate(
+    stageState.bird.coordinate,
+    getViewportCoordinate(state.viewport)
+  );
 
   const birdFromSprite = getBird();
   birdFromSprite.anchor.set(0.5, 0.5);
@@ -212,10 +213,10 @@ function getBird(): PIXI.AnimatedSprite {
 /**
  * Determine the position in the canvas by computing a sprite's position relative to the viewport.
  */
-function positionFromCoordinate(coordinate: Coordinate, viewport: Viewport): Coordinate {
+function positionFromViewportCoordinate(coordinate: Coordinate, viewportCoordinate: Coordinate): Coordinate {
   return {
-    x: coordinate.x - viewport.coordinate.x,
-    y: coordinate.y - viewport.coordinate.y
+    x: coordinate.x - viewportCoordinate.x,
+    y: coordinate.y - viewportCoordinate.y
   };
 }
 
@@ -223,7 +224,7 @@ function positionFromCoordinate(coordinate: Coordinate, viewport: Viewport): Coo
  * Determine the current viewport position, which should always have the
  * bird centered when accounting for the canvas dimension.
  */
-function viewportCoordinateFromBird(bird: Bird, dimension: Dimension): Coordinate {
+function viewportCoordinateFromBird(bird: GameObject, dimension: Dimension): Coordinate {
   const x = bird.coordinate.x - dimension.width / 2;
   const y = bird.coordinate.y - dimension.height / 2;
 
