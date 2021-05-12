@@ -1,5 +1,5 @@
-import * as PIXI from "pixi.js";
-import "./style.css";
+import * as PIXI from 'pixi.js';
+import './style.css';
 
 /**
  * Types.
@@ -39,7 +39,7 @@ function startGame() {
   // Create a PixiJS application.
   const app = createApp();
 
-  const { renderer, stage, ticker, view } = app;
+  const {renderer, stage, ticker, view} = app;
 
   // Hook for browser window resizes.
   const resize = async (): Promise<void> => onResize(renderer, stageState);
@@ -63,7 +63,7 @@ function startGame() {
 
 function setupWindowHooks(onload: Callback, resize: Callback) {
   window.onload = onload;
-  window.addEventListener("resize", resize);
+  window.addEventListener('resize', resize);
 }
 
 /**
@@ -90,7 +90,7 @@ function createApp() {
     width: gameWidth(),
     height: gameHeight(),
     resolution: window.devicePixelRatio,
-    autoDensity: true,
+    autoDensity: true
   });
 }
 
@@ -123,7 +123,7 @@ async function onLoad(stage: PIXI.Container, view: HTMLCanvasElement, stageState
 async function loadGameAssets(): Promise<void> {
   return new Promise((res, rej) => {
     const loader = PIXI.Loader.shared;
-    loader.add("rabbit", "./assets/simpleSpriteSheet.json");
+    loader.add('rabbit', './assets/simpleSpriteSheet.json');
 
     loader.onComplete.once(() => {
       res();
@@ -155,9 +155,9 @@ function setupStage(stage: PIXI.Container, stageState: StageState) {
  */
 function getBird(): PIXI.AnimatedSprite {
   const bird = new PIXI.AnimatedSprite([
-    PIXI.Texture.from("birdUp.png"),
-    PIXI.Texture.from("birdMiddle.png"),
-    PIXI.Texture.from("birdDown.png"),
+    PIXI.Texture.from('birdUp.png'),
+    PIXI.Texture.from('birdMiddle.png'),
+    PIXI.Texture.from('birdDown.png')
   ]);
 
   bird.loop = true;
