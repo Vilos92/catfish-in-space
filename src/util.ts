@@ -1,6 +1,12 @@
 import {Coordinate, Dimension, GameSprite} from './type';
 
 /**
+ * Constants.
+ */
+
+export declare const VERSION: string;
+
+/**
  * Determine a new position for the viewport taking account the
  * screen dimension, and keeping the game sprite centered.
  */

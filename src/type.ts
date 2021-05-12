@@ -26,6 +26,12 @@ export interface GameSprite {
 }
 
 /**
+ * PIXI.
+ */
+
+export type Renderer = PIXI.Renderer | PIXI.AbstractRenderer;
+
+/**
  * Helpers.
  */
 
