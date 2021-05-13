@@ -1,12 +1,13 @@
 import * as PIXI from 'pixi.js';
+
+import {createApp, onLoad, onResize} from './createApp';
+import {setupWindowHooks} from './createApp';
+import {State, store} from './state/store';
+import {UpdateViewportCoordinateAction, updateViewportCoordinateAction} from './state/viewport/action';
+import {getViewportCoordinate} from './state/viewport/selector';
+import {CallbackWithArg, Coordinate, GameSprite, makePayloadActionCallback, Renderer} from './type';
 import {VERSION} from './util';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
-import {store, State} from './state/store';
-import {updateViewportCoordinateAction, UpdateViewportCoordinateAction} from './state/viewport/action';
-import {CallbackWithArg, Coordinate, GameSprite, makePayloadActionCallback, Renderer} from './type';
-import {createApp, onResize, onLoad} from './createApp';
-import {setupWindowHooks} from './createApp';
-import {getViewportCoordinate} from './state/viewport/selector';
 
 /**
  * Types.

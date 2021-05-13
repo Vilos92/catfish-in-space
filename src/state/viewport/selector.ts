@@ -1,5 +1,5 @@
-import {ViewportState} from './reducer';
 import {Coordinate, Dimension} from '../../type';
+import {ViewportState} from './reducer';
 
 export const getViewportCoordinate = (state: ViewportState): Coordinate => state.coordinate;
 

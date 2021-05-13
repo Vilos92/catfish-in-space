@@ -1,9 +1,10 @@
 import * as PIXI from 'pixi.js';
-import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
+
+import {StageState} from './game';
 import {State} from './state/store';
 import {getViewportCoordinate, getViewportDimension} from './state/viewport/selector';
-import {StageState} from './game';
 import {Callback, CallbackWithArg, Coordinate, Renderer} from './type';
+import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
 
 /**
  * Helpers.

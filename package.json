@@ -21,6 +21,7 @@
     "license": "MIT",
     "dependencies": {
         "core-js": "^3.11.2",
+        "eslint-plugin-simple-import-sort": "^7.0.0",
         "pixi.js": "^6.0.2",
         "redux": "^4.1.0"
     },
