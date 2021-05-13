@@ -6,7 +6,7 @@ import {UpdatePlayerSpriteAction, updatePlayerSpriteAction} from './state/player
 import {getPlayer} from './state/player/selector';
 import {GetState, store} from './state/store';
 import {UpdateViewportCoordinateAction, updateViewportCoordinateAction} from './state/viewport/action';
-import {getViewportCoordinate} from './state/viewport/selector';
+import {getViewport} from './state/viewport/selector';
 import {CallbackWithArg, Coordinate, makePayloadActionCallback, Renderer} from './type';
 import {VERSION} from './util';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
@@ -41,22 +41,22 @@ export function startGame(): void {
   );
 
   // Create a PixiJS application.
-  const app = createApp();
+  const app = createApp(getState);
 
   const {renderer, stage, ticker, view} = app;
 
   // Hook for browser window resizes.
-  const resize = async (): Promise<void> => onResize(renderer, getState, updateViewportCoordinate);
+  const resize = async (): Promise<void> => onResize(getState, renderer, updateViewportCoordinate);
   resize();
 
   // Hook for initial loading of assets.
-  const onload = async (): Promise<void> => onLoad(stage, view, getState, updatePlayerSprite);
+  const onload = async (): Promise<void> => onLoad(getState, stage, view, updatePlayerSprite);
 
   // Attach hooks to window.
   setupWindowHooks(onload, resize);
 
   // Callback for game loop.
-  const onGameLoop = () => gameLoop(renderer, stage, getState, updateViewportCoordinate);
+  const onGameLoop = () => gameLoop(getState, renderer, stage, updateViewportCoordinate);
 
   // Attach and start game loop.
   ticker.add(onGameLoop);
@@ -70,9 +70,9 @@ export function startGame(): void {
  * making changes to the current stage.
  */
 export function gameLoop(
+  getState: GetState,
   renderer: Renderer,
   stage: PIXI.Container,
-  getState: GetState,
   updateViewportCoordinate: CallbackWithArg<Coordinate>
 ): void {
   const state = getState();
@@ -83,7 +83,7 @@ export function gameLoop(
   if (playerSprite) {
     playerSprite.rotation += 0.1;
 
-    const playerPosition = calculatePositionRelativeToViewport(playerCoordinate, getViewportCoordinate(state.viewport));
+    const playerPosition = calculatePositionRelativeToViewport(playerCoordinate, getViewport(state).coordinate);
 
     playerSprite.position.set(playerPosition.x, playerPosition.y);
   }

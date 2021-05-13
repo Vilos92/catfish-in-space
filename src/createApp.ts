@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js';
 
 import {getPlayer} from './state/player/selector';
 import {GetState} from './state/store';
-import {getViewportCoordinate, getViewportDimension} from './state/viewport/selector';
+import {getViewport} from './state/viewport/selector';
 import {Callback, CallbackWithArg, Coordinate, Renderer} from './type';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
 
@@ -10,8 +10,10 @@ import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from '
  * Helpers.
  */
 
-export function createApp(): PIXI.Application {
-  const {width, height} = getViewportDimension();
+export function createApp(getState: GetState): PIXI.Application {
+  const state = getState();
+
+  const {width, height} = getViewport(state).dimension;
 
   return new PIXI.Application({
     backgroundColor: 0xd3d3d3,
@@ -28,12 +30,13 @@ export function setupWindowHooks(onload: Callback, resize: Callback): void {
 }
 
 export async function onResize(
-  renderer: Renderer,
   getState: GetState,
+  renderer: Renderer,
   updateViewportCoordinate: CallbackWithArg<Coordinate>
 ): Promise<void> {
-  const viewportDimension = getViewportDimension();
   const state = getState();
+
+  const viewportDimension = getViewport(state).dimension;
 
   const player = getPlayer(state);
 
@@ -44,7 +47,7 @@ export async function onResize(
   const {sprite: playerSprite} = player.gameElement;
 
   if (playerSprite) {
-    const position = calculatePositionRelativeToViewport(playerSprite, getViewportCoordinate(state.viewport));
+    const position = calculatePositionRelativeToViewport(playerSprite, getViewport(state).coordinate);
 
     playerSprite.position.set(position.x, position.y);
   }
@@ -53,9 +56,9 @@ export async function onResize(
 }
 
 export async function onLoad(
+  getState: GetState,
   stage: PIXI.Container,
   view: HTMLCanvasElement,
-  getState: GetState,
   updatePlayerSprite: CallbackWithArg<PIXI.AnimatedSprite>
 ): Promise<void> {
   // Do not append the game view to the DOM, until the assets are loaded.
@@ -102,7 +105,7 @@ function setupStage(
 
   const birdPosition = calculatePositionRelativeToViewport(
     player.gameElement.coordinate,
-    getViewportCoordinate(state.viewport)
+    getViewport(state).coordinate
   );
 
   const birdFromSprite = getBird();

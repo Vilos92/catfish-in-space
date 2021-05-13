@@ -1,7 +1,10 @@
-import {Coordinate, Dimension} from '../../type';
+import {Dimension} from '../../type';
+import {State} from '../store';
 import {ViewportState} from './reducer';
 
-export const getViewportCoordinate = (state: ViewportState): Coordinate => state.coordinate;
+export const getViewport = (state: State): ViewportState => {
+  return {...state.viewport, dimension: getViewportDimension()};
+};
 
 /**
  * Although this is not retrieved from state,
