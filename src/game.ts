@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize} from './createApp';
 import {setupWindowHooks} from './createApp';
-import {State, store} from './state/store';
+import {GetState, store} from './state/store';
 import {UpdateViewportCoordinateAction, updateViewportCoordinateAction} from './state/viewport/action';
 import {getViewportCoordinate} from './state/viewport/selector';
 import {CallbackWithArg, Coordinate, GameSprite, makePayloadActionCallback, Renderer} from './type';
@@ -61,7 +61,7 @@ export function startGame(): void {
   setupWindowHooks(onload, resize);
 
   // Callback for game loop.
-  const onGameLoop = () => gameLoop(renderer, stage, stageState, state, updateViewportCoordinate);
+  const onGameLoop = () => gameLoop(renderer, stage, stageState, store.getState, updateViewportCoordinate);
 
   // Attach and start game loop.
   ticker.add(onGameLoop);
@@ -78,9 +78,11 @@ export function gameLoop(
   renderer: Renderer,
   stage: PIXI.Container,
   stageState: StageState,
-  state: State,
+  getState: GetState,
   updateViewportCoordinate: CallbackWithArg<Coordinate>
 ): void {
+  const state = getState();
+
   const {bird} = stageState;
 
   if (stageState.bird && stageState.bird.sprite) {
