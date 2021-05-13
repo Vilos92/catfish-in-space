@@ -7,7 +7,19 @@ import {Callback, CallbackWithArg, Coordinate, Renderer} from './type';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
 
 /**
- * Helpers.
+ * Browser.
+ */
+
+export function setupKeybinds(
+  handleKeydown: CallbackWithArg<KeyboardEvent>,
+  handleKeyup: CallbackWithArg<KeyboardEvent>
+): void {
+  window.addEventListener('keydown', handleKeydown, false);
+  window.addEventListener('keyup', handleKeyup, false);
+}
+
+/**
+ * PIXI.
  */
 
 export function createApp(getState: GetState): PIXI.Application {

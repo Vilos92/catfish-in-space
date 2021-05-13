@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 
-import {createApp, onLoad, onResize} from './createApp';
+import {createApp, onLoad, onResize, setupKeybinds} from './createApp';
 import {setupWindowHooks} from './createApp';
 import {UpdatePlayerSpriteAction, updatePlayerSpriteAction} from './state/player/action';
 import {getPlayer} from './state/player/selector';
@@ -28,6 +28,7 @@ export function startGame(): void {
     height: window.innerHeight
   });
 
+  // Setup actions from dispatch.
   const updateViewportCoordinate = makePayloadActionCallback<UpdateViewportCoordinateAction, Coordinate>(
     store.dispatch,
     updateViewportCoordinateAction
@@ -57,6 +58,22 @@ export function startGame(): void {
 
   // Callback for game loop.
   const onGameLoop = () => gameLoop(getState, renderer, stage, updateViewportCoordinate);
+
+  // Setup key binds.
+  // Create a keyboard reducer which receives the keyboard code, and a up/down event.
+  // Reducer itself can determine if key is pressed/depressed.
+  // Game loop check check keyboard state to take action, rather than event moving the character.
+  // This keeps everything functional despite the event nature of the keyboard.
+
+  function handleKeydown(event: KeyboardEvent): void {
+    console.log('sup', event);
+  }
+
+  function handleKeyup(event: KeyboardEvent): void {
+    console.log('ey', event);
+  }
+
+  setupKeybinds(handleKeydown, handleKeyup);
 
   // Attach and start game loop.
   ticker.add(onGameLoop);
