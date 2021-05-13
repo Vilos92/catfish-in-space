@@ -13,10 +13,16 @@ export const initialState: PlayerState = {
 
 export function playerReducer(state: PlayerState = initialState, action: PlayerAction): PlayerState {
   switch (action.type) {
-    case ActionTypesEnum.UPDATE_PLAYER_COORDINATE_ACTION:
+    case ActionTypesEnum.UPDATE_PLAYER_COORDINATE_ACTION: {
       const gameSprite: GameSprite = {...state.gameSprite, coordinate: action.coordinate};
 
       return {...state, gameSprite};
+    }
+    case ActionTypesEnum.UPDATE_PLAYER_SPRITE_ACTION: {
+      const gameSprite: GameSprite = {...state.gameSprite, sprite: action.sprite};
+
+      return {...state, gameSprite};
+    }
     default:
       return state;
   }

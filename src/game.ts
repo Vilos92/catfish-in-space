@@ -2,6 +2,8 @@ import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize} from './createApp';
 import {setupWindowHooks} from './createApp';
+import {UpdatePlayerSpriteAction, updatePlayerSpriteAction} from './state/player/action';
+import {getPlayer} from './state/player/selector';
 import {GetState, store} from './state/store';
 import {UpdateViewportCoordinateAction, updateViewportCoordinateAction} from './state/viewport/action';
 import {getViewportCoordinate} from './state/viewport/selector';
@@ -10,18 +12,12 @@ import {VERSION} from './util';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
 
 /**
- * Types.
- */
-
-export interface StageState {
-  bird: GameSprite;
-}
-
-/**
  * Functions.
  */
 
 export function startGame(): void {
+  const getState = store.getState;
+
   // Initialize the game state.
   const bird: GameSprite = {
     coordinate: {x: 0, y: 0}
@@ -34,8 +30,6 @@ export function startGame(): void {
     height: window.innerHeight
   });
 
-  const getState = store.getState;
-
   const updateViewportCoordinate = makePayloadActionCallback<UpdateViewportCoordinateAction, Coordinate>(
     store.dispatch,
     updateViewportCoordinateAction
@@ -43,7 +37,10 @@ export function startGame(): void {
 
   updateViewportCoordinate(initialViewportCoordinate);
 
-  const stageState: StageState = {bird};
+  const updatePlayerSprite = makePayloadActionCallback<UpdatePlayerSpriteAction, PIXI.AnimatedSprite>(
+    store.dispatch,
+    updatePlayerSpriteAction
+  );
 
   // Create a PixiJS application.
   const app = createApp();
@@ -51,17 +48,17 @@ export function startGame(): void {
   const {renderer, stage, ticker, view} = app;
 
   // Hook for browser window resizes.
-  const resize = async (): Promise<void> => onResize(renderer, stageState, getState, updateViewportCoordinate);
+  const resize = async (): Promise<void> => onResize(renderer, getState, updateViewportCoordinate);
   resize();
 
   // Hook for initial loading of assets.
-  const onload = async (): Promise<void> => onLoad(stage, view, stageState, getState);
+  const onload = async (): Promise<void> => onLoad(stage, view, getState, updatePlayerSprite);
 
   // Attach hooks to window.
   setupWindowHooks(onload, resize);
 
   // Callback for game loop.
-  const onGameLoop = () => gameLoop(renderer, stage, stageState, getState, updateViewportCoordinate);
+  const onGameLoop = () => gameLoop(renderer, stage, getState, updateViewportCoordinate);
 
   // Attach and start game loop.
   ticker.add(onGameLoop);
@@ -77,22 +74,20 @@ export function startGame(): void {
 export function gameLoop(
   renderer: Renderer,
   stage: PIXI.Container,
-  stageState: StageState,
   getState: GetState,
   updateViewportCoordinate: CallbackWithArg<Coordinate>
 ): void {
   const state = getState();
 
-  const {bird} = stageState;
+  const player = getPlayer(state);
+  const {coordinate: playerCoordinate, sprite: playerSprite} = player.gameSprite;
 
-  if (stageState.bird && stageState.bird.sprite) {
-    stageState.bird.sprite.rotation += 0.1;
-  }
+  if (playerSprite) {
+    playerSprite.rotation += 0.1;
 
-  const birdPosition = calculatePositionRelativeToViewport(bird.coordinate, getViewportCoordinate(state.viewport));
+    const playerPosition = calculatePositionRelativeToViewport(playerCoordinate, getViewportCoordinate(state.viewport));
 
-  if (bird.sprite) {
-    bird.sprite.position.set(birdPosition.x, birdPosition.y);
+    playerSprite.position.set(playerPosition.x, playerPosition.y);
   }
 
   const coordinate: Coordinate = {
