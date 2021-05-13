@@ -34,7 +34,7 @@ export function startGame(): void {
     height: window.innerHeight
   });
 
-  const state = store.getState();
+  const getState = store.getState;
 
   const updateViewportCoordinate = makePayloadActionCallback<UpdateViewportCoordinateAction, Coordinate>(
     store.dispatch,
@@ -51,17 +51,17 @@ export function startGame(): void {
   const {renderer, stage, ticker, view} = app;
 
   // Hook for browser window resizes.
-  const resize = async (): Promise<void> => onResize(renderer, stageState, state, updateViewportCoordinate);
+  const resize = async (): Promise<void> => onResize(renderer, stageState, getState, updateViewportCoordinate);
   resize();
 
   // Hook for initial loading of assets.
-  const onload = async (): Promise<void> => onLoad(stage, view, stageState, state);
+  const onload = async (): Promise<void> => onLoad(stage, view, stageState, getState);
 
   // Attach hooks to window.
   setupWindowHooks(onload, resize);
 
   // Callback for game loop.
-  const onGameLoop = () => gameLoop(renderer, stage, stageState, store.getState, updateViewportCoordinate);
+  const onGameLoop = () => gameLoop(renderer, stage, stageState, getState, updateViewportCoordinate);
 
   // Attach and start game loop.
   ticker.add(onGameLoop);

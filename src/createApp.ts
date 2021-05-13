@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 
 import {StageState} from './game';
-import {State} from './state/store';
+import {GetState} from './state/store';
 import {getViewportCoordinate, getViewportDimension} from './state/viewport/selector';
 import {Callback, CallbackWithArg, Coordinate, Renderer} from './type';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
@@ -30,10 +30,11 @@ export function setupWindowHooks(onload: Callback, resize: Callback): void {
 export async function onResize(
   renderer: Renderer,
   stageState: StageState,
-  state: State,
+  getState: GetState,
   updateViewportCoordinate: CallbackWithArg<Coordinate>
 ): Promise<void> {
   const viewportDimension = getViewportDimension();
+  const state = getState();
 
   // We should re-arrange the viewport to be centered on our humble bird.
   const viewportCoordinate = calculateViewportCoordinate(stageState.bird, viewportDimension);
@@ -55,14 +56,14 @@ export async function onLoad(
   stage: PIXI.Container,
   view: HTMLCanvasElement,
   stageState: StageState,
-  state: State
+  getState: GetState
 ): Promise<void> {
   // Do not append the game view to the DOM, until the assets are loaded.
   await loadGameAssets();
 
   document.body.appendChild(view);
 
-  setupStage(stage, stageState, state);
+  setupStage(stage, stageState, getState);
 }
 
 /**
@@ -90,7 +91,9 @@ async function loadGameAssets(): Promise<void> {
 /**
  * Setup the stage of the game, by adding initial elements.
  */
-function setupStage(stage: PIXI.Container, stageState: StageState, state: State) {
+function setupStage(stage: PIXI.Container, stageState: StageState, getState: GetState) {
+  const state = getState();
+
   const birdPosition = calculatePositionRelativeToViewport(
     stageState.bird.coordinate,
     getViewportCoordinate(state.viewport)
