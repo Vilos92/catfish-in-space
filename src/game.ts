@@ -7,7 +7,7 @@ import {getPlayer} from './state/player/selector';
 import {GetState, store} from './state/store';
 import {UpdateViewportCoordinateAction, updateViewportCoordinateAction} from './state/viewport/action';
 import {getViewportCoordinate} from './state/viewport/selector';
-import {CallbackWithArg, Coordinate, GameSprite, makePayloadActionCallback, Renderer} from './type';
+import {CallbackWithArg, Coordinate, makePayloadActionCallback, Renderer} from './type';
 import {VERSION} from './util';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
 
@@ -19,13 +19,11 @@ export function startGame(): void {
   const getState = store.getState;
 
   // Initialize the game state.
-  const bird: GameSprite = {
-    coordinate: {x: 0, y: 0}
-  };
+  const coordinate = {x: 0, y: 0};
 
   // The coordinates of our Viewport begin negative, as our centered player
   // begins at (0, 0).
-  const initialViewportCoordinate = calculateViewportCoordinate(bird, {
+  const initialViewportCoordinate = calculateViewportCoordinate(coordinate, {
     width: window.innerWidth,
     height: window.innerHeight
   });
@@ -80,7 +78,7 @@ export function gameLoop(
   const state = getState();
 
   const player = getPlayer(state);
-  const {coordinate: playerCoordinate, sprite: playerSprite} = player.gameSprite;
+  const {coordinate: playerCoordinate, sprite: playerSprite} = player.gameElement;
 
   if (playerSprite) {
     playerSprite.rotation += 0.1;

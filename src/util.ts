@@ -1,4 +1,4 @@
-import {Coordinate, Dimension, GameSprite} from './type';
+import {Coordinate, Dimension} from './type';
 
 /**
  * Constants.
@@ -8,11 +8,11 @@ export declare const VERSION: string;
 
 /**
  * Determine a new position for the viewport taking account the
- * screen dimension, and keeping the game sprite centered.
+ * screen dimension, and keeping the game element centered.
  */
-export function calculateViewportCoordinate(gameSprite: GameSprite, screenDimension: Dimension): Coordinate {
-  const x = gameSprite.coordinate.x - screenDimension.width / 2;
-  const y = gameSprite.coordinate.y - screenDimension.height / 2;
+export function calculateViewportCoordinate(gameElementCoordinate: Coordinate, screenDimension: Dimension): Coordinate {
+  const x = gameElementCoordinate.x - screenDimension.width / 2;
+  const y = gameElementCoordinate.y - screenDimension.height / 2;
 
   return {
     x,

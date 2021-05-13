@@ -38,10 +38,10 @@ export async function onResize(
   const player = getPlayer(state);
 
   // We should re-arrange the viewport to be centered on our humble bird.
-  const viewportCoordinate = calculateViewportCoordinate(player.gameSprite, viewportDimension);
+  const viewportCoordinate = calculateViewportCoordinate(player.gameElement.coordinate, viewportDimension);
   updateViewportCoordinate(viewportCoordinate);
 
-  const {sprite: playerSprite} = player.gameSprite;
+  const {sprite: playerSprite} = player.gameElement;
 
   if (playerSprite) {
     const position = calculatePositionRelativeToViewport(playerSprite, getViewportCoordinate(state.viewport));
@@ -101,7 +101,7 @@ function setupStage(
   const player = getPlayer(state);
 
   const birdPosition = calculatePositionRelativeToViewport(
-    player.gameSprite.coordinate,
+    player.gameElement.coordinate,
     getViewportCoordinate(state.viewport)
   );
 

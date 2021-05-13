@@ -19,7 +19,7 @@ export interface Dimension {
   height: number;
 }
 
-export interface GameSprite {
+export interface GameElement {
   // This is the coordinate in our game, not the canvas.
   coordinate: Coordinate;
   sprite?: PIXI.AnimatedSprite;
