@@ -29,6 +29,5 @@ export const playerReducer: Reducer<PlayerState, PlayerAction> = produce((state:
       break;
     }
     default:
-      return state;
   }
 }, initialState);

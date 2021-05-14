@@ -19,9 +19,8 @@ export const viewportReducer: Reducer<ViewportState, ViewportAction> = produce(
   (state: ViewportState, action: ViewportAction) => {
     switch (action.type) {
       case ActionTypesEnum.UPDATE_VIEWPORT_COORDINATE_ACTION:
-        return {...state, coordinate: action.coordinate};
+        state.coordinate = action.coordinate;
       default:
-        return state;
     }
   },
   initialState

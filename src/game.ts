@@ -146,6 +146,7 @@ function calculateUpdatedCoordinateFromKeyboard(keyboard: KeyboardState, playerC
   const xDelta = calculateDeltaFromOpposingKeys(aIsActive, dIsActive);
   const yDelta = calculateDeltaFromOpposingKeys(wIsActive, sIsActive);
 
+  // TODO: This computation incorrectly gives the player extra velocity at the moment.
   return {
     x: playerCoordinate.x + xDelta * 5,
     y: playerCoordinate.y + yDelta * 5

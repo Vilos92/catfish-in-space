@@ -44,7 +44,6 @@ export const keyboardReducer: Reducer<KeyboardState, KeyboardAction> = produce(
         break;
       }
       default:
-        return state;
     }
   },
   initialState
