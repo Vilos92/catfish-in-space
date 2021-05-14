@@ -12,26 +12,26 @@ export enum ActionTypesEnum {
 
 export interface KeyDownAction {
   type: ActionTypesEnum.KEY_DOWN_ACTION;
-  keyCodesEnum: KeyCodesEnum;
+  keyCode: KeyCodesEnum;
 }
 
 export interface KeyUpAction {
   type: ActionTypesEnum.KEY_UP_ACTION;
-  keyCodesEnum: KeyCodesEnum;
+  keyCode: KeyCodesEnum;
 }
 
 export type KeyboardAction = KeyDownAction | KeyUpAction;
 
-export function keyDownAction(keyCodesEnum: KeyCodesEnum): KeyDownAction {
+export function keyDownAction(keyCode: KeyCodesEnum): KeyDownAction {
   return {
     type: ActionTypesEnum.KEY_DOWN_ACTION,
-    keyCodesEnum
+    keyCode: keyCode
   };
 }
 
-export function keyUpAction(keyCodesEnum: KeyCodesEnum): KeyUpAction {
+export function keyUpAction(keyCode: KeyCodesEnum): KeyUpAction {
   return {
     type: ActionTypesEnum.KEY_UP_ACTION,
-    keyCodesEnum
+    keyCode: keyCode
   };
 }

@@ -28,17 +28,19 @@ const initialState: KeyboardState = {
 
 export const keyboardReducer: Reducer<KeyboardState, KeyboardAction> = produce(
   (state: KeyboardState, action: KeyboardAction) => {
+    if (!(action.keyCode in KeyCodesEnum)) return;
+
     switch (action.type) {
       case ActionTypesEnum.KEY_DOWN_ACTION: {
         const {keyStateMap} = state;
-        const keyState = keyStateMap[action.keyCodesEnum];
+        const keyState = keyStateMap[action.keyCode];
 
         keyState.isActive = true;
         break;
       }
       case ActionTypesEnum.KEY_UP_ACTION: {
         const {keyStateMap} = state;
-        const keyState = keyStateMap[action.keyCodesEnum];
+        const keyState = keyStateMap[action.keyCode];
 
         keyState.isActive = false;
         break;
