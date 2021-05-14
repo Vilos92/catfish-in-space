@@ -1,8 +1,8 @@
 import * as PIXI from 'pixi.js';
 
-import {getPlayer} from './state/player/selector';
-import {GetState} from './state/store';
-import {getViewport} from './state/viewport/selector';
+import {getPlayer} from './store/player/selector';
+import {GetState} from './store/store';
+import {getViewport} from './store/viewport/selector';
 import {Callback, CallbackWithArg, Coordinate, Renderer} from './type';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
 

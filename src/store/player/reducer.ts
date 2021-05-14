@@ -1,3 +1,6 @@
+import produce from 'immer';
+import {Reducer} from 'redux';
+
 import {GameElement} from '../../type';
 import {ActionTypesEnum, PlayerAction} from './action';
 
@@ -11,19 +14,21 @@ export const initialState: PlayerState = {
   }
 };
 
-export function playerReducer(state: PlayerState = initialState, action: PlayerAction): PlayerState {
+export const playerReducer: Reducer<PlayerState, PlayerAction> = produce((state: PlayerState, action: PlayerAction) => {
   switch (action.type) {
     case ActionTypesEnum.UPDATE_PLAYER_COORDINATE_ACTION: {
-      const gameElement: GameElement = {...state.gameElement, coordinate: action.coordinate};
+      const {gameElement} = state;
 
-      return {...state, gameElement};
+      gameElement.coordinate = action.coordinate;
+      break;
     }
     case ActionTypesEnum.UPDATE_PLAYER_SPRITE_ACTION: {
-      const gameElement: GameElement = {...state.gameElement, sprite: action.sprite};
+      const {gameElement} = state;
 
-      return {...state, gameElement};
+      gameElement.sprite = action.sprite;
+      break;
     }
     default:
       return state;
   }
-}
+}, initialState);

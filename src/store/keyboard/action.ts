@@ -20,7 +20,7 @@ export interface KeyUpAction {
   keyCodesEnum: KeyCodesEnum;
 }
 
-export type KeyboardActions = KeyDownAction | KeyUpAction;
+export type KeyboardAction = KeyDownAction | KeyUpAction;
 
 export function keyDownAction(keyCodesEnum: KeyCodesEnum): KeyDownAction {
   return {

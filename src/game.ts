@@ -2,19 +2,19 @@ import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize, setupKeybinds} from './createApp';
 import {setupWindowHooks} from './createApp';
-import {KeyCodesEnum, KeyDownAction, keyDownAction, KeyUpAction, keyUpAction} from './state/keyboard/action';
-import {KeyboardState} from './state/keyboard/reducer';
-import {getKeyboard} from './state/keyboard/selector';
+import {KeyCodesEnum, KeyDownAction, keyDownAction, KeyUpAction, keyUpAction} from './store/keyboard/action';
+import {KeyboardState} from './store/keyboard/reducer';
+import {getKeyboard} from './store/keyboard/selector';
 import {
   UpdatePlayerCoordinateAction,
   updatePlayerCoordinateAction,
   UpdatePlayerSpriteAction,
   updatePlayerSpriteAction
-} from './state/player/action';
-import {getPlayer} from './state/player/selector';
-import {GetState, store} from './state/store';
-import {UpdateViewportCoordinateAction, updateViewportCoordinateAction} from './state/viewport/action';
-import {getViewport} from './state/viewport/selector';
+} from './store/player/action';
+import {getPlayer} from './store/player/selector';
+import {GetState, store} from './store/store';
+import {UpdateViewportCoordinateAction, updateViewportCoordinateAction} from './store/viewport/action';
+import {getViewport} from './store/viewport/selector';
 import {CallbackWithArg, Coordinate, makePayloadActionCallback, Renderer} from './type';
 import {VERSION} from './util';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
@@ -72,12 +72,6 @@ export function startGame(): void {
   // Callback for game loop.
   const onGameLoop = () => gameLoop(getState, renderer, stage, updatePlayerCoordinate, updateViewportCoordinate);
 
-  // Setup key binds.
-  // Create a keyboard reducer which receives the keyboard code, and a up/down event.
-  // Reducer itself can determine if key is pressed/depressed.
-  // Game loop check check keyboard state to take action, rather than event moving the character.
-  // This keeps everything functional despite the event nature of the keyboard.
-
   const keyDown = makePayloadActionCallback<KeyDownAction, KeyCodesEnum>(store.dispatch, keyDownAction);
   const handleKeydown = (event: KeyboardEvent): void => {
     const keyCode: unknown = event.code;
@@ -129,9 +123,11 @@ export function gameLoop(
     playerSprite.position.set(playerPosition.x, playerPosition.y);
   }
 
+  const viewport = getViewport(state);
+
   const updatedViewportCoordinate: Coordinate = {
-    x: state.viewport.coordinate.x + 1,
-    y: state.viewport.coordinate.y + 1
+    x: viewport.coordinate.x + 1,
+    y: viewport.coordinate.y + 1
   };
 
   updateViewportCoordinate(updatedViewportCoordinate);
