@@ -1,9 +1,11 @@
 import {combineReducers, createStore} from 'redux';
 
+import {keyboardReducer} from './keyboard/reducer';
 import {playerReducer} from './player/reducer';
 import {viewportReducer} from './viewport/reducer';
 
 const rootReducer = combineReducers({
+  keyboard: keyboardReducer,
   player: playerReducer,
   viewport: viewportReducer
 });

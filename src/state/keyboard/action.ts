@@ -1,6 +1,8 @@
-enum KeyCodesEnum {
-  UP = '123',
-  DOWN = '124'
+export enum KeyCodesEnum {
+  KeyA = 'KeyA',
+  KeyD = 'KeyD',
+  KeyS = 'KeyS',
+  KeyW = 'KeyW'
 }
 
 export enum ActionTypesEnum {
