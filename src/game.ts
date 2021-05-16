@@ -84,6 +84,9 @@ export function startGame(): void {
 
   // Create a Matter engine.
   const engine = Matter.Engine.create();
+  // Disable gravity.
+  engine.world.gravity.y = 0;
+
   const runner = Matter.Runner.create();
 
   // Create a PIXI application.
@@ -141,53 +144,80 @@ export function gameLoop(
   updatePlayerCoordinate: CallbackWithArg<Coordinate>,
   updateViewportCoordinate: CallbackWithArg<Coordinate>
 ): void {
+  playerLoop(getState, updatePlayerCoordinate);
+
+  spriteLoop(getState);
+
+  // Handle viewport loop last, as it could depend on updated positions of game elements.
+  viewportLoop(getState, updateViewportCoordinate);
+
+  renderer.render(stage);
+}
+
+function playerLoop(getState: GetState, updatePlayerCoordinate: CallbackWithArg<Coordinate>): void {
   const state = getState();
-
   const keyboard = getKeyboard(state);
-
   const player = getPlayer(state);
-  const {coordinate: playerCoordinate, matterBody: playerMatterBody, pixiSprite: playerSprite} = player.gameElement;
 
-  const updatedPlayerCoordinate = calculateUpdatedPlayerCoordinateFromKeyboard(keyboard, playerCoordinate);
-
-  updatePlayerCoordinate(updatedPlayerCoordinate);
+  const {coordinate: playerCoordinate, matterBody: playerMatterBody} = player.gameElement;
 
   // Update player coordinate based on matter, rather than a change from keyboard.
   if (playerMatterBody) {
-    console.log('matter body!', playerMatterBody);
-    const updatedPlayerCoordinate2 = {x: playerMatterBody.position.x, y: playerMatterBody.position.y};
-    updatePlayerCoordinate(updatedPlayerCoordinate2);
+    addForceToPlayerMatterBodyFromKeyboard(keyboard, playerCoordinate, playerMatterBody);
+
+    const updatedPlayerCoordinate = {x: playerMatterBody.position.x, y: playerMatterBody.position.y};
+    updatePlayerCoordinate(updatedPlayerCoordinate);
   }
+}
+
+function spriteLoop(getState: GetState): void {
+  const state = getState();
+
+  const player = getPlayer(state);
+  const {coordinate: playerCoordinate, pixiSprite: playerSprite} = player.gameElement;
 
   if (playerSprite) {
     playerSprite.rotation += 0.1;
 
-    const playerPosition = calculatePositionRelativeToViewport(updatedPlayerCoordinate, getViewport(state).coordinate);
+    const playerPosition = calculatePositionRelativeToViewport(playerCoordinate, getViewport(state).coordinate);
 
     playerSprite.position.set(playerPosition.x, playerPosition.y);
   }
+}
 
+function viewportLoop(getState: GetState, updateViewportCoordinate: CallbackWithArg<Coordinate>): void {
+  const state = getState();
+  const keyboard = getKeyboard(state);
   const viewport = getViewport(state);
 
   const updatedViewportCoordinate = calculateUpdatedViewportCoordinateFromKeyboard(keyboard, viewport.coordinate);
 
   updateViewportCoordinate(updatedViewportCoordinate);
-
-  renderer.render(stage);
 }
 
-function calculateUpdatedPlayerCoordinateFromKeyboard(
+function addForceToPlayerMatterBodyFromKeyboard(
   keyboard: KeyboardState,
-  playerCoordinate: Coordinate
-): Coordinate {
-  return calculateUpdatedCoordinateFromKeyboard(
-    keyboard,
-    playerCoordinate,
-    KeyCodesEnum.KEY_A,
-    KeyCodesEnum.KEY_D,
-    KeyCodesEnum.KEY_W,
-    KeyCodesEnum.KEY_S
-  );
+  playerCoordinate: Coordinate,
+  playerMatterBody: Matter.Body
+) {
+  const {keyStateMap} = keyboard;
+
+  const leftIsActive = keyStateMap[KeyCodesEnum.KEY_A].isActive;
+  const rightIsActive = keyStateMap[KeyCodesEnum.KEY_D].isActive;
+  const upIsActive = keyStateMap[KeyCodesEnum.KEY_W].isActive;
+  const downIsActive = keyStateMap[KeyCodesEnum.KEY_S].isActive;
+
+  const xDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
+  const yDirection = calculateDirectionFromOpposingKeys(upIsActive, downIsActive);
+
+  const thrusterForce = 3000; // Newtons;
+
+  const playerForceVector = {
+    x: thrusterForce * xDirection,
+    y: thrusterForce * yDirection
+  };
+
+  Matter.Body.applyForce(playerMatterBody, playerCoordinate, playerForceVector);
 }
 
 function calculateUpdatedViewportCoordinateFromKeyboard(

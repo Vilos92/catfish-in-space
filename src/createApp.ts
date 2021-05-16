@@ -136,7 +136,11 @@ function setupWorld(
     player.gameElement.coordinate.y,
     // We use dimensions of our sprite.
     birdPixi.width,
-    birdPixi.height
+    birdPixi.height,
+    {
+      // Approximate mass of Falcon 9.
+      mass: 550000
+    }
   );
 
   Matter.Composite.add(world, birdMatter);
