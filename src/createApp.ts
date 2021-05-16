@@ -1,3 +1,4 @@
+import Matter from 'matter-js';
 import * as PIXI from 'pixi.js';
 
 import {getPlayer} from './store/player/selector';
@@ -69,8 +70,10 @@ export async function onResize(
 
 export async function onLoad(
   getState: GetState,
+  world: Matter.World,
   stage: PIXI.Container,
   view: HTMLCanvasElement,
+  updatePlayerMatterBody: CallbackWithArg<Matter.Body>,
   updatePlayerSprite: CallbackWithArg<PIXI.AnimatedSprite>
 ): Promise<void> {
   // Do not append the game view to the DOM, until the assets are loaded.
@@ -78,7 +81,7 @@ export async function onLoad(
 
   document.body.appendChild(view);
 
-  setupStage(stage, getState, updatePlayerSprite);
+  setupWorld(getState, world, stage, updatePlayerMatterBody, updatePlayerSprite);
 }
 
 /**
@@ -106,9 +109,11 @@ async function loadGameAssets(): Promise<void> {
 /**
  * Setup the stage of the game, by adding initial elements.
  */
-function setupStage(
-  stage: PIXI.Container,
+function setupWorld(
   getState: GetState,
+  world: Matter.World,
+  stage: PIXI.Container,
+  updatePlayerMatterBody: CallbackWithArg<Matter.Body>,
   updatePlayerSprite: CallbackWithArg<PIXI.AnimatedSprite>
 ) {
   const state = getState();
@@ -120,13 +125,25 @@ function setupStage(
     getViewport(state).coordinate
   );
 
-  const birdFromSprite = getBird();
-  birdFromSprite.anchor.set(0.5, 0.5);
+  const birdPixi = getBird();
+  birdPixi.anchor.set(0.5, 0.5);
 
-  birdFromSprite.position.set(birdPosition.x, birdPosition.y);
+  birdPixi.position.set(birdPosition.x, birdPosition.y);
 
-  stage.addChild(birdFromSprite);
-  updatePlayerSprite(birdFromSprite);
+  const birdMatter = Matter.Bodies.rectangle(
+    // Game and matter coordinates have a one-to-one mapping.
+    player.gameElement.coordinate.x,
+    player.gameElement.coordinate.y,
+    // We use dimensions of our sprite.
+    birdPixi.width,
+    birdPixi.height
+  );
+
+  Matter.Composite.add(world, birdMatter);
+  updatePlayerMatterBody(birdMatter);
+
+  stage.addChild(birdPixi);
+  updatePlayerSprite(birdPixi);
 }
 
 /**

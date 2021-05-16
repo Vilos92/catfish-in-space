@@ -1,4 +1,5 @@
 // import {Howl} from 'howler';
+import Matter from 'matter-js';
 import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize, setupKeybinds} from './createApp';
@@ -9,6 +10,8 @@ import {getKeyboard} from './store/keyboard/selector';
 import {
   UpdatePlayerCoordinateAction,
   updatePlayerCoordinateAction,
+  UpdatePlayerMatterBodyAction,
+  updatePlayerMatterBodyAction,
   UpdatePlayerSpriteAction,
   updatePlayerSpriteAction
 } from './store/player/action';
@@ -46,7 +49,6 @@ export function startGame(): void {
   */
 
   const getState = store.getState;
-
   // Initialize the game state.
   const coordinate = {x: 0, y: 0};
 
@@ -70,12 +72,21 @@ export function startGame(): void {
     updatePlayerCoordinateAction
   );
 
+  const updatePlayerMatterBody = makePayloadActionCallback<UpdatePlayerMatterBodyAction, Matter.Body>(
+    store.dispatch,
+    updatePlayerMatterBodyAction
+  );
+
   const updatePlayerSprite = makePayloadActionCallback<UpdatePlayerSpriteAction, PIXI.AnimatedSprite>(
     store.dispatch,
     updatePlayerSpriteAction
   );
 
-  // Create a PixiJS application.
+  // Create a Matter engine.
+  const engine = Matter.Engine.create();
+  const runner = Matter.Runner.create();
+
+  // Create a PIXI application.
   const app = createApp(getState);
 
   const {renderer, stage, ticker, view} = app;
@@ -85,7 +96,8 @@ export function startGame(): void {
   resize();
 
   // Hook for initial loading of assets.
-  const onload = async (): Promise<void> => onLoad(getState, stage, view, updatePlayerSprite);
+  const onload = async (): Promise<void> =>
+    onLoad(getState, engine.world, stage, view, updatePlayerMatterBody, updatePlayerSprite);
 
   // Attach hooks to window.
   setupWindowHooks(onload, resize);
@@ -93,6 +105,7 @@ export function startGame(): void {
   // Callback for game loop.
   const onGameLoop = () => gameLoop(getState, renderer, stage, updatePlayerCoordinate, updateViewportCoordinate);
 
+  // Setup key bindings.
   const keyDown = makePayloadActionCallback<KeyDownAction, KeyCodesEnum>(store.dispatch, keyDownAction);
   const handleKeydown = (event: KeyboardEvent): void => {
     const keyCode: unknown = event.code;
@@ -106,6 +119,9 @@ export function startGame(): void {
   };
 
   setupKeybinds(handleKeydown, handleKeyup);
+
+  // Start the matter runner.
+  Matter.Runner.run(runner, engine);
 
   // Attach and start game loop.
   ticker.add(onGameLoop);
@@ -130,11 +146,18 @@ export function gameLoop(
   const keyboard = getKeyboard(state);
 
   const player = getPlayer(state);
-  const {coordinate: playerCoordinate, sprite: playerSprite} = player.gameElement;
+  const {coordinate: playerCoordinate, matterBody: playerMatterBody, sprite: playerSprite} = player.gameElement;
 
   const updatedPlayerCoordinate = calculateUpdatedPlayerCoordinateFromKeyboard(keyboard, playerCoordinate);
 
   updatePlayerCoordinate(updatedPlayerCoordinate);
+
+  // Update player coordinate based on matter, rather than a change from keyboard.
+  if (playerMatterBody) {
+    console.log('matter body!', playerMatterBody);
+    const updatedPlayerCoordinate2 = {x: playerMatterBody.position.x, y: playerMatterBody.position.y};
+    updatePlayerCoordinate(updatedPlayerCoordinate2);
+  }
 
   if (playerSprite) {
     playerSprite.rotation += 0.1;

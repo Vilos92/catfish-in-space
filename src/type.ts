@@ -1,3 +1,4 @@
+import Matter from 'matter-js';
 import * as PIXI from 'pixi.js';
 import {Action, Dispatch} from 'redux';
 
@@ -48,6 +49,7 @@ export interface Dimension {
 export interface GameElement {
   // This is the coordinate in our game, not the canvas.
   coordinate: Coordinate;
+  matterBody?: Matter.Body;
   sprite?: PIXI.AnimatedSprite;
 }
 
