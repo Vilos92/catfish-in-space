@@ -1,7 +1,8 @@
 import produce from 'immer';
 import {Reducer} from 'redux';
 
-import {ActionTypesEnum, KeyboardAction, KeyCodesEnum} from './action';
+import {KeyCodesEnum} from '../../type';
+import {ActionTypesEnum, KeyboardAction} from './action';
 
 interface KeyState {
   isActive: boolean;
@@ -19,37 +20,42 @@ const initialKeyState = {isActive: false};
 
 const initialKeyStateMap = {
   // Player movement.
-  [KeyCodesEnum.KeyA]: initialKeyState,
-  [KeyCodesEnum.KeyD]: initialKeyState,
-  [KeyCodesEnum.KeyS]: initialKeyState,
-  [KeyCodesEnum.KeyW]: initialKeyState,
+  [KeyCodesEnum.KEY_A]: initialKeyState,
+  [KeyCodesEnum.KEY_D]: initialKeyState,
+  [KeyCodesEnum.KEY_S]: initialKeyState,
+  [KeyCodesEnum.KEY_W]: initialKeyState,
 
   // Viewport movement.
-  [KeyCodesEnum.KeyI]: initialKeyState,
-  [KeyCodesEnum.KeyJ]: initialKeyState,
-  [KeyCodesEnum.KeyK]: initialKeyState,
-  [KeyCodesEnum.KeyL]: initialKeyState
+  [KeyCodesEnum.KEY_I]: initialKeyState,
+  [KeyCodesEnum.KEY_J]: initialKeyState,
+  [KeyCodesEnum.KEY_K]: initialKeyState,
+  [KeyCodesEnum.KEY_L]: initialKeyState
 };
 
 const initialState: KeyboardState = {
   keyStateMap: initialKeyStateMap
 };
 
+// We use a set to quickly validate of keys are mapped in the game.
+const keyCodesSet = new Set(Object.values(KeyCodesEnum));
+
 export const keyboardReducer: Reducer<KeyboardState, KeyboardAction> = produce(
   (state: KeyboardState, action: KeyboardAction) => {
-    if (!(action.keyCode in KeyCodesEnum)) return;
+    const {keyCode} = action;
+
+    if (!keyCodesSet.has(keyCode)) return;
 
     switch (action.type) {
       case ActionTypesEnum.KEY_DOWN_ACTION: {
         const {keyStateMap} = state;
-        const keyState = keyStateMap[action.keyCode];
+        const keyState = keyStateMap[keyCode];
 
         keyState.isActive = true;
         break;
       }
       case ActionTypesEnum.KEY_UP_ACTION: {
         const {keyStateMap} = state;
-        const keyState = keyStateMap[action.keyCode];
+        const keyState = keyStateMap[keyCode];
 
         keyState.isActive = false;
         break;

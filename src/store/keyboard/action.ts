@@ -1,16 +1,4 @@
-export enum KeyCodesEnum {
-  // Player movement.
-  KeyA = 'KeyA',
-  KeyD = 'KeyD',
-  KeyS = 'KeyS',
-  KeyW = 'KeyW',
-
-  // Viewport movement.
-  KeyI = 'KeyI',
-  KeyJ = 'KeyJ',
-  KeyK = 'KeyK',
-  KeyL = 'KeyL'
-}
+import {KeyCodesEnum} from '../../type';
 
 export enum ActionTypesEnum {
   KEY_DOWN_ACTION = 'key_down_action',

@@ -9,6 +9,10 @@ export interface CallbackWithArg<T> {
   (arg: T): void;
 }
 
+/**
+ * Game world.
+ */
+
 export interface Coordinate {
   x: number;
   y: number;
@@ -23,6 +27,24 @@ export interface GameElement {
   // This is the coordinate in our game, not the canvas.
   coordinate: Coordinate;
   sprite?: PIXI.AnimatedSprite;
+}
+
+/**
+ * Keyboard Events.
+ */
+
+export enum KeyCodesEnum {
+  // Player movement.
+  KEY_A = 'KeyA',
+  KEY_D = 'KeyD',
+  KEY_S = 'KeyS',
+  KEY_W = 'KeyW',
+
+  // Viewport movement.
+  KEY_I = 'KeyI',
+  KEY_J = 'KeyJ',
+  KEY_K = 'KeyK',
+  KEY_L = 'KeyL'
 }
 
 /**

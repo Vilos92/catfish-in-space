@@ -3,7 +3,7 @@ import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize, setupKeybinds} from './createApp';
 import {setupWindowHooks} from './createApp';
-import {KeyCodesEnum, KeyDownAction, keyDownAction, KeyUpAction, keyUpAction} from './store/keyboard/action';
+import {KeyDownAction, keyDownAction, KeyUpAction, keyUpAction} from './store/keyboard/action';
 import {KeyboardState} from './store/keyboard/reducer';
 import {getKeyboard} from './store/keyboard/selector';
 import {
@@ -16,9 +16,20 @@ import {getPlayer} from './store/player/selector';
 import {GetState, store} from './store/store';
 import {UpdateViewportCoordinateAction, updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
-import {CallbackWithArg, Coordinate, makePayloadActionCallback, Renderer} from './type';
+import {CallbackWithArg, Coordinate, KeyCodesEnum, makePayloadActionCallback, Renderer} from './type';
 import {VERSION} from './util';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
+
+/**
+ * Types.
+ */
+
+// The direction state which can be computed from two opposing keys.
+enum KeyDirectionsEnum {
+  NEGATIVE = -1,
+  NEUTRAL = 0,
+  POSITIVE = 1
+}
 
 /**
  * Functions.
@@ -149,10 +160,10 @@ function calculateUpdatedPlayerCoordinateFromKeyboard(
   return calculateUpdatedCoordinateFromKeyboard(
     keyboard,
     playerCoordinate,
-    KeyCodesEnum.KeyA,
-    KeyCodesEnum.KeyD,
-    KeyCodesEnum.KeyW,
-    KeyCodesEnum.KeyS
+    KeyCodesEnum.KEY_A,
+    KeyCodesEnum.KEY_D,
+    KeyCodesEnum.KEY_W,
+    KeyCodesEnum.KEY_S
   );
 }
 
@@ -163,10 +174,10 @@ function calculateUpdatedViewportCoordinateFromKeyboard(
   return calculateUpdatedCoordinateFromKeyboard(
     keyboard,
     viewportCoordinate,
-    KeyCodesEnum.KeyJ,
-    KeyCodesEnum.KeyL,
-    KeyCodesEnum.KeyI,
-    KeyCodesEnum.KeyK
+    KeyCodesEnum.KEY_J,
+    KeyCodesEnum.KEY_L,
+    KeyCodesEnum.KEY_I,
+    KeyCodesEnum.KEY_K
   );
 }
 
@@ -185,24 +196,24 @@ function calculateUpdatedCoordinateFromKeyboard(
   const upIsActive = keyStateMap[keyCodeUp].isActive;
   const downIsActive = keyStateMap[keyCodeDown].isActive;
 
-  const xDelta = calculateDeltaFromOpposingKeys(leftIsActive, rightIsActive);
-  const yDelta = calculateDeltaFromOpposingKeys(upIsActive, downIsActive);
+  const xDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
+  const yDirection = calculateDirectionFromOpposingKeys(upIsActive, downIsActive);
 
   // TODO: This computation incorrectly gives the player extra velocity at
   // when moving in a diagonal direction.
   return {
-    x: coordinate.x + xDelta * 5,
-    y: coordinate.y + yDelta * 5
+    x: coordinate.x + xDirection * 5,
+    y: coordinate.y + yDirection * 5
   };
 }
 
 // For two key presses which oppose each other, determine the delta.
-function calculateDeltaFromOpposingKeys(leftIsActive: boolean, rightIsActive: boolean): number {
-  if (leftIsActive === rightIsActive) return 0;
+function calculateDirectionFromOpposingKeys(negativeIsActive: boolean, positiveIsActive: boolean): KeyDirectionsEnum {
+  if (negativeIsActive === positiveIsActive) return KeyDirectionsEnum.NEUTRAL;
 
-  // If only the left parameter is active, return -1.
-  if (leftIsActive) return -1;
+  // If only the negative parameter is active, return -1.
+  if (negativeIsActive) return KeyDirectionsEnum.NEGATIVE;
 
-  // If only the right parameter is active, return 1.
-  return 1;
+  // If only the positive parameter is active, return 1.
+  return KeyDirectionsEnum.POSITIVE;
 }
