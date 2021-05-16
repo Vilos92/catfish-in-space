@@ -57,7 +57,7 @@ export async function onResize(
   const viewportCoordinate = calculateViewportCoordinate(player.gameElement.coordinate, viewportDimension);
   updateViewportCoordinate(viewportCoordinate);
 
-  const {sprite: playerSprite} = player.gameElement;
+  const {pixiSprite: playerSprite} = player.gameElement;
 
   if (playerSprite) {
     const position = calculatePositionRelativeToViewport(playerSprite, getViewport(state).coordinate);

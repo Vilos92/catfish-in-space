@@ -146,7 +146,7 @@ export function gameLoop(
   const keyboard = getKeyboard(state);
 
   const player = getPlayer(state);
-  const {coordinate: playerCoordinate, matterBody: playerMatterBody, sprite: playerSprite} = player.gameElement;
+  const {coordinate: playerCoordinate, matterBody: playerMatterBody, pixiSprite: playerSprite} = player.gameElement;
 
   const updatedPlayerCoordinate = calculateUpdatedPlayerCoordinateFromKeyboard(keyboard, playerCoordinate);
 

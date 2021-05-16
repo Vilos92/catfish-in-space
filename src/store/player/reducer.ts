@@ -35,7 +35,7 @@ export const playerReducer: Reducer<PlayerState, PlayerAction> = (
     case ActionTypesEnum.UPDATE_PLAYER_SPRITE_ACTION: {
       const {gameElement} = state;
 
-      const updatedGameElement: GameElement = {...gameElement, sprite: action.sprite};
+      const updatedGameElement: GameElement = {...gameElement, pixiSprite: action.pixiSprite};
 
       return {...state, gameElement: updatedGameElement};
     }

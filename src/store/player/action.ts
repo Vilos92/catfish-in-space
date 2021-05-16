@@ -4,9 +4,9 @@ import * as PIXI from 'pixi.js';
 import {Coordinate} from '../../type';
 
 export enum ActionTypesEnum {
-  UPDATE_PLAYER_COORDINATE_ACTION = 'update_player_coordinate_action',
-  UPDATE_PLAYER_MATTER_BODY_ACTION = 'update_player_matter_body_action',
-  UPDATE_PLAYER_SPRITE_ACTION = 'update_player_sprite_action'
+  UPDATE_PLAYER_COORDINATE_ACTION = 'UPDATE_PLAYER_COORDINATE_ACTION',
+  UPDATE_PLAYER_MATTER_BODY_ACTION = 'UPDATE_PLAYER_MATTER_BODY_ACTION',
+  UPDATE_PLAYER_SPRITE_ACTION = 'UPDATE_PLAYER_SPRITE_ACTION'
 }
 
 export interface UpdatePlayerCoordinateAction {
@@ -21,7 +21,7 @@ export interface UpdatePlayerMatterBodyAction {
 
 export interface UpdatePlayerSpriteAction {
   type: ActionTypesEnum.UPDATE_PLAYER_SPRITE_ACTION;
-  sprite: PIXI.AnimatedSprite;
+  pixiSprite: PIXI.AnimatedSprite;
 }
 
 export type PlayerAction = UpdatePlayerCoordinateAction | UpdatePlayerMatterBodyAction | UpdatePlayerSpriteAction;
@@ -40,9 +40,9 @@ export function updatePlayerMatterBodyAction(matterBody: Matter.Body): UpdatePla
   };
 }
 
-export function updatePlayerSpriteAction(sprite: PIXI.AnimatedSprite): UpdatePlayerSpriteAction {
+export function updatePlayerSpriteAction(pixiSprite: PIXI.AnimatedSprite): UpdatePlayerSpriteAction {
   return {
     type: ActionTypesEnum.UPDATE_PLAYER_SPRITE_ACTION,
-    sprite
+    pixiSprite
   };
 }

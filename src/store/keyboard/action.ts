@@ -1,8 +1,8 @@
 import {KeyCodesEnum} from '../../type';
 
 export enum ActionTypesEnum {
-  KEY_DOWN_ACTION = 'key_down_action',
-  KEY_UP_ACTION = 'key_up_action'
+  KEY_DOWN_ACTION = 'KEY_DOWN_ACTION',
+  KEY_UP_ACTION = 'KEY_UP_ACTION'
 }
 
 export interface KeyDownAction {
