@@ -36,7 +36,7 @@ const initialState: KeyboardState = {
   keyStateMap: initialKeyStateMap
 };
 
-// We use a set to quickly validate of keys are mapped in the game.
+// We use a set to quickly validate if keys are mapped in the game.
 const keyCodesSet = new Set(Object.values(KeyCodesEnum));
 
 export const keyboardReducer: Reducer<KeyboardState, KeyboardAction> = produce(
