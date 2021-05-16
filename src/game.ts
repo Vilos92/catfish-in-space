@@ -1,4 +1,4 @@
-import {Howl} from 'howler';
+// import {Howl} from 'howler';
 import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize, setupKeybinds} from './createApp';
@@ -26,11 +26,13 @@ import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from '
 
 export function startGame(): void {
   // Hello howler!
+  /*
   const soundTest = new Howl({
     src: ['./assets/audio/tests_audio_sound1.mp3'],
     autoplay: true
   });
   console.log('sound test', soundTest);
+  */
 
   const getState = store.getState;
 
@@ -119,7 +121,7 @@ export function gameLoop(
   const player = getPlayer(state);
   const {coordinate: playerCoordinate, sprite: playerSprite} = player.gameElement;
 
-  const updatedPlayerCoordinate = calculateUpdatedCoordinateFromKeyboard(keyboard, playerCoordinate);
+  const updatedPlayerCoordinate = calculateUpdatedPlayerCoordinateFromKeyboard(keyboard, playerCoordinate);
 
   updatePlayerCoordinate(updatedPlayerCoordinate);
 
@@ -133,31 +135,64 @@ export function gameLoop(
 
   const viewport = getViewport(state);
 
-  const updatedViewportCoordinate: Coordinate = {
-    x: viewport.coordinate.x + 1,
-    y: viewport.coordinate.y + 1
-  };
+  const updatedViewportCoordinate = calculateUpdatedViewportCoordinateFromKeyboard(keyboard, viewport.coordinate);
 
   updateViewportCoordinate(updatedViewportCoordinate);
 
   renderer.render(stage);
 }
 
-function calculateUpdatedCoordinateFromKeyboard(keyboard: KeyboardState, playerCoordinate: Coordinate): Coordinate {
+function calculateUpdatedPlayerCoordinateFromKeyboard(
+  keyboard: KeyboardState,
+  playerCoordinate: Coordinate
+): Coordinate {
+  return calculateUpdatedCoordinateFromKeyboard(
+    keyboard,
+    playerCoordinate,
+    KeyCodesEnum.KeyA,
+    KeyCodesEnum.KeyD,
+    KeyCodesEnum.KeyW,
+    KeyCodesEnum.KeyS
+  );
+}
+
+function calculateUpdatedViewportCoordinateFromKeyboard(
+  keyboard: KeyboardState,
+  viewportCoordinate: Coordinate
+): Coordinate {
+  return calculateUpdatedCoordinateFromKeyboard(
+    keyboard,
+    viewportCoordinate,
+    KeyCodesEnum.KeyJ,
+    KeyCodesEnum.KeyL,
+    KeyCodesEnum.KeyI,
+    KeyCodesEnum.KeyK
+  );
+}
+
+function calculateUpdatedCoordinateFromKeyboard(
+  keyboard: KeyboardState,
+  coordinate: Coordinate,
+  keyCodeLeft: KeyCodesEnum,
+  keyCodeRight: KeyCodesEnum,
+  keyCodeUp: KeyCodesEnum,
+  keyCodeDown: KeyCodesEnum
+): Coordinate {
   const {keyStateMap} = keyboard;
 
-  const aIsActive = keyStateMap[KeyCodesEnum.KeyA].isActive;
-  const dIsActive = keyStateMap[KeyCodesEnum.KeyD].isActive;
-  const wIsActive = keyStateMap[KeyCodesEnum.KeyW].isActive;
-  const sIsActive = keyStateMap[KeyCodesEnum.KeyS].isActive;
+  const leftIsActive = keyStateMap[keyCodeLeft].isActive;
+  const rightIsActive = keyStateMap[keyCodeRight].isActive;
+  const upIsActive = keyStateMap[keyCodeUp].isActive;
+  const downIsActive = keyStateMap[keyCodeDown].isActive;
 
-  const xDelta = calculateDeltaFromOpposingKeys(aIsActive, dIsActive);
-  const yDelta = calculateDeltaFromOpposingKeys(wIsActive, sIsActive);
+  const xDelta = calculateDeltaFromOpposingKeys(leftIsActive, rightIsActive);
+  const yDelta = calculateDeltaFromOpposingKeys(upIsActive, downIsActive);
 
-  // TODO: This computation incorrectly gives the player extra velocity at the moment.
+  // TODO: This computation incorrectly gives the player extra velocity at
+  // when moving in a diagonal direction.
   return {
-    x: playerCoordinate.x + xDelta * 5,
-    y: playerCoordinate.y + yDelta * 5
+    x: coordinate.x + xDelta * 5,
+    y: coordinate.y + yDelta * 5
   };
 }
 

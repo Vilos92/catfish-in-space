@@ -1,8 +1,15 @@
 export enum KeyCodesEnum {
+  // Player movement.
   KeyA = 'KeyA',
   KeyD = 'KeyD',
   KeyS = 'KeyS',
-  KeyW = 'KeyW'
+  KeyW = 'KeyW',
+
+  // Viewport movement.
+  KeyI = 'KeyI',
+  KeyJ = 'KeyJ',
+  KeyK = 'KeyK',
+  KeyL = 'KeyL'
 }
 
 export enum ActionTypesEnum {

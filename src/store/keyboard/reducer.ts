@@ -16,10 +16,17 @@ export interface KeyboardState {
 }
 
 const initialKeyStateMap = {
+  // Player movement.
   [KeyCodesEnum.KeyA]: {isActive: false},
   [KeyCodesEnum.KeyD]: {isActive: false},
   [KeyCodesEnum.KeyS]: {isActive: false},
-  [KeyCodesEnum.KeyW]: {isActive: false}
+  [KeyCodesEnum.KeyW]: {isActive: false},
+
+  // Viewport movement.
+  [KeyCodesEnum.KeyI]: {isActive: false},
+  [KeyCodesEnum.KeyJ]: {isActive: false},
+  [KeyCodesEnum.KeyK]: {isActive: false},
+  [KeyCodesEnum.KeyL]: {isActive: false}
 };
 
 const initialState: KeyboardState = {
