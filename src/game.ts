@@ -12,11 +12,12 @@ import {
   updatePlayerCoordinateAction,
   UpdatePlayerMatterBodyAction,
   updatePlayerMatterBodyAction,
+  updatePlayerRotationAction,
   UpdatePlayerSpriteAction,
   updatePlayerSpriteAction
 } from './store/player/action';
 import {getPlayer} from './store/player/selector';
-import {GetState, store} from './store/store';
+import {Dispatch, GetState, store} from './store/store';
 import {UpdateViewportCoordinateAction, updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
 import {CallbackWithArg, Coordinate, KeyCodesEnum, makePayloadActionCallback, Renderer} from './type';
@@ -106,7 +107,8 @@ export function startGame(): void {
   setupWindowHooks(onload, resize);
 
   // Callback for game loop.
-  const onGameLoop = () => gameLoop(getState, renderer, stage, updatePlayerCoordinate, updateViewportCoordinate);
+  const onGameLoop = () =>
+    gameLoop(getState, store.dispatch, renderer, stage, updatePlayerCoordinate, updateViewportCoordinate);
 
   // Setup key bindings.
   const keyDown = makePayloadActionCallback<KeyDownAction, KeyCodesEnum>(store.dispatch, keyDownAction);
@@ -139,12 +141,13 @@ export function startGame(): void {
  */
 export function gameLoop(
   getState: GetState,
+  dispatch: Dispatch,
   renderer: Renderer,
   stage: PIXI.Container,
   updatePlayerCoordinate: CallbackWithArg<Coordinate>,
   updateViewportCoordinate: CallbackWithArg<Coordinate>
 ): void {
-  playerLoop(getState, updatePlayerCoordinate);
+  playerLoop(getState, dispatch, updatePlayerCoordinate);
 
   spriteLoop(getState);
 
@@ -154,7 +157,7 @@ export function gameLoop(
   renderer.render(stage);
 }
 
-function playerLoop(getState: GetState, updatePlayerCoordinate: CallbackWithArg<Coordinate>): void {
+function playerLoop(getState: GetState, dispatch: Dispatch, updatePlayerCoordinate: CallbackWithArg<Coordinate>): void {
   const state = getState();
   const keyboard = getKeyboard(state);
   const player = getPlayer(state);
@@ -163,10 +166,15 @@ function playerLoop(getState: GetState, updatePlayerCoordinate: CallbackWithArg<
 
   // Update player coordinate based on matter, rather than a change from keyboard.
   if (playerMatterBody) {
+    // Test.
+    Matter.Body.setAngularVelocity(playerMatterBody, 0.1);
+
     addForceToPlayerMatterBodyFromKeyboard(keyboard, playerCoordinate, playerMatterBody);
 
     const updatedPlayerCoordinate = {x: playerMatterBody.position.x, y: playerMatterBody.position.y};
     updatePlayerCoordinate(updatedPlayerCoordinate);
+
+    dispatch(updatePlayerRotationAction(playerMatterBody.angle));
   }
 }
 
@@ -174,14 +182,14 @@ function spriteLoop(getState: GetState): void {
   const state = getState();
 
   const player = getPlayer(state);
-  const {coordinate: playerCoordinate, pixiSprite: playerSprite} = player.gameElement;
+  const {coordinate: playerCoordinate, rotation: playerRotation, pixiSprite: playerSprite} = player.gameElement;
 
   if (playerSprite) {
-    // playerSprite.rotation += 0.1;
-
     const playerPosition = calculatePositionRelativeToViewport(playerCoordinate, getViewport(state).coordinate);
-
     playerSprite.position.set(playerPosition.x, playerPosition.y);
+
+    console.log('rotation', playerRotation);
+    playerSprite.rotation = playerRotation;
   }
 }
 

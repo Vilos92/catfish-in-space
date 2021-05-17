@@ -14,3 +14,5 @@ export const store = createStore(rootReducer);
 
 export type GetState = typeof store.getState;
 export type State = ReturnType<GetState>;
+
+export type Dispatch = typeof store.dispatch;

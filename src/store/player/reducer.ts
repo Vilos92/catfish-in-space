@@ -9,7 +9,8 @@ export interface PlayerState {
 
 export const initialState: PlayerState = {
   gameElement: {
-    coordinate: {x: 0, y: 0}
+    coordinate: {x: 0, y: 0},
+    rotation: 0
   }
 };
 
@@ -22,6 +23,13 @@ export const playerReducer: Reducer<PlayerState, PlayerAction> = (
       const {gameElement} = state;
 
       const updatedGameElement: GameElement = {...gameElement, coordinate: action.coordinate};
+
+      return {...state, gameElement: updatedGameElement};
+    }
+    case ActionTypesEnum.UPDATE_PLAYER_ROTATION_ACTION: {
+      const {gameElement} = state;
+
+      const updatedGameElement: GameElement = {...gameElement, rotation: action.rotation};
 
       return {...state, gameElement: updatedGameElement};
     }

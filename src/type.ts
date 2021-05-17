@@ -49,6 +49,8 @@ export interface Dimension {
 export interface GameElement {
   // This is the coordinate in our game, not the canvas.
   coordinate: Coordinate;
+  // This is in radians. Default orientation (0) is facing right.
+  rotation: number;
   matterBody?: Matter.Body;
   pixiSprite?: PIXI.Sprite | PIXI.AnimatedSprite;
 }

@@ -5,6 +5,7 @@ import {Coordinate} from '../../type';
 
 export enum ActionTypesEnum {
   UPDATE_PLAYER_COORDINATE_ACTION = 'UPDATE_PLAYER_COORDINATE_ACTION',
+  UPDATE_PLAYER_ROTATION_ACTION = 'UPDATE_PLAYER_ROTATION_ACTION',
   UPDATE_PLAYER_MATTER_BODY_ACTION = 'UPDATE_PLAYER_MATTER_BODY_ACTION',
   UPDATE_PLAYER_SPRITE_ACTION = 'UPDATE_PLAYER_SPRITE_ACTION'
 }
@@ -12,6 +13,11 @@ export enum ActionTypesEnum {
 export interface UpdatePlayerCoordinateAction {
   type: ActionTypesEnum.UPDATE_PLAYER_COORDINATE_ACTION;
   coordinate: Coordinate;
+}
+
+export interface UpdatePlayerRotationAction {
+  type: ActionTypesEnum.UPDATE_PLAYER_ROTATION_ACTION;
+  rotation: number;
 }
 
 export interface UpdatePlayerMatterBodyAction {
@@ -24,12 +30,23 @@ export interface UpdatePlayerSpriteAction {
   pixiSprite: PIXI.Sprite;
 }
 
-export type PlayerAction = UpdatePlayerCoordinateAction | UpdatePlayerMatterBodyAction | UpdatePlayerSpriteAction;
+export type PlayerAction =
+  | UpdatePlayerCoordinateAction
+  | UpdatePlayerRotationAction
+  | UpdatePlayerMatterBodyAction
+  | UpdatePlayerSpriteAction;
 
 export function updatePlayerCoordinateAction(coordinate: Coordinate): UpdatePlayerCoordinateAction {
   return {
     type: ActionTypesEnum.UPDATE_PLAYER_COORDINATE_ACTION,
     coordinate
+  };
+}
+
+export function updatePlayerRotationAction(rotation: number): UpdatePlayerRotationAction {
+  return {
+    type: ActionTypesEnum.UPDATE_PLAYER_ROTATION_ACTION,
+    rotation
   };
 }
 
