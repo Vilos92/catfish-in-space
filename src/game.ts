@@ -230,8 +230,8 @@ function addForceToPlayerMatterBodyFromKeyboard(keyboard: KeyboardState, playerM
 
   // TODO: Figure out computation to get a point a certain distance behind the ship.
   const behindPlayerCoordinate = {
-    x: -Math.cos(playerMatterBody.angle) * 5 + playerMatterBody.position.x,
-    y: -Math.sin(playerMatterBody.angle) * 5 + playerMatterBody.position.y
+    x: playerMatterBody.position.x - Math.cos(playerMatterBody.angle) * 5,
+    y: playerMatterBody.position.y - Math.sin(playerMatterBody.angle) * 5
   };
 
   console.log('behindPlayer', behindPlayerCoordinate, playerMatterBody.force);
