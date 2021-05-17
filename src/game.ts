@@ -162,14 +162,14 @@ function playerLoop(getState: GetState, dispatch: Dispatch, updatePlayerCoordina
   const keyboard = getKeyboard(state);
   const player = getPlayer(state);
 
-  const {coordinate: playerCoordinate, matterBody: playerMatterBody} = player.gameElement;
+  const {coordinate: playerCoordinate, rotation: playerRotation, matterBody: playerMatterBody} = player.gameElement;
 
   // Update player coordinate based on matter, rather than a change from keyboard.
   if (playerMatterBody) {
     // Test.
-    Matter.Body.setAngularVelocity(playerMatterBody, 0.1);
+    // Matter.Body.setAngularVelocity(playerMatterBody, 0.1);
 
-    addForceToPlayerMatterBodyFromKeyboard(keyboard, playerCoordinate, playerMatterBody);
+    addForceToPlayerMatterBodyFromKeyboard(keyboard, playerCoordinate, playerRotation, playerMatterBody);
 
     const updatedPlayerCoordinate = {x: playerMatterBody.position.x, y: playerMatterBody.position.y};
     updatePlayerCoordinate(updatedPlayerCoordinate);
@@ -206,23 +206,30 @@ function viewportLoop(getState: GetState, updateViewportCoordinate: CallbackWith
 function addForceToPlayerMatterBodyFromKeyboard(
   keyboard: KeyboardState,
   playerCoordinate: Coordinate,
+  playerRotation: number,
   playerMatterBody: Matter.Body
 ) {
   const {keyStateMap} = keyboard;
 
-  const leftIsActive = keyStateMap[KeyCodesEnum.KEY_A].isActive;
-  const rightIsActive = keyStateMap[KeyCodesEnum.KEY_D].isActive;
+  // const leftIsActive = keyStateMap[KeyCodesEnum.KEY_A].isActive;
+  // const rightIsActive = keyStateMap[KeyCodesEnum.KEY_D].isActive;
   const upIsActive = keyStateMap[KeyCodesEnum.KEY_W].isActive;
   const downIsActive = keyStateMap[KeyCodesEnum.KEY_S].isActive;
 
-  const xDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
-  const yDirection = calculateDirectionFromOpposingKeys(upIsActive, downIsActive);
+  // const sideDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
+  const straightDirection = calculateDirectionFromOpposingKeys(downIsActive, upIsActive);
 
   const thrusterForce = 3000; // Newtons;
 
-  const playerForceVector = {
-    x: thrusterForce * xDirection,
-    y: thrusterForce * yDirection
+  // Force should be based on the current direction of the ship.
+  const xForce = Math.cos(playerRotation) * thrusterForce * straightDirection;
+  const yForce = Math.sin(playerRotation) * thrusterForce * straightDirection;
+
+  console.log('xforce', playerRotation, xForce);
+
+  const playerForceVector: Matter.Vector = {
+    x: xForce,
+    y: yForce
   };
 
   Matter.Body.applyForce(playerMatterBody, playerCoordinate, playerForceVector);
