@@ -211,28 +211,42 @@ function addForceToPlayerMatterBodyFromKeyboard(
 ) {
   const {keyStateMap} = keyboard;
 
-  // const leftIsActive = keyStateMap[KeyCodesEnum.KEY_A].isActive;
-  // const rightIsActive = keyStateMap[KeyCodesEnum.KEY_D].isActive;
+  const leftIsActive = keyStateMap[KeyCodesEnum.KEY_A].isActive;
+  const rightIsActive = keyStateMap[KeyCodesEnum.KEY_D].isActive;
   const upIsActive = keyStateMap[KeyCodesEnum.KEY_W].isActive;
   const downIsActive = keyStateMap[KeyCodesEnum.KEY_S].isActive;
 
-  // const sideDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
+  const sideDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
   const straightDirection = calculateDirectionFromOpposingKeys(downIsActive, upIsActive);
 
-  const thrusterForce = 3000; // Newtons;
+  const straightThrusterForce = 3000; // Newtons;
+  const sideThrusterForce = 200; // Newtons;
 
   // Force should be based on the current direction of the ship.
-  const xForce = Math.cos(playerRotation) * thrusterForce * straightDirection;
-  const yForce = Math.sin(playerRotation) * thrusterForce * straightDirection;
+  const xStraightForce = Math.cos(playerRotation) * straightThrusterForce * straightDirection;
+  const yStraightForce = Math.sin(playerRotation) * straightThrusterForce * straightDirection;
 
-  console.log('xforce', playerRotation, xForce);
-
-  const playerForceVector: Matter.Vector = {
-    x: xForce,
-    y: yForce
+  const playerStraightForceVector: Matter.Vector = {
+    x: xStraightForce,
+    y: yStraightForce
   };
 
-  Matter.Body.applyForce(playerMatterBody, playerCoordinate, playerForceVector);
+  console.log('player coord', playerCoordinate);
+
+  Matter.Body.applyForce(playerMatterBody, playerMatterBody.position, playerStraightForceVector);
+
+  const behindPlayerCoordinate = playerMatterBody.position;
+
+  // Force should be based on the current direction of the ship.
+  const xSideForce = Math.cos(playerRotation + Math.PI / 2) * sideThrusterForce * sideDirection;
+  const ySideForce = Math.sin(playerRotation + Math.PI / 2) * sideThrusterForce * sideDirection;
+
+  const playerSideForceVector: Matter.Vector = {
+    x: xSideForce,
+    y: ySideForce
+  };
+
+  Matter.Body.applyForce(playerMatterBody, behindPlayerCoordinate, playerSideForceVector);
 }
 
 function calculateUpdatedViewportCoordinateFromKeyboard(
