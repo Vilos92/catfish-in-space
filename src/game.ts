@@ -162,14 +162,14 @@ function playerLoop(getState: GetState, dispatch: Dispatch, updatePlayerCoordina
   const keyboard = getKeyboard(state);
   const player = getPlayer(state);
 
-  const {coordinate: playerCoordinate, rotation: playerRotation, matterBody: playerMatterBody} = player.gameElement;
+  const {matterBody: playerMatterBody} = player.gameElement;
 
   // Update player coordinate based on matter, rather than a change from keyboard.
   if (playerMatterBody) {
     // Test.
     // Matter.Body.setAngularVelocity(playerMatterBody, 0.1);
 
-    addForceToPlayerMatterBodyFromKeyboard(keyboard, playerCoordinate, playerRotation, playerMatterBody);
+    addForceToPlayerMatterBodyFromKeyboard(keyboard, playerMatterBody);
 
     const updatedPlayerCoordinate = {x: playerMatterBody.position.x, y: playerMatterBody.position.y};
     updatePlayerCoordinate(updatedPlayerCoordinate);
@@ -203,12 +203,7 @@ function viewportLoop(getState: GetState, updateViewportCoordinate: CallbackWith
   updateViewportCoordinate(updatedViewportCoordinate);
 }
 
-function addForceToPlayerMatterBodyFromKeyboard(
-  keyboard: KeyboardState,
-  playerCoordinate: Coordinate,
-  playerRotation: number,
-  playerMatterBody: Matter.Body
-) {
+function addForceToPlayerMatterBodyFromKeyboard(keyboard: KeyboardState, playerMatterBody: Matter.Body) {
   const {keyStateMap} = keyboard;
 
   const leftIsActive = keyStateMap[KeyCodesEnum.KEY_A].isActive;
@@ -219,27 +214,31 @@ function addForceToPlayerMatterBodyFromKeyboard(
   const sideDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
   const straightDirection = calculateDirectionFromOpposingKeys(downIsActive, upIsActive);
 
-  const straightThrusterForce = 3000; // Newtons;
-  const sideThrusterForce = 200; // Newtons;
+  const straightThrusterForce = 1000; // Newtons;
+  const sideThrusterForce = 10; // Newtons;
 
   // Force should be based on the current direction of the ship.
-  const xStraightForce = Math.cos(playerRotation) * straightThrusterForce * straightDirection;
-  const yStraightForce = Math.sin(playerRotation) * straightThrusterForce * straightDirection;
+  const xStraightForce = Math.cos(playerMatterBody.angle) * straightThrusterForce * straightDirection;
+  const yStraightForce = Math.sin(playerMatterBody.angle) * straightThrusterForce * straightDirection;
 
   const playerStraightForceVector: Matter.Vector = {
     x: xStraightForce,
     y: yStraightForce
   };
 
-  console.log('player coord', playerCoordinate);
-
   Matter.Body.applyForce(playerMatterBody, playerMatterBody.position, playerStraightForceVector);
 
-  const behindPlayerCoordinate = playerMatterBody.position;
+  // TODO: Figure out computation to get a point a certain distance behind the ship.
+  const behindPlayerCoordinate = {
+    x: -Math.cos(playerMatterBody.angle) * 5 + playerMatterBody.position.x,
+    y: -Math.sin(playerMatterBody.angle) * 5 + playerMatterBody.position.y
+  };
+
+  console.log('behindPlayer', behindPlayerCoordinate, playerMatterBody.force);
 
   // Force should be based on the current direction of the ship.
-  const xSideForce = Math.cos(playerRotation + Math.PI / 2) * sideThrusterForce * sideDirection;
-  const ySideForce = Math.sin(playerRotation + Math.PI / 2) * sideThrusterForce * sideDirection;
+  const xSideForce = -Math.cos(playerMatterBody.angle + Math.PI / 2) * sideThrusterForce * sideDirection;
+  const ySideForce = -Math.sin(playerMatterBody.angle + Math.PI / 2) * sideThrusterForce * sideDirection;
 
   const playerSideForceVector: Matter.Vector = {
     x: xSideForce,
