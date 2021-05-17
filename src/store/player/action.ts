@@ -21,7 +21,7 @@ export interface UpdatePlayerMatterBodyAction {
 
 export interface UpdatePlayerSpriteAction {
   type: ActionTypesEnum.UPDATE_PLAYER_SPRITE_ACTION;
-  pixiSprite: PIXI.AnimatedSprite;
+  pixiSprite: PIXI.Sprite;
 }
 
 export type PlayerAction = UpdatePlayerCoordinateAction | UpdatePlayerMatterBodyAction | UpdatePlayerSpriteAction;
@@ -40,7 +40,7 @@ export function updatePlayerMatterBodyAction(matterBody: Matter.Body): UpdatePla
   };
 }
 
-export function updatePlayerSpriteAction(pixiSprite: PIXI.AnimatedSprite): UpdatePlayerSpriteAction {
+export function updatePlayerSpriteAction(pixiSprite: PIXI.Sprite): UpdatePlayerSpriteAction {
   return {
     type: ActionTypesEnum.UPDATE_PLAYER_SPRITE_ACTION,
     pixiSprite

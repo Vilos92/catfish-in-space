@@ -50,11 +50,11 @@ export function startGame(): void {
 
   const getState = store.getState;
   // Initialize the game state.
-  const coordinate = {x: 0, y: 0};
+  const initialPlayerCoordinate = {x: 0, y: 0};
 
   // The coordinates of our Viewport begin negative, as our centered player
   // begins at (0, 0).
-  const initialViewportCoordinate = calculateViewportCoordinate(coordinate, {
+  const initialViewportCoordinate = calculateViewportCoordinate(initialPlayerCoordinate, {
     width: window.innerWidth,
     height: window.innerHeight
   });
@@ -77,7 +77,7 @@ export function startGame(): void {
     updatePlayerMatterBodyAction
   );
 
-  const updatePlayerSprite = makePayloadActionCallback<UpdatePlayerSpriteAction, PIXI.AnimatedSprite>(
+  const updatePlayerSprite = makePayloadActionCallback<UpdatePlayerSpriteAction, PIXI.Sprite>(
     store.dispatch,
     updatePlayerSpriteAction
   );
@@ -177,7 +177,7 @@ function spriteLoop(getState: GetState): void {
   const {coordinate: playerCoordinate, pixiSprite: playerSprite} = player.gameElement;
 
   if (playerSprite) {
-    playerSprite.rotation += 0.1;
+    // playerSprite.rotation += 0.1;
 
     const playerPosition = calculatePositionRelativeToViewport(playerCoordinate, getViewport(state).coordinate);
 
@@ -224,30 +224,12 @@ function calculateUpdatedViewportCoordinateFromKeyboard(
   keyboard: KeyboardState,
   viewportCoordinate: Coordinate
 ): Coordinate {
-  return calculateUpdatedCoordinateFromKeyboard(
-    keyboard,
-    viewportCoordinate,
-    KeyCodesEnum.KEY_J,
-    KeyCodesEnum.KEY_L,
-    KeyCodesEnum.KEY_I,
-    KeyCodesEnum.KEY_K
-  );
-}
-
-function calculateUpdatedCoordinateFromKeyboard(
-  keyboard: KeyboardState,
-  coordinate: Coordinate,
-  keyCodeLeft: KeyCodesEnum,
-  keyCodeRight: KeyCodesEnum,
-  keyCodeUp: KeyCodesEnum,
-  keyCodeDown: KeyCodesEnum
-): Coordinate {
   const {keyStateMap} = keyboard;
 
-  const leftIsActive = keyStateMap[keyCodeLeft].isActive;
-  const rightIsActive = keyStateMap[keyCodeRight].isActive;
-  const upIsActive = keyStateMap[keyCodeUp].isActive;
-  const downIsActive = keyStateMap[keyCodeDown].isActive;
+  const leftIsActive = keyStateMap[KeyCodesEnum.KEY_J].isActive;
+  const rightIsActive = keyStateMap[KeyCodesEnum.KEY_L].isActive;
+  const upIsActive = keyStateMap[KeyCodesEnum.KEY_I].isActive;
+  const downIsActive = keyStateMap[KeyCodesEnum.KEY_K].isActive;
 
   const xDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
   const yDirection = calculateDirectionFromOpposingKeys(upIsActive, downIsActive);
@@ -255,8 +237,8 @@ function calculateUpdatedCoordinateFromKeyboard(
   // TODO: This computation incorrectly gives the player extra velocity at
   // when moving in a diagonal direction.
   return {
-    x: coordinate.x + xDirection * 5,
-    y: coordinate.y + yDirection * 5
+    x: viewportCoordinate.x + xDirection * 5,
+    y: viewportCoordinate.y + yDirection * 5
   };
 }
 

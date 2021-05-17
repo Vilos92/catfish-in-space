@@ -50,7 +50,7 @@ export interface GameElement {
   // This is the coordinate in our game, not the canvas.
   coordinate: Coordinate;
   matterBody?: Matter.Body;
-  pixiSprite?: PIXI.AnimatedSprite;
+  pixiSprite?: PIXI.Sprite | PIXI.AnimatedSprite;
 }
 
 /**

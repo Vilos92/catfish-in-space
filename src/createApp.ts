@@ -53,7 +53,7 @@ export async function onResize(
 
   const player = getPlayer(state);
 
-  // We should re-arrange the viewport to be centered on our humble bird.
+  // We should re-arrange the viewport to be centered on our player.
   const viewportCoordinate = calculateViewportCoordinate(player.gameElement.coordinate, viewportDimension);
   updateViewportCoordinate(viewportCoordinate);
 
@@ -74,7 +74,7 @@ export async function onLoad(
   stage: PIXI.Container,
   view: HTMLCanvasElement,
   updatePlayerMatterBody: CallbackWithArg<Matter.Body>,
-  updatePlayerSprite: CallbackWithArg<PIXI.AnimatedSprite>
+  updatePlayerSprite: CallbackWithArg<PIXI.Sprite>
 ): Promise<void> {
   // Do not append the game view to the DOM, until the assets are loaded.
   await loadGameAssets();
@@ -93,6 +93,8 @@ async function loadGameAssets(): Promise<void> {
   return new Promise((res, rej) => {
     const loader = PIXI.Loader.shared;
     loader.add('rabbit', './assets/simpleSpriteSheet.json');
+
+    loader.add('spaceship', './assets/sprites/nightraiderfixed.png');
 
     loader.onComplete.once(() => {
       res();
@@ -114,56 +116,38 @@ function setupWorld(
   world: Matter.World,
   stage: PIXI.Container,
   updatePlayerMatterBody: CallbackWithArg<Matter.Body>,
-  updatePlayerSprite: CallbackWithArg<PIXI.AnimatedSprite>
+  updatePlayerSprite: CallbackWithArg<PIXI.Sprite>
 ) {
   const state = getState();
 
   const player = getPlayer(state);
 
-  const birdPosition = calculatePositionRelativeToViewport(
+  const spaceshipPosition = calculatePositionRelativeToViewport(
     player.gameElement.coordinate,
     getViewport(state).coordinate
   );
 
-  const birdPixi = getBird();
-  birdPixi.anchor.set(0.5, 0.5);
+  const spaceshipPixi = new PIXI.Sprite(PIXI.Texture.from('spaceship'));
+  spaceshipPixi.anchor.set(0.5, 0.5);
 
-  birdPixi.position.set(birdPosition.x, birdPosition.y);
+  spaceshipPixi.position.set(spaceshipPosition.x, spaceshipPosition.y);
 
-  const birdMatter = Matter.Bodies.rectangle(
+  const spaceshipMatter = Matter.Bodies.rectangle(
     // Game and matter coordinates have a one-to-one mapping.
     player.gameElement.coordinate.x,
     player.gameElement.coordinate.y,
     // We use dimensions of our sprite.
-    birdPixi.width,
-    birdPixi.height,
+    spaceshipPixi.width,
+    spaceshipPixi.height,
     {
       // Approximate mass of Falcon 9.
       mass: 550000
     }
   );
 
-  Matter.Composite.add(world, birdMatter);
-  updatePlayerMatterBody(birdMatter);
+  Matter.Composite.add(world, spaceshipMatter);
+  updatePlayerMatterBody(spaceshipMatter);
 
-  stage.addChild(birdPixi);
-  updatePlayerSprite(birdPixi);
-}
-
-/**
- * Test method which loads a bird from the sprite sheet, and returns the AnimatedSprite.
- */
-function getBird(): PIXI.AnimatedSprite {
-  const bird = new PIXI.AnimatedSprite([
-    PIXI.Texture.from('birdUp.png'),
-    PIXI.Texture.from('birdMiddle.png'),
-    PIXI.Texture.from('birdDown.png')
-  ]);
-
-  bird.loop = true;
-  bird.animationSpeed = 0.1;
-  bird.play();
-  bird.scale.set(3);
-
-  return bird;
+  stage.addChild(spaceshipPixi);
+  updatePlayerSprite(spaceshipPixi);
 }
