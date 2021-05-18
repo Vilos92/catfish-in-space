@@ -4,23 +4,14 @@ import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize, setupKeybinds} from './createApp';
 import {setupWindowHooks} from './createApp';
-import {KeyDownAction, keyDownAction, KeyUpAction, keyUpAction} from './store/keyboard/action';
 import {KeyboardState} from './store/keyboard/reducer';
 import {getKeyboard} from './store/keyboard/selector';
-import {
-  UpdatePlayerCoordinateAction,
-  updatePlayerCoordinateAction,
-  UpdatePlayerMatterBodyAction,
-  updatePlayerMatterBodyAction,
-  updatePlayerRotationAction,
-  UpdatePlayerSpriteAction,
-  updatePlayerSpriteAction
-} from './store/player/action';
+import {updatePlayerCoordinateAction, updatePlayerRotationAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {Dispatch, GetState, store} from './store/store';
-import {UpdateViewportCoordinateAction, updateViewportCoordinateAction} from './store/viewport/action';
+import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
-import {CallbackWithArg, Coordinate, KeyCodesEnum, makePayloadActionCallback, Renderer} from './type';
+import {Coordinate, KeyCodesEnum, Renderer} from './type';
 import {VERSION} from './util';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
 
@@ -60,28 +51,7 @@ export function startGame(): void {
     height: window.innerHeight
   });
 
-  // Setup actions from dispatch.
-  const updateViewportCoordinate = makePayloadActionCallback<UpdateViewportCoordinateAction, Coordinate>(
-    store.dispatch,
-    updateViewportCoordinateAction
-  );
-
-  updateViewportCoordinate(initialViewportCoordinate);
-
-  const updatePlayerCoordinate = makePayloadActionCallback<UpdatePlayerCoordinateAction, Coordinate>(
-    store.dispatch,
-    updatePlayerCoordinateAction
-  );
-
-  const updatePlayerMatterBody = makePayloadActionCallback<UpdatePlayerMatterBodyAction, Matter.Body>(
-    store.dispatch,
-    updatePlayerMatterBodyAction
-  );
-
-  const updatePlayerSprite = makePayloadActionCallback<UpdatePlayerSpriteAction, PIXI.Sprite>(
-    store.dispatch,
-    updatePlayerSpriteAction
-  );
+  store.dispatch(updateViewportCoordinateAction(initialViewportCoordinate));
 
   // Create a Matter engine.
   const engine = Matter.Engine.create();
@@ -96,34 +66,20 @@ export function startGame(): void {
   const {renderer, stage, ticker, view} = app;
 
   // Hook for browser window resizes.
-  const resize = async (): Promise<void> => onResize(getState, renderer, updateViewportCoordinate);
+  const resize = async (): Promise<void> => onResize(getState, store.dispatch, renderer);
   resize();
 
   // Hook for initial loading of assets.
-  const onload = async (): Promise<void> =>
-    onLoad(getState, engine.world, stage, view, updatePlayerMatterBody, updatePlayerSprite);
+  const onload = async (): Promise<void> => onLoad(getState, store.dispatch, engine.world, stage, view);
 
   // Attach hooks to window.
   setupWindowHooks(onload, resize);
 
   // Callback for game loop.
-  const onGameLoop = () =>
-    gameLoop(getState, store.dispatch, renderer, stage, updatePlayerCoordinate, updateViewportCoordinate);
+  const onGameLoop = () => gameLoop(getState, store.dispatch, renderer, stage);
 
   // Setup key bindings.
-  const keyDown = makePayloadActionCallback<KeyDownAction, KeyCodesEnum>(store.dispatch, keyDownAction);
-  const handleKeydown = (event: KeyboardEvent): void => {
-    const keyCode: unknown = event.code;
-    keyDown(keyCode as KeyCodesEnum);
-  };
-
-  const keyUp = makePayloadActionCallback<KeyUpAction, KeyCodesEnum>(store.dispatch, keyUpAction);
-  const handleKeyup = (event: KeyboardEvent): void => {
-    const keyCode: unknown = event.code;
-    keyUp(keyCode as KeyCodesEnum);
-  };
-
-  setupKeybinds(handleKeydown, handleKeyup);
+  setupKeybinds(store.dispatch);
 
   // Start the matter runner.
   Matter.Runner.run(runner, engine);
@@ -139,43 +95,37 @@ export function startGame(): void {
  * Primary game loop function, which is responsible for
  * making changes to the current stage.
  */
-export function gameLoop(
-  getState: GetState,
-  dispatch: Dispatch,
-  renderer: Renderer,
-  stage: PIXI.Container,
-  updatePlayerCoordinate: CallbackWithArg<Coordinate>,
-  updateViewportCoordinate: CallbackWithArg<Coordinate>
-): void {
-  playerLoop(getState, dispatch, updatePlayerCoordinate);
+export function gameLoop(getState: GetState, dispatch: Dispatch, renderer: Renderer, stage: PIXI.Container): void {
+  // 1. Handle player loop first, to account for keyboard inputs and changes in matter position.
+  playerLoop(getState, dispatch);
 
+  // 2. Handle sprite loop after player loop, to account for changes in matter position.
   spriteLoop(getState);
 
-  // Handle viewport loop last, as it could depend on updated positions of game elements.
-  viewportLoop(getState, updateViewportCoordinate);
+  // 3. Handle viewport loop last, as it can depend on updated positions of game elements.
+  viewportLoop(getState, dispatch);
 
   renderer.render(stage);
 }
 
-function playerLoop(getState: GetState, dispatch: Dispatch, updatePlayerCoordinate: CallbackWithArg<Coordinate>): void {
+// Set forces on player matter from keyboard inputs, and update player coordinate
+// to be aligned with the matter position.
+function playerLoop(getState: GetState, dispatch: Dispatch): void {
   const state = getState();
   const keyboard = getKeyboard(state);
   const player = getPlayer(state);
 
   const {matterBody: playerMatterBody} = player.gameElement;
 
-  // Update player coordinate based on matter, rather than a change from keyboard.
-  if (playerMatterBody) {
-    // Test.
-    // Matter.Body.setAngularVelocity(playerMatterBody, 0.1);
+  if (!playerMatterBody) return;
 
-    addForceToPlayerMatterBodyFromKeyboard(keyboard, playerMatterBody);
+  // Apply forces from keyboard presses, before updating state with values from matter.
+  addForceToPlayerMatterBodyFromKeyboard(keyboard, playerMatterBody);
 
-    const updatedPlayerCoordinate = {x: playerMatterBody.position.x, y: playerMatterBody.position.y};
-    updatePlayerCoordinate(updatedPlayerCoordinate);
+  const updatedPlayerCoordinate = {x: playerMatterBody.position.x, y: playerMatterBody.position.y};
+  dispatch(updatePlayerCoordinateAction(updatedPlayerCoordinate));
 
-    dispatch(updatePlayerRotationAction(playerMatterBody.angle));
-  }
+  dispatch(updatePlayerRotationAction(playerMatterBody.angle));
 }
 
 function spriteLoop(getState: GetState): void {
@@ -184,23 +134,22 @@ function spriteLoop(getState: GetState): void {
   const player = getPlayer(state);
   const {coordinate: playerCoordinate, rotation: playerRotation, pixiSprite: playerSprite} = player.gameElement;
 
-  if (playerSprite) {
-    const playerPosition = calculatePositionRelativeToViewport(playerCoordinate, getViewport(state).coordinate);
-    playerSprite.position.set(playerPosition.x, playerPosition.y);
+  if (!playerSprite) return;
 
-    console.log('rotation', playerRotation);
-    playerSprite.rotation = playerRotation;
-  }
+  const playerPosition = calculatePositionRelativeToViewport(playerCoordinate, getViewport(state).coordinate);
+  playerSprite.position.set(playerPosition.x, playerPosition.y);
+
+  playerSprite.rotation = playerRotation;
 }
 
-function viewportLoop(getState: GetState, updateViewportCoordinate: CallbackWithArg<Coordinate>): void {
+function viewportLoop(getState: GetState, dispatch: Dispatch): void {
   const state = getState();
   const keyboard = getKeyboard(state);
   const viewport = getViewport(state);
 
   const updatedViewportCoordinate = calculateUpdatedViewportCoordinateFromKeyboard(keyboard, viewport.coordinate);
 
-  updateViewportCoordinate(updatedViewportCoordinate);
+  dispatch(updateViewportCoordinateAction(updatedViewportCoordinate));
 }
 
 function addForceToPlayerMatterBodyFromKeyboard(keyboard: KeyboardState, playerMatterBody: Matter.Body) {
@@ -228,13 +177,11 @@ function addForceToPlayerMatterBodyFromKeyboard(keyboard: KeyboardState, playerM
 
   Matter.Body.applyForce(playerMatterBody, playerMatterBody.position, playerStraightForceVector);
 
-  // TODO: Figure out computation to get a point a certain distance behind the ship.
+  // TODO: Compute this based on the width of the ship.
   const behindPlayerCoordinate = {
     x: playerMatterBody.position.x - Math.cos(playerMatterBody.angle) * 5,
     y: playerMatterBody.position.y - Math.sin(playerMatterBody.angle) * 5
   };
-
-  console.log('behindPlayer', behindPlayerCoordinate, playerMatterBody.force);
 
   // Force should be based on the current direction of the ship.
   const xSideForce = -Math.cos(playerMatterBody.angle + Math.PI / 2) * sideThrusterForce * sideDirection;
@@ -264,13 +211,14 @@ function calculateUpdatedViewportCoordinateFromKeyboard(
 
   // TODO: This computation incorrectly gives the player extra velocity at
   // when moving in a diagonal direction.
+
   return {
     x: viewportCoordinate.x + xDirection * 5,
     y: viewportCoordinate.y + yDirection * 5
   };
 }
 
-// For two key presses which oppose each other, determine the delta.
+// For two key presses which oppose each other, determine the direction.
 function calculateDirectionFromOpposingKeys(negativeIsActive: boolean, positiveIsActive: boolean): KeyDirectionsEnum {
   if (negativeIsActive === positiveIsActive) return KeyDirectionsEnum.NEUTRAL;
 

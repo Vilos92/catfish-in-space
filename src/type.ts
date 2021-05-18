@@ -1,6 +1,5 @@
 import Matter from 'matter-js';
 import * as PIXI from 'pixi.js';
-import {Action, Dispatch} from 'redux';
 
 /**
  * Keyboard Events.
@@ -60,14 +59,3 @@ export interface GameElement {
  */
 
 export type Renderer = PIXI.Renderer | PIXI.AbstractRenderer;
-
-/**
- * Helpers.
- */
-
-export function makePayloadActionCallback<A extends Action, P>(
-  dispatch: Dispatch<A>,
-  actionCreator: (payload: P) => A
-): CallbackWithArg<P> {
-  return (payload: P) => dispatch(actionCreator(payload));
-}

@@ -1,20 +1,30 @@
 import Matter from 'matter-js';
 import * as PIXI from 'pixi.js';
 
+import {keyDownAction, keyUpAction} from './store/keyboard/action';
+import {updatePlayerMatterBodyAction, updatePlayerSpriteAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
-import {GetState} from './store/store';
+import {Dispatch, GetState} from './store/store';
+import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
-import {Callback, CallbackWithArg, Coordinate, Renderer} from './type';
+import {Callback, CallbackWithArg, KeyCodesEnum, Renderer} from './type';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
 
 /**
  * Browser.
  */
 
-export function setupKeybinds(
-  handleKeydown: CallbackWithArg<KeyboardEvent>,
-  handleKeyup: CallbackWithArg<KeyboardEvent>
-): void {
+export function setupKeybinds(dispatch: Dispatch): void {
+  const handleKeydown: CallbackWithArg<KeyboardEvent> = (event: KeyboardEvent): void => {
+    const keyCode = event.code;
+    dispatch(keyDownAction(keyCode as KeyCodesEnum));
+  };
+
+  const handleKeyup: CallbackWithArg<KeyboardEvent> = (event: KeyboardEvent): void => {
+    const keyCode = event.code;
+    dispatch(keyUpAction(keyCode as KeyCodesEnum));
+  };
+
   window.addEventListener('keydown', handleKeydown, false);
   window.addEventListener('keyup', handleKeyup, false);
 }
@@ -42,11 +52,7 @@ export function setupWindowHooks(onload: Callback, resize: Callback): void {
   window.addEventListener('resize', resize);
 }
 
-export async function onResize(
-  getState: GetState,
-  renderer: Renderer,
-  updateViewportCoordinate: CallbackWithArg<Coordinate>
-): Promise<void> {
+export async function onResize(getState: GetState, dispatch: Dispatch, renderer: Renderer): Promise<void> {
   const state = getState();
 
   const viewportDimension = getViewport(state).dimension;
@@ -55,7 +61,7 @@ export async function onResize(
 
   // We should re-arrange the viewport to be centered on our player.
   const viewportCoordinate = calculateViewportCoordinate(player.gameElement.coordinate, viewportDimension);
-  updateViewportCoordinate(viewportCoordinate);
+  dispatch(updateViewportCoordinateAction(viewportCoordinate));
 
   const {pixiSprite: playerSprite} = player.gameElement;
 
@@ -70,18 +76,17 @@ export async function onResize(
 
 export async function onLoad(
   getState: GetState,
+  dispatch: Dispatch,
   world: Matter.World,
   stage: PIXI.Container,
-  view: HTMLCanvasElement,
-  updatePlayerMatterBody: CallbackWithArg<Matter.Body>,
-  updatePlayerSprite: CallbackWithArg<PIXI.Sprite>
+  view: HTMLCanvasElement
 ): Promise<void> {
   // Do not append the game view to the DOM, until the assets are loaded.
   await loadGameAssets();
 
   document.body.appendChild(view);
 
-  setupWorld(getState, world, stage, updatePlayerMatterBody, updatePlayerSprite);
+  setupWorld(getState, dispatch, world, stage);
 }
 
 /**
@@ -111,13 +116,7 @@ async function loadGameAssets(): Promise<void> {
 /**
  * Setup the stage of the game, by adding initial elements.
  */
-function setupWorld(
-  getState: GetState,
-  world: Matter.World,
-  stage: PIXI.Container,
-  updatePlayerMatterBody: CallbackWithArg<Matter.Body>,
-  updatePlayerSprite: CallbackWithArg<PIXI.Sprite>
-) {
+function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World, stage: PIXI.Container) {
   const state = getState();
 
   const player = getPlayer(state);
@@ -146,8 +145,8 @@ function setupWorld(
   );
 
   Matter.Composite.add(world, spaceshipMatter);
-  updatePlayerMatterBody(spaceshipMatter);
+  dispatch(updatePlayerMatterBodyAction(spaceshipMatter));
 
   stage.addChild(spaceshipPixi);
-  updatePlayerSprite(spaceshipPixi);
+  dispatch(updatePlayerSpriteAction(spaceshipPixi));
 }
