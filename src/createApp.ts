@@ -148,6 +148,12 @@ function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World,
   dispatch(updatePlayerSpriteAction(spaceshipPixi));
 
   // Draw a test rectangle.
+  // TODO:
+  // - Create a helper function which creates both a sprite/graphic, as well as matter object.
+  // Automatically set anchor or shift by half of width or height.
+  // In the sprite loop, loop through an array of GameElements
+  // If GameElement is found which has matter and Pixi sprite, update Pixi sprite
+  // to match matter.
   const testCoordinate = {x: 300, y: -100};
 
   const testGraphicsPosition = calculatePositionRelativeToViewport(testCoordinate, viewport.coordinate);
