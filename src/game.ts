@@ -64,7 +64,7 @@ export function startGame(): void {
   setupWindowHooks(onload, resize);
 
   // Callback for game loop.
-  const onGameLoop = () => gameLoop(getState, store.dispatch, renderer, stage);
+  const onGameLoop = () => gameLoop(getState, store.dispatch, engine.world, renderer, stage);
 
   // Setup key bindings.
   setupKeybinds(store.dispatch);
@@ -83,12 +83,18 @@ export function startGame(): void {
  * Primary game loop function, which is responsible for
  * making changes to the current stage.
  */
-export function gameLoop(getState: GetState, dispatch: Dispatch, renderer: Renderer, stage: PIXI.Container): void {
+export function gameLoop(
+  getState: GetState,
+  dispatch: Dispatch,
+  world: Matter.World,
+  renderer: Renderer,
+  stage: PIXI.Container
+): void {
   // 1. Handle player loop first, to account for keyboard inputs and changes in matter position.
   playerLoop(getState, dispatch);
 
   // 2. Handle sprite loop after player loop, to account for changes in matter position.
-  spriteLoop(getState);
+  spriteLoop(getState, world, stage);
 
   // 3. Handle viewport loop last, as it can depend on updated positions of game elements.
   viewportLoop(getState, dispatch);
@@ -118,7 +124,9 @@ function playerLoop(getState: GetState, dispatch: Dispatch): void {
   dispatch(updatePlayerRotationAction(updatedPlayerRotation));
 }
 
-function spriteLoop(getState: GetState): void {
+let lastWireframeGraphics: PIXI.Graphics | undefined = undefined;
+
+function spriteLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {
   const state = getState();
 
   const player = getPlayer(state);
@@ -130,6 +138,34 @@ function spriteLoop(getState: GetState): void {
   playerSprite.position.set(playerPosition.x, playerPosition.y);
 
   playerSprite.rotation = playerRotation;
+
+  // Draw debug wire frame from the Matter world.
+  const viewport = getViewport(state);
+  const {coordinate: viewportCoordinate} = viewport;
+
+  const wireFrameGraphics = new PIXI.Graphics();
+  wireFrameGraphics.lineStyle(1, 0x00ff00);
+
+  world.bodies.forEach((body) => {
+    const {vertices} = body;
+
+    const initialWireFramePosition = calculatePositionRelativeToViewport(vertices[0], viewportCoordinate);
+
+    wireFrameGraphics.moveTo(initialWireFramePosition.x, initialWireFramePosition.y);
+
+    for (let i = 1; i < vertices.length; i++) {
+      const wireFramePosition = calculatePositionRelativeToViewport(vertices[i], viewportCoordinate);
+
+      wireFrameGraphics.lineTo(wireFramePosition.x, wireFramePosition.y);
+    }
+
+    wireFrameGraphics.lineTo(initialWireFramePosition.x, initialWireFramePosition.y);
+  });
+
+  if (lastWireframeGraphics) lastWireframeGraphics.destroy();
+
+  stage.addChild(wireFrameGraphics);
+  lastWireframeGraphics = wireFrameGraphics;
 }
 
 function viewportLoop(getState: GetState, dispatch: Dispatch): void {
