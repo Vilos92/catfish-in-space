@@ -124,6 +124,7 @@ function playerLoop(getState: GetState, dispatch: Dispatch): void {
   dispatch(updatePlayerRotationAction(updatedPlayerRotation));
 }
 
+// TODO: Use store for this, rather than this brittle variable.
 let lastWireframeGraphics: PIXI.Graphics | undefined = undefined;
 
 function spriteLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {

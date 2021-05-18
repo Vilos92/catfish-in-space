@@ -118,13 +118,10 @@ async function loadGameAssets(): Promise<void> {
  */
 function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World, stage: PIXI.Container) {
   const state = getState();
-
+  const viewport = getViewport(state);
   const player = getPlayer(state);
 
-  const spaceshipPosition = calculatePositionRelativeToViewport(
-    player.gameElement.coordinate,
-    getViewport(state).coordinate
-  );
+  const spaceshipPosition = calculatePositionRelativeToViewport(player.gameElement.coordinate, viewport.coordinate);
 
   const spaceshipPixi = new PIXI.Sprite(PIXI.Texture.from('spaceship'));
   spaceshipPixi.anchor.set(0.5, 0.5);
@@ -149,4 +146,30 @@ function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World,
 
   stage.addChild(spaceshipPixi);
   dispatch(updatePlayerSpriteAction(spaceshipPixi));
+
+  // Draw a test rectangle.
+  const testCoordinate = {x: 300, y: -100};
+
+  const testGraphicsPosition = calculatePositionRelativeToViewport(testCoordinate, viewport.coordinate);
+  console.log('test', testGraphicsPosition);
+
+  const testGraphics = new PIXI.Graphics();
+
+  testGraphics.beginFill(0xffff00);
+  testGraphics.lineStyle(5, 0xffff00);
+  // MatterJS centers automatically, whereas with PixiJS we must set anchor or shift by half of width and height.
+  testGraphics.drawRect(testGraphicsPosition.x - 300 / 2, testGraphicsPosition.y - 200 / 2, 300, 200);
+
+  const testMatter = Matter.Bodies.rectangle(
+    testCoordinate.x,
+    testCoordinate.y,
+    testGraphics.width,
+    testGraphics.height,
+    {
+      mass: 550000
+    }
+  );
+
+  Matter.Composite.add(world, testMatter);
+  stage.addChild(testGraphics);
 }
