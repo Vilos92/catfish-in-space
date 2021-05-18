@@ -133,13 +133,38 @@ export function calculateUpdatedViewportCoordinateFromKeyboard(
   // TODO: This computation incorrectly gives the player extra velocity at
   // when moving in a diagonal direction.
 
-  const viewportDimension = getViewportDimension();
-  const xPerFrame = viewportDimension.width / 20;
-  const yPerFrame = viewportDimension.width / 20;
+  const viewportDelta = calculateViewportDelta(xDirection, yDirection);
 
   return {
-    x: viewportCoordinate.x + xDirection * xPerFrame,
-    y: viewportCoordinate.y + yDirection * yPerFrame
+    x: viewportCoordinate.x + viewportDelta.x,
+    y: viewportCoordinate.y + viewportDelta.y
+  };
+}
+
+function calculateViewportDelta(xDirection: KeyDirectionsEnum, yDirection: KeyDirectionsEnum): Coordinate {
+  const viewportDimension = getViewportDimension();
+  const {width, height} = viewportDimension;
+
+  // Overall max delta is based on the minimum screen dimension.
+  const maxDelta = Math.min(width, height) / 20;
+
+  // Delta along each axis with direction accounted for.
+  const xDelta = xDirection * maxDelta;
+  const yDelta = yDirection * maxDelta;
+
+  // If both x and y axis have active key presses, we must compute from the diagonal delta.
+  if (xDirection !== KeyDirectionsEnum.NEUTRAL && yDirection !== KeyDirectionsEnum.NEUTRAL) {
+    const angle = Math.atan2(height, width);
+
+    return {
+      x: Math.cos(angle) * xDelta,
+      y: Math.sin(angle) * yDelta
+    };
+  }
+
+  return {
+    x: xDelta,
+    y: yDelta
   };
 }
 
