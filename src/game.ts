@@ -10,7 +10,7 @@ import {updatePlayerCoordinateAction, updatePlayerRotationAction} from './store/
 import {getPlayer} from './store/player/selector';
 import {Dispatch, GetState, store} from './store/store';
 import {updateViewportCoordinateAction} from './store/viewport/action';
-import {getViewport} from './store/viewport/selector';
+import {getViewport, getViewportDimension} from './store/viewport/selector';
 import {Coordinate, KeyCodesEnum, Renderer} from './type';
 import {VERSION} from './util';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
@@ -25,6 +25,14 @@ enum KeyDirectionsEnum {
   NEUTRAL = 0,
   POSITIVE = 1
 }
+
+/**
+ * Constants.
+ */
+
+// These forces are in Newtons.
+const STRAIGHT_THRUSTER_FORCE = 1000;
+const SIDE_THRUSTER_FORCE = 10;
 
 /**
  * Functions.
@@ -125,7 +133,9 @@ function playerLoop(getState: GetState, dispatch: Dispatch): void {
   const updatedPlayerCoordinate = {x: playerMatterBody.position.x, y: playerMatterBody.position.y};
   dispatch(updatePlayerCoordinateAction(updatedPlayerCoordinate));
 
-  dispatch(updatePlayerRotationAction(playerMatterBody.angle));
+  // Restrict the current player matter angle within the bounds of 0 to 2PI
+  const updatedPlayerRotation = (2 * Math.PI + playerMatterBody.angle) % (2 * Math.PI);
+  dispatch(updatePlayerRotationAction(updatedPlayerRotation));
 }
 
 function spriteLoop(getState: GetState): void {
@@ -155,20 +165,22 @@ function viewportLoop(getState: GetState, dispatch: Dispatch): void {
 function addForceToPlayerMatterBodyFromKeyboard(keyboard: KeyboardState, playerMatterBody: Matter.Body) {
   const {keyStateMap} = keyboard;
 
+  const downIsActive = keyStateMap[KeyCodesEnum.KEY_S].isActive;
+  const upIsActive = keyStateMap[KeyCodesEnum.KEY_W].isActive;
+  addStraightForceToPlayerMatterBody(downIsActive, upIsActive, playerMatterBody);
+
   const leftIsActive = keyStateMap[KeyCodesEnum.KEY_A].isActive;
   const rightIsActive = keyStateMap[KeyCodesEnum.KEY_D].isActive;
-  const upIsActive = keyStateMap[KeyCodesEnum.KEY_W].isActive;
-  const downIsActive = keyStateMap[KeyCodesEnum.KEY_S].isActive;
+  addSideForceToPlayerMatterBody(leftIsActive, rightIsActive, playerMatterBody);
+}
 
-  const sideDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
+function addStraightForceToPlayerMatterBody(downIsActive: boolean, upIsActive: boolean, playerMatterBody: Matter.Body) {
   const straightDirection = calculateDirectionFromOpposingKeys(downIsActive, upIsActive);
+  const straightThrusterForce = straightDirection * STRAIGHT_THRUSTER_FORCE;
 
-  const straightThrusterForce = 1000; // Newtons;
-  const sideThrusterForce = 10; // Newtons;
-
-  // Force should be based on the current direction of the ship.
-  const xStraightForce = Math.cos(playerMatterBody.angle) * straightThrusterForce * straightDirection;
-  const yStraightForce = Math.sin(playerMatterBody.angle) * straightThrusterForce * straightDirection;
+  // Force should be in line with the direction of the ship.
+  const xStraightForce = Math.cos(playerMatterBody.angle) * straightThrusterForce;
+  const yStraightForce = Math.sin(playerMatterBody.angle) * straightThrusterForce;
 
   const playerStraightForceVector: Matter.Vector = {
     x: xStraightForce,
@@ -176,23 +188,34 @@ function addForceToPlayerMatterBodyFromKeyboard(keyboard: KeyboardState, playerM
   };
 
   Matter.Body.applyForce(playerMatterBody, playerMatterBody.position, playerStraightForceVector);
+}
+
+function addSideForceToPlayerMatterBody(leftIsActive: boolean, rightIsActive: boolean, playerMatterBody: Matter.Body) {
+  const sideDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
+  const sideThrusterForce = sideDirection * SIDE_THRUSTER_FORCE;
 
   // TODO: Compute this based on the width of the ship.
-  const behindPlayerCoordinate = {
-    x: playerMatterBody.position.x - Math.cos(playerMatterBody.angle) * 5,
-    y: playerMatterBody.position.y - Math.sin(playerMatterBody.angle) * 5
+  // Positive is towards front of ship, whereas negative is towards rear.
+  const thrusterDistanceFromCenter = -5;
+
+  const thrusterCoordinate = {
+    x: playerMatterBody.position.x + Math.cos(playerMatterBody.angle) * thrusterDistanceFromCenter,
+    y: playerMatterBody.position.y + Math.sin(playerMatterBody.angle) * thrusterDistanceFromCenter
   };
 
-  // Force should be based on the current direction of the ship.
-  const xSideForce = -Math.cos(playerMatterBody.angle + Math.PI / 2) * sideThrusterForce * sideDirection;
-  const ySideForce = -Math.sin(playerMatterBody.angle + Math.PI / 2) * sideThrusterForce * sideDirection;
+  // If thruster is at back of ship, we reverse thrust to apply correct rotational force.
+  const thrusterDirection = thrusterDistanceFromCenter < 0 ? -1 : 1;
+
+  // Force should be perpendicular to where the ship is facing.
+  const xSideForce = thrusterDirection * Math.cos(playerMatterBody.angle + Math.PI / 2) * sideThrusterForce;
+  const ySideForce = thrusterDirection * Math.sin(playerMatterBody.angle + Math.PI / 2) * sideThrusterForce;
 
   const playerSideForceVector: Matter.Vector = {
     x: xSideForce,
     y: ySideForce
   };
 
-  Matter.Body.applyForce(playerMatterBody, behindPlayerCoordinate, playerSideForceVector);
+  Matter.Body.applyForce(playerMatterBody, thrusterCoordinate, playerSideForceVector);
 }
 
 function calculateUpdatedViewportCoordinateFromKeyboard(
@@ -212,9 +235,13 @@ function calculateUpdatedViewportCoordinateFromKeyboard(
   // TODO: This computation incorrectly gives the player extra velocity at
   // when moving in a diagonal direction.
 
+  const viewportDimension = getViewportDimension();
+  const xPerFrame = viewportDimension.width / 20;
+  const yPerFrame = viewportDimension.width / 20;
+
   return {
-    x: viewportCoordinate.x + xDirection * 5,
-    y: viewportCoordinate.y + yDirection * 5
+    x: viewportCoordinate.x + xDirection * xPerFrame,
+    y: viewportCoordinate.y + yDirection * yPerFrame
   };
 }
 
