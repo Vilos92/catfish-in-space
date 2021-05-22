@@ -1,5 +1,5 @@
 import {Dimension} from '../../type';
-import {State} from '../store';
+import {State} from '../gameReducer';
 import {ViewportState} from './reducer';
 
 export const getViewport = (state: State): ViewportState => {

@@ -1,13 +1,15 @@
 import Matter from 'matter-js';
 import * as PIXI from 'pixi.js';
 
+import {pushGameElementAction} from './store/gameElement/action';
+import {Dispatch, GetState} from './store/gameReducer';
 import {keyDownAction, keyUpAction} from './store/keyboard/action';
 import {updatePlayerMatterBodyAction, updatePlayerSpriteAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
-import {Dispatch, GetState} from './store/store';
 import {updateViewportCoordinateAction} from './store/viewport/action';
+import {ViewportState} from './store/viewport/reducer';
 import {getViewport} from './store/viewport/selector';
-import {Callback, CallbackWithArg, KeyCodesEnum, Renderer} from './type';
+import {Callback, CallbackWithArg, GameElement, KeyCodesEnum, Renderer} from './type';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
 
 /**
@@ -147,24 +149,22 @@ function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World,
   stage.addChild(spaceshipPixi);
   dispatch(updatePlayerSpriteAction(spaceshipPixi));
 
-  // Draw a test rectangle.
-  // TODO:
-  // - Create a helper function which creates both a sprite/graphic, as well as matter object.
-  // Automatically set anchor or shift by half of width or height.
-  // In the sprite loop, loop through an array of GameElements
-  // If GameElement is found which has matter and Pixi sprite, update Pixi sprite
-  // to match matter.
+  const testRectangle = createTestRectangle(viewport);
+  addGameElement(dispatch, world, stage, testRectangle);
+}
+
+function createTestRectangle(viewport: ViewportState): GameElement {
   const testCoordinate = {x: 300, y: -100};
 
   const testGraphicsPosition = calculatePositionRelativeToViewport(testCoordinate, viewport.coordinate);
-  console.log('test', testGraphicsPosition);
 
   const testGraphics = new PIXI.Graphics();
 
   testGraphics.beginFill(0xffff00);
   testGraphics.lineStyle(5, 0xffff00);
   // MatterJS centers automatically, whereas with PixiJS we must set anchor or shift by half of width and height.
-  testGraphics.drawRect(testGraphicsPosition.x - 300 / 2, testGraphicsPosition.y - 200 / 2, 300, 200);
+  testGraphics.drawRect(testGraphicsPosition.x, testGraphicsPosition.y, 300, 200);
+  testGraphics.pivot.set(testGraphicsPosition.x + 300 / 2, testGraphicsPosition.y + 200 / 2);
 
   const testMatter = Matter.Bodies.rectangle(
     testCoordinate.x,
@@ -176,6 +176,18 @@ function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World,
     }
   );
 
-  Matter.Composite.add(world, testMatter);
-  stage.addChild(testGraphics);
+  return {
+    coordinate: testCoordinate,
+    rotation: 0,
+    matterBody: testMatter,
+    pixiSprite: testGraphics
+  };
+}
+
+function addGameElement(dispatch: Dispatch, world: Matter.World, stage: PIXI.Container, gameElement: GameElement) {
+  if (gameElement.matterBody) Matter.Composite.add(world, gameElement.matterBody);
+
+  if (gameElement.pixiSprite) stage.addChild(gameElement.pixiSprite);
+
+  dispatch(pushGameElementAction(gameElement));
 }

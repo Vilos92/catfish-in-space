@@ -4,13 +4,14 @@ import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize, setupKeybinds} from './createApp';
 import {setupWindowHooks} from './createApp';
+import {getGameElements} from './store/gameElement/selector';
+import {Dispatch, GetState, store} from './store/gameReducer';
 import {getKeyboard} from './store/keyboard/selector';
 import {updatePlayerCoordinateAction, updatePlayerRotationAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
-import {Dispatch, GetState, store} from './store/store';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
-import {Renderer} from './type';
+import {Coordinate, Renderer} from './type';
 import {addForceToPlayerMatterBodyFromKeyboard, calculateUpdatedViewportCoordinateFromKeyboard, VERSION} from './util';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
 
@@ -124,30 +125,48 @@ function playerLoop(getState: GetState, dispatch: Dispatch): void {
   dispatch(updatePlayerRotationAction(updatedPlayerRotation));
 }
 
-// TODO: Use store for this, rather than this brittle variable.
-let lastWireframeGraphics: PIXI.Graphics | undefined = undefined;
-
 function spriteLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {
   const state = getState();
 
   const player = getPlayer(state);
   const {coordinate: playerCoordinate, rotation: playerRotation, pixiSprite: playerSprite} = player.gameElement;
 
+  const viewport = getViewport(state);
+  const {coordinate: viewportCoordinate} = viewport;
+
   if (!playerSprite) return;
 
-  const playerPosition = calculatePositionRelativeToViewport(playerCoordinate, getViewport(state).coordinate);
+  const playerPosition = calculatePositionRelativeToViewport(playerCoordinate, viewportCoordinate);
   playerSprite.position.set(playerPosition.x, playerPosition.y);
 
   playerSprite.rotation = playerRotation;
 
-  // Draw debug wire frame from the Matter world.
-  const viewport = getViewport(state);
-  const {coordinate: viewportCoordinate} = viewport;
+  // Reposition all GameElements based on MatterJS coordinates.
+  const gameElements = getGameElements(state);
+  gameElements.forEach(gameElement => {
+    if (!gameElement.matterBody || !gameElement.pixiSprite) return;
 
+    const gameElementPosition = calculatePositionRelativeToViewport(
+      gameElement.matterBody.position,
+      viewportCoordinate
+    );
+
+    gameElement.pixiSprite.position.set(gameElementPosition.x, gameElementPosition.y);
+    gameElement.pixiSprite.rotation = gameElement.matterBody.angle;
+  });
+
+  // Draw debug wire frame from the Matter world.
+  drawWireFrameGraphics(viewportCoordinate, world, stage);
+}
+
+// TODO: Use store for this, rather than this brittle variable.
+let lastWireFrameGraphics: PIXI.Graphics | undefined = undefined;
+
+function drawWireFrameGraphics(viewportCoordinate: Coordinate, world: Matter.World, stage: PIXI.Container) {
   const wireFrameGraphics = new PIXI.Graphics();
   wireFrameGraphics.lineStyle(1, 0x00ff00);
 
-  world.bodies.forEach((body) => {
+  world.bodies.forEach(body => {
     const {vertices} = body;
 
     const initialWireFramePosition = calculatePositionRelativeToViewport(vertices[0], viewportCoordinate);
@@ -163,10 +182,10 @@ function spriteLoop(getState: GetState, world: Matter.World, stage: PIXI.Contain
     wireFrameGraphics.lineTo(initialWireFramePosition.x, initialWireFramePosition.y);
   });
 
-  if (lastWireframeGraphics) lastWireframeGraphics.destroy();
+  if (lastWireFrameGraphics) lastWireFrameGraphics.destroy();
 
   stage.addChild(wireFrameGraphics);
-  lastWireframeGraphics = wireFrameGraphics;
+  lastWireFrameGraphics = wireFrameGraphics;
 }
 
 function viewportLoop(getState: GetState, dispatch: Dispatch): void {

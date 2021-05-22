@@ -1,11 +1,11 @@
 import {Coordinate} from '../../type';
 
-export enum ActionTypesEnum {
+export enum ViewportActionTypesEnum {
   UPDATE_VIEWPORT_COORDINATE_ACTION = 'UPDATE_VIEWPORT_COORDINATE_ACTION'
 }
 
 export interface UpdateViewportCoordinateAction {
-  type: ActionTypesEnum;
+  type: ViewportActionTypesEnum;
   coordinate: Coordinate;
 }
 
@@ -13,7 +13,7 @@ export type ViewportAction = UpdateViewportCoordinateAction;
 
 export function updateViewportCoordinateAction(coordinate: Coordinate): UpdateViewportCoordinateAction {
   return {
-    type: ActionTypesEnum.UPDATE_VIEWPORT_COORDINATE_ACTION,
+    type: ViewportActionTypesEnum.UPDATE_VIEWPORT_COORDINATE_ACTION,
     coordinate
   };
 }

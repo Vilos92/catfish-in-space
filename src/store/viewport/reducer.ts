@@ -2,7 +2,7 @@ import produce from 'immer';
 import {Reducer} from 'redux';
 
 import {Coordinate, Dimension} from '../../type';
-import {ActionTypesEnum, ViewportAction} from './action';
+import {ViewportAction, ViewportActionTypesEnum} from './action';
 import {getViewportDimension} from './selector';
 
 export interface ViewportState {
@@ -18,7 +18,7 @@ export const initialState: ViewportState = {
 export const viewportReducer: Reducer<ViewportState, ViewportAction> = produce(
   (state: ViewportState, action: ViewportAction) => {
     switch (action.type) {
-      case ActionTypesEnum.UPDATE_VIEWPORT_COORDINATE_ACTION:
+      case ViewportActionTypesEnum.UPDATE_VIEWPORT_COORDINATE_ACTION:
         state.coordinate = action.coordinate;
       default:
     }

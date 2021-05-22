@@ -3,7 +3,7 @@ import * as PIXI from 'pixi.js';
 
 import {Coordinate} from '../../type';
 
-export enum ActionTypesEnum {
+export enum PlayerActionTypesEnum {
   UPDATE_PLAYER_COORDINATE_ACTION = 'UPDATE_PLAYER_COORDINATE_ACTION',
   UPDATE_PLAYER_ROTATION_ACTION = 'UPDATE_PLAYER_ROTATION_ACTION',
   UPDATE_PLAYER_MATTER_BODY_ACTION = 'UPDATE_PLAYER_MATTER_BODY_ACTION',
@@ -11,22 +11,22 @@ export enum ActionTypesEnum {
 }
 
 export interface UpdatePlayerCoordinateAction {
-  type: ActionTypesEnum.UPDATE_PLAYER_COORDINATE_ACTION;
+  type: PlayerActionTypesEnum.UPDATE_PLAYER_COORDINATE_ACTION;
   coordinate: Coordinate;
 }
 
 export interface UpdatePlayerRotationAction {
-  type: ActionTypesEnum.UPDATE_PLAYER_ROTATION_ACTION;
+  type: PlayerActionTypesEnum.UPDATE_PLAYER_ROTATION_ACTION;
   rotation: number;
 }
 
 export interface UpdatePlayerMatterBodyAction {
-  type: ActionTypesEnum.UPDATE_PLAYER_MATTER_BODY_ACTION;
+  type: PlayerActionTypesEnum.UPDATE_PLAYER_MATTER_BODY_ACTION;
   matterBody: Matter.Body;
 }
 
 export interface UpdatePlayerSpriteAction {
-  type: ActionTypesEnum.UPDATE_PLAYER_SPRITE_ACTION;
+  type: PlayerActionTypesEnum.UPDATE_PLAYER_SPRITE_ACTION;
   pixiSprite: PIXI.Sprite;
 }
 
@@ -38,28 +38,28 @@ export type PlayerAction =
 
 export function updatePlayerCoordinateAction(coordinate: Coordinate): UpdatePlayerCoordinateAction {
   return {
-    type: ActionTypesEnum.UPDATE_PLAYER_COORDINATE_ACTION,
+    type: PlayerActionTypesEnum.UPDATE_PLAYER_COORDINATE_ACTION,
     coordinate
   };
 }
 
 export function updatePlayerRotationAction(rotation: number): UpdatePlayerRotationAction {
   return {
-    type: ActionTypesEnum.UPDATE_PLAYER_ROTATION_ACTION,
+    type: PlayerActionTypesEnum.UPDATE_PLAYER_ROTATION_ACTION,
     rotation
   };
 }
 
 export function updatePlayerMatterBodyAction(matterBody: Matter.Body): UpdatePlayerMatterBodyAction {
   return {
-    type: ActionTypesEnum.UPDATE_PLAYER_MATTER_BODY_ACTION,
+    type: PlayerActionTypesEnum.UPDATE_PLAYER_MATTER_BODY_ACTION,
     matterBody
   };
 }
 
 export function updatePlayerSpriteAction(pixiSprite: PIXI.Sprite): UpdatePlayerSpriteAction {
   return {
-    type: ActionTypesEnum.UPDATE_PLAYER_SPRITE_ACTION,
+    type: PlayerActionTypesEnum.UPDATE_PLAYER_SPRITE_ACTION,
     pixiSprite
   };
 }

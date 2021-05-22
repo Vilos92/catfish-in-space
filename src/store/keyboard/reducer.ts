@@ -2,7 +2,7 @@ import produce from 'immer';
 import {Reducer} from 'redux';
 
 import {KeyCodesEnum} from '../../type';
-import {ActionTypesEnum, KeyboardAction} from './action';
+import {KeyboardAction, KeyboardActionTypesEnum} from './action';
 
 interface KeyState {
   isActive: boolean;
@@ -46,14 +46,14 @@ export const keyboardReducer: Reducer<KeyboardState, KeyboardAction> = produce(
     if (!keyCodesSet.has(keyCode)) return;
 
     switch (action.type) {
-      case ActionTypesEnum.KEY_DOWN_ACTION: {
+      case KeyboardActionTypesEnum.KEY_DOWN_ACTION: {
         const {keyStateMap} = state;
         const keyState = keyStateMap[keyCode];
 
         keyState.isActive = true;
         break;
       }
-      case ActionTypesEnum.KEY_UP_ACTION: {
+      case KeyboardActionTypesEnum.KEY_UP_ACTION: {
         const {keyStateMap} = state;
         const keyState = keyStateMap[keyCode];
 
