@@ -23,6 +23,9 @@ export const gameElementReducer: Reducer<GameElementState, GameElementAction> = 
 
       return {...state, gameElements: updatedGameElements};
     }
+    case GameElementActionTypesEnum.UPDATE_GAME_ELEMENTS_ACTION: {
+      return {...state, gameElements: action.gameElements};
+    }
     default:
       return state;
   }

@@ -9,7 +9,7 @@ import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {ViewportState} from './store/viewport/reducer';
 import {getViewport} from './store/viewport/selector';
-import {Callback, CallbackWithArg, GameElement, KeyCodesEnum, Renderer} from './type';
+import {Callback, CallbackWithArg, Coordinate, GameElement, KeyCodesEnum, Renderer} from './type';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
 
 /**
@@ -149,38 +149,39 @@ function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World,
   stage.addChild(spaceshipPixi);
   dispatch(updatePlayerSpriteAction(spaceshipPixi));
 
-  const testRectangle = createTestRectangle(viewport);
-  addGameElement(dispatch, world, stage, testRectangle);
+  const testRectangle1 = createTestRectangle(viewport, {x: 300, y: -100});
+  const testRectangle2 = createTestRectangle(viewport, {x: -300, y: 100});
+  const testRectangle3 = createTestRectangle(viewport, {x: 0, y: 400});
+  const testRectangle4 = createTestRectangle(viewport, {x: 0, y: -400});
+  addGameElement(dispatch, world, stage, testRectangle1);
+  addGameElement(dispatch, world, stage, testRectangle2);
+  addGameElement(dispatch, world, stage, testRectangle3);
+  addGameElement(dispatch, world, stage, testRectangle4);
 }
 
-function createTestRectangle(viewport: ViewportState): GameElement {
-  const testCoordinate = {x: 300, y: -100};
+function createTestRectangle(viewport: ViewportState, coordinate: Coordinate): GameElement {
+  const width = 300;
+  const height = 200;
 
-  const testGraphicsPosition = calculatePositionRelativeToViewport(testCoordinate, viewport.coordinate);
+  const position = calculatePositionRelativeToViewport(coordinate, viewport.coordinate);
 
-  const testGraphics = new PIXI.Graphics();
+  const graphics = new PIXI.Graphics();
 
-  testGraphics.beginFill(0xffff00);
-  testGraphics.lineStyle(5, 0xffff00);
+  graphics.beginFill(0xffff00);
+  graphics.lineStyle(5, 0xffff00);
   // MatterJS centers automatically, whereas with PixiJS we must set anchor or shift by half of width and height.
-  testGraphics.drawRect(testGraphicsPosition.x, testGraphicsPosition.y, 300, 200);
-  testGraphics.pivot.set(testGraphicsPosition.x + 300 / 2, testGraphicsPosition.y + 200 / 2);
+  graphics.drawRect(position.x, position.y, width, height);
+  graphics.pivot.set(position.x + width / 2, position.y + height / 2);
 
-  const testMatter = Matter.Bodies.rectangle(
-    testCoordinate.x,
-    testCoordinate.y,
-    testGraphics.width,
-    testGraphics.height,
-    {
-      mass: 550000
-    }
-  );
+  const matter = Matter.Bodies.rectangle(coordinate.x, coordinate.y, graphics.width, graphics.height, {
+    mass: 550000
+  });
 
   return {
-    coordinate: testCoordinate,
+    coordinate: coordinate,
     rotation: 0,
-    matterBody: testMatter,
-    pixiSprite: testGraphics
+    matterBody: matter,
+    pixiSprite: graphics
   };
 }
 

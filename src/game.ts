@@ -4,6 +4,7 @@ import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize, setupKeybinds} from './createApp';
 import {setupWindowHooks} from './createApp';
+import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
 import {getKeyboard} from './store/keyboard/selector';
@@ -94,10 +95,13 @@ export function gameLoop(
   // 1. Handle player loop first, to account for keyboard inputs and changes in matter position.
   playerLoop(getState, dispatch);
 
-  // 2. Handle sprite loop after player loop, to account for changes in matter position.
+  // 1. Handle game element loop next, to account for changes in matter position.
+  gameElementLoop(getState, dispatch);
+
+  // 3. Handle sprite loop after player loop, to account for changes in matter position.
   spriteLoop(getState, world, stage);
 
-  // 3. Handle viewport loop last, as it can depend on updated positions of game elements.
+  // 4. Handle viewport loop last, as it can depend on updated positions of game elements.
   viewportLoop(getState, dispatch);
 
   renderer.render(stage);
@@ -125,6 +129,26 @@ function playerLoop(getState: GetState, dispatch: Dispatch): void {
   dispatch(updatePlayerRotationAction(updatedPlayerRotation));
 }
 
+// Update game element coordinates to be aligned with their matter positions.
+function gameElementLoop(getState: GetState, dispatch: Dispatch) {
+  const state = getState();
+
+  const gameElements = getGameElements(state);
+
+  const updatedGameElements = gameElements.map(gameElement => {
+    const {matterBody} = gameElement;
+
+    if (!matterBody) return gameElement;
+
+    const coordinate: Coordinate = matterBody.position;
+    const rotation = matterBody.angle;
+
+    return {...gameElement, coordinate, rotation};
+  });
+
+  dispatch(updateGameElementsAction(updatedGameElements));
+}
+
 function spriteLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {
   const state = getState();
 
@@ -141,18 +165,14 @@ function spriteLoop(getState: GetState, world: Matter.World, stage: PIXI.Contain
 
   playerSprite.rotation = playerRotation;
 
-  // Reposition all GameElements based on MatterJS coordinates.
   const gameElements = getGameElements(state);
   gameElements.forEach(gameElement => {
-    if (!gameElement.matterBody || !gameElement.pixiSprite) return;
+    if (!gameElement.pixiSprite) return;
 
-    const gameElementPosition = calculatePositionRelativeToViewport(
-      gameElement.matterBody.position,
-      viewportCoordinate
-    );
+    const gameElementPosition = calculatePositionRelativeToViewport(gameElement.coordinate, viewportCoordinate);
 
     gameElement.pixiSprite.position.set(gameElementPosition.x, gameElementPosition.y);
-    gameElement.pixiSprite.rotation = gameElement.matterBody.angle;
+    gameElement.pixiSprite.rotation = gameElement.rotation;
   });
 
   // Draw debug wire frame from the Matter world.
