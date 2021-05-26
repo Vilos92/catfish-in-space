@@ -19,31 +19,10 @@ export const playerReducer: Reducer<PlayerState, PlayerAction> = (
   action: PlayerAction
 ) => {
   switch (action.type) {
-    case PlayerActionTypesEnum.UPDATE_PLAYER_COORDINATE_ACTION: {
+    case PlayerActionTypesEnum.UPDATE_PLAYER_GAME_ELEMENT_ACTION: {
       const {gameElement} = state;
 
-      const updatedGameElement: GameElement = {...gameElement, coordinate: action.coordinate};
-
-      return {...state, gameElement: updatedGameElement};
-    }
-    case PlayerActionTypesEnum.UPDATE_PLAYER_ROTATION_ACTION: {
-      const {gameElement} = state;
-
-      const updatedGameElement: GameElement = {...gameElement, rotation: action.rotation};
-
-      return {...state, gameElement: updatedGameElement};
-    }
-    case PlayerActionTypesEnum.UPDATE_PLAYER_MATTER_BODY_ACTION: {
-      const {gameElement} = state;
-
-      const updatedGameElement: GameElement = {...gameElement, matterBody: action.matterBody};
-
-      return {...state, gameElement: updatedGameElement};
-    }
-    case PlayerActionTypesEnum.UPDATE_PLAYER_SPRITE_ACTION: {
-      const {gameElement} = state;
-
-      const updatedGameElement: GameElement = {...gameElement, pixiSprite: action.pixiSprite};
+      const updatedGameElement: GameElement = {...gameElement, ...action.gameElement};
 
       return {...state, gameElement: updatedGameElement};
     }

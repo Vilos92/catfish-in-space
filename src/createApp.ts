@@ -4,7 +4,7 @@ import * as PIXI from 'pixi.js';
 import {pushGameElementAction} from './store/gameElement/action';
 import {Dispatch, GetState} from './store/gameReducer';
 import {keyDownAction, keyUpAction} from './store/keyboard/action';
-import {updatePlayerMatterBodyAction, updatePlayerSpriteAction} from './store/player/action';
+import {updatePlayerGameElementAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {ViewportState} from './store/viewport/reducer';
@@ -121,9 +121,34 @@ async function loadGameAssets(): Promise<void> {
 function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World, stage: PIXI.Container) {
   const state = getState();
   const viewport = getViewport(state);
-  const player = getPlayer(state);
 
-  const spaceshipPosition = calculatePositionRelativeToViewport(player.gameElement.coordinate, viewport.coordinate);
+  const player = createPlayerGameElement(viewport.coordinate);
+  dispatch(updatePlayerGameElementAction(player));
+  addGameElement(dispatch, world, stage, player);
+
+  const testRectangle1 = createRectangleGameElement(viewport, {x: 300, y: -100});
+  const testRectangle2 = createRectangleGameElement(viewport, {x: -300, y: 100});
+  const testRectangle3 = createRectangleGameElement(viewport, {x: 0, y: 400});
+  const testRectangle4 = createRectangleGameElement(viewport, {x: 0, y: -400});
+  addGameElement(dispatch, world, stage, testRectangle1);
+  addGameElement(dispatch, world, stage, testRectangle2);
+  addGameElement(dispatch, world, stage, testRectangle3);
+  addGameElement(dispatch, world, stage, testRectangle4);
+}
+
+function addGameElement(dispatch: Dispatch, world: Matter.World, stage: PIXI.Container, gameElement: GameElement) {
+  if (gameElement.matterBody) Matter.Composite.add(world, gameElement.matterBody);
+
+  if (gameElement.pixiSprite) stage.addChild(gameElement.pixiSprite);
+
+  dispatch(pushGameElementAction(gameElement));
+}
+
+function createPlayerGameElement(viewportCoordinate: Coordinate): GameElement {
+  // Player will start at the very center.
+  const initialPlayerCoordinate = {x: 0, y: 0};
+
+  const spaceshipPosition = calculatePositionRelativeToViewport(initialPlayerCoordinate, viewportCoordinate);
 
   const spaceshipPixi = new PIXI.Sprite(PIXI.Texture.from('spaceship'));
   spaceshipPixi.anchor.set(0.5, 0.5);
@@ -132,8 +157,8 @@ function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World,
 
   const spaceshipMatter = Matter.Bodies.rectangle(
     // Game and matter coordinates have a one-to-one mapping.
-    player.gameElement.coordinate.x,
-    player.gameElement.coordinate.y,
+    initialPlayerCoordinate.x,
+    initialPlayerCoordinate.y,
     // We use dimensions of our sprite.
     spaceshipPixi.width,
     spaceshipPixi.height,
@@ -143,23 +168,15 @@ function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World,
     }
   );
 
-  Matter.Composite.add(world, spaceshipMatter);
-  dispatch(updatePlayerMatterBodyAction(spaceshipMatter));
-
-  stage.addChild(spaceshipPixi);
-  dispatch(updatePlayerSpriteAction(spaceshipPixi));
-
-  const testRectangle1 = createTestRectangle(viewport, {x: 300, y: -100});
-  const testRectangle2 = createTestRectangle(viewport, {x: -300, y: 100});
-  const testRectangle3 = createTestRectangle(viewport, {x: 0, y: 400});
-  const testRectangle4 = createTestRectangle(viewport, {x: 0, y: -400});
-  addGameElement(dispatch, world, stage, testRectangle1);
-  addGameElement(dispatch, world, stage, testRectangle2);
-  addGameElement(dispatch, world, stage, testRectangle3);
-  addGameElement(dispatch, world, stage, testRectangle4);
+  return {
+    coordinate: initialPlayerCoordinate,
+    rotation: 0,
+    matterBody: spaceshipMatter,
+    pixiSprite: spaceshipPixi
+  };
 }
 
-function createTestRectangle(viewport: ViewportState, coordinate: Coordinate): GameElement {
+function createRectangleGameElement(viewport: ViewportState, coordinate: Coordinate): GameElement {
   const width = 300;
   const height = 200;
 
@@ -183,12 +200,4 @@ function createTestRectangle(viewport: ViewportState, coordinate: Coordinate): G
     matterBody: matter,
     pixiSprite: graphics
   };
-}
-
-function addGameElement(dispatch: Dispatch, world: Matter.World, stage: PIXI.Container, gameElement: GameElement) {
-  if (gameElement.matterBody) Matter.Composite.add(world, gameElement.matterBody);
-
-  if (gameElement.pixiSprite) stage.addChild(gameElement.pixiSprite);
-
-  dispatch(pushGameElementAction(gameElement));
 }

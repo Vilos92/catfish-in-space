@@ -8,7 +8,6 @@ import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
 import {getKeyboard} from './store/keyboard/selector';
-import {updatePlayerCoordinateAction, updatePlayerRotationAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
@@ -92,13 +91,13 @@ export function gameLoop(
   renderer: Renderer,
   stage: PIXI.Container
 ): void {
-  // 1. Handle player loop first, to account for keyboard inputs and changes in matter position.
-  playerLoop(getState, dispatch);
+  // 1. Handle player loop first, to account for keyboard inputs to apply changes to the matter body.
+  playerLoop(getState);
 
-  // 1. Handle game element loop next, to account for changes in matter position.
+  // 2. Handle game element loop next, to account for changes in matter position and rotation.
   gameElementLoop(getState, dispatch);
 
-  // 3. Handle sprite loop after player loop, to account for changes in matter position.
+  // 3. Handle sprite loop afterwards, to align canvas with the game world's coordinates (relative to the viewport).
   spriteLoop(getState, world, stage);
 
   // 4. Handle viewport loop last, as it can depend on updated positions of game elements.
@@ -109,7 +108,7 @@ export function gameLoop(
 
 // Set forces on player matter from keyboard inputs, and update player coordinate
 // to be aligned with the matter position.
-function playerLoop(getState: GetState, dispatch: Dispatch): void {
+function playerLoop(getState: GetState): void {
   const state = getState();
   const keyboard = getKeyboard(state);
   const player = getPlayer(state);
@@ -120,13 +119,6 @@ function playerLoop(getState: GetState, dispatch: Dispatch): void {
 
   // Apply forces from keyboard presses, before updating state with values from matter.
   addForceToPlayerMatterBodyFromKeyboard(keyboard, playerMatterBody);
-
-  const updatedPlayerCoordinate = {x: playerMatterBody.position.x, y: playerMatterBody.position.y};
-  dispatch(updatePlayerCoordinateAction(updatedPlayerCoordinate));
-
-  // Restrict the current player matter angle within the bounds of 0 to 2PI
-  const updatedPlayerRotation = (2 * Math.PI + playerMatterBody.angle) % (2 * Math.PI);
-  dispatch(updatePlayerRotationAction(updatedPlayerRotation));
 }
 
 // Update game element coordinates to be aligned with their matter positions.
@@ -141,7 +133,7 @@ function gameElementLoop(getState: GetState, dispatch: Dispatch) {
     if (!matterBody) return gameElement;
 
     const coordinate: Coordinate = matterBody.position;
-    const rotation = matterBody.angle;
+    const rotation = (2 * Math.PI + matterBody.angle) % (2 * Math.PI);
 
     return {...gameElement, coordinate, rotation};
   });
@@ -152,18 +144,8 @@ function gameElementLoop(getState: GetState, dispatch: Dispatch) {
 function spriteLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {
   const state = getState();
 
-  const player = getPlayer(state);
-  const {coordinate: playerCoordinate, rotation: playerRotation, pixiSprite: playerSprite} = player.gameElement;
-
   const viewport = getViewport(state);
   const {coordinate: viewportCoordinate} = viewport;
-
-  if (!playerSprite) return;
-
-  const playerPosition = calculatePositionRelativeToViewport(playerCoordinate, viewportCoordinate);
-  playerSprite.position.set(playerPosition.x, playerPosition.y);
-
-  playerSprite.rotation = playerRotation;
 
   const gameElements = getGameElements(state);
   gameElements.forEach(gameElement => {
