@@ -60,12 +60,12 @@ export function addForceToPlayerMatterBodyFromMouseCoordinate(
   const {position: playerPosition} = playerMatterBody;
   const playerRelativeToViewport = calculatePositionRelativeToViewport(playerPosition, viewportCoordinate);
 
-  const xDiff = mouseCoordinate.x - playerRelativeToViewport.x;
-  const yDiff = mouseCoordinate.y - playerRelativeToViewport.y;
+  // const xDiff = mouseCoordinate.x - playerRelativeToViewport.x;
+  // const yDiff = mouseCoordinate.y - playerRelativeToViewport.y;
 
-  const playerMouseAngle = Math.atan2(yDiff, xDiff);
-  const playerRotation =
-    playerMatterBody.angle > Math.PI ? (-Math.PI + playerMatterBody.angle) * -1 : playerMatterBody.angle;
+  // const playerMouseAngle = Math.atan2(yDiff, xDiff);
+  const playerMouseAngle = Math.PI + Matter.Vector.angle(playerRelativeToViewport, mouseCoordinate);
+  const playerRotation = (2 * Math.PI + playerMatterBody.angle) % (2 * Math.PI);
   const angleDiff = playerMouseAngle - playerRotation;
   console.log('angle', playerMouseAngle, playerRotation, angleDiff);
 
