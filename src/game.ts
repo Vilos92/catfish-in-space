@@ -98,10 +98,13 @@ export function gameLoop(
   gameElementLoop(getState, dispatch);
 
   // 3. Handle sprite loop afterwards, to align canvas with the game world's coordinates (relative to the viewport).
-  spriteLoop(getState, world, stage);
+  spriteLoop(getState);
 
   // 4. Handle viewport loop last, as it can depend on updated positions of game elements.
   viewportLoop(getState, dispatch);
+
+  // 5. Optionally draw debug wire frames from the Matter world.
+  debugLoop(getState, world, stage);
 
   renderer.render(stage);
 }
@@ -141,7 +144,7 @@ function gameElementLoop(getState: GetState, dispatch: Dispatch) {
   dispatch(updateGameElementsAction(updatedGameElements));
 }
 
-function spriteLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {
+function spriteLoop(getState: GetState): void {
   const state = getState();
 
   const viewport = getViewport(state);
@@ -156,6 +159,23 @@ function spriteLoop(getState: GetState, world: Matter.World, stage: PIXI.Contain
     gameElement.pixiSprite.position.set(gameElementPosition.x, gameElementPosition.y);
     gameElement.pixiSprite.rotation = gameElement.rotation;
   });
+}
+
+function viewportLoop(getState: GetState, dispatch: Dispatch): void {
+  const state = getState();
+  const keyboard = getKeyboard(state);
+  const viewport = getViewport(state);
+
+  const updatedViewportCoordinate = calculateUpdatedViewportCoordinateFromKeyboard(keyboard, viewport.coordinate);
+
+  dispatch(updateViewportCoordinateAction(updatedViewportCoordinate));
+}
+
+function debugLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {
+  const state = getState();
+
+  const viewport = getViewport(state);
+  const {coordinate: viewportCoordinate} = viewport;
 
   // Draw debug wire frame from the Matter world.
   drawWireFrameGraphics(viewportCoordinate, world, stage);
@@ -163,7 +183,6 @@ function spriteLoop(getState: GetState, world: Matter.World, stage: PIXI.Contain
 
 // TODO: Use store for this, rather than this brittle variable.
 let lastWireFrameGraphics: PIXI.Graphics | undefined = undefined;
-
 function drawWireFrameGraphics(viewportCoordinate: Coordinate, world: Matter.World, stage: PIXI.Container) {
   const wireFrameGraphics = new PIXI.Graphics();
   wireFrameGraphics.lineStyle(1, 0x00ff00);
@@ -188,14 +207,4 @@ function drawWireFrameGraphics(viewportCoordinate: Coordinate, world: Matter.Wor
 
   stage.addChild(wireFrameGraphics);
   lastWireFrameGraphics = wireFrameGraphics;
-}
-
-function viewportLoop(getState: GetState, dispatch: Dispatch): void {
-  const state = getState();
-  const keyboard = getKeyboard(state);
-  const viewport = getViewport(state);
-
-  const updatedViewportCoordinate = calculateUpdatedViewportCoordinateFromKeyboard(keyboard, viewport.coordinate);
-
-  dispatch(updateViewportCoordinateAction(updatedViewportCoordinate));
 }

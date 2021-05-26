@@ -21,7 +21,7 @@ enum KeyDirectionsEnum {
 
 export declare const VERSION: string;
 
-// These forces are in Newtons.
+// These forces are in Newtons / 1,000,000.
 const STRAIGHT_THRUSTER_FORCE = 1000;
 const SIDE_THRUSTER_FORCE = 10;
 
