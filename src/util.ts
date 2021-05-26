@@ -52,6 +52,53 @@ export function calculatePositionRelativeToViewport(
   };
 }
 
+export function addForceToPlayerMatterBodyFromMouseCoordinate(
+  mouseCoordinate: Coordinate,
+  viewportCoordinate: Coordinate,
+  playerMatterBody: Matter.Body
+): void {
+  const {position: playerPosition} = playerMatterBody;
+  const playerRelativeToViewport = calculatePositionRelativeToViewport(playerPosition, viewportCoordinate);
+
+  const xDiff = mouseCoordinate.x - playerRelativeToViewport.x;
+  const yDiff = mouseCoordinate.y - playerRelativeToViewport.y;
+
+  const playerMouseAngle = Math.atan2(yDiff, xDiff);
+  const playerRotation =
+    playerMatterBody.angle > Math.PI ? (-Math.PI + playerMatterBody.angle) * -1 : playerMatterBody.angle;
+  const angleDiff = playerMouseAngle - playerRotation;
+  console.log('angle', playerMouseAngle, playerRotation, angleDiff);
+
+  const sideDirection = 0;
+
+  const sideThrusterForce = sideDirection * SIDE_THRUSTER_FORCE;
+
+  console.log('sideThrusterForce', sideThrusterForce);
+
+  // TODO: Compute this based on the width of the ship.
+  // Positive is towards front of ship, whereas negative is towards rear.
+  const thrusterDistanceFromCenter = -5;
+
+  const thrusterCoordinate = {
+    x: playerMatterBody.position.x + Math.cos(playerMatterBody.angle) * thrusterDistanceFromCenter,
+    y: playerMatterBody.position.y + Math.sin(playerMatterBody.angle) * thrusterDistanceFromCenter
+  };
+
+  // If thruster is at back of ship, we reverse thrust to apply correct rotational force.
+  const thrusterDirection = thrusterDistanceFromCenter < 0 ? -1 : 1;
+
+  // Force should be perpendicular to where the ship is facing.
+  const xSideForce = thrusterDirection * Math.cos(playerMatterBody.angle + Math.PI / 2) * sideThrusterForce;
+  const ySideForce = thrusterDirection * Math.sin(playerMatterBody.angle + Math.PI / 2) * sideThrusterForce;
+
+  const playerSideForceVector: Matter.Vector = {
+    x: xSideForce,
+    y: ySideForce
+  };
+
+  Matter.Body.applyForce(playerMatterBody, thrusterCoordinate, playerSideForceVector);
+}
+
 export function addForceToPlayerMatterBodyFromKeyboard(keyboard: KeyboardState, playerMatterBody: Matter.Body): void {
   const {keyStateMap} = keyboard;
 

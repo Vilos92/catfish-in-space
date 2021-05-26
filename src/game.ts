@@ -12,7 +12,12 @@ import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
 import {Coordinate, Renderer} from './type';
-import {addForceToPlayerMatterBodyFromKeyboard, calculateUpdatedViewportCoordinateFromKeyboard, VERSION} from './util';
+import {
+  addForceToPlayerMatterBodyFromKeyboard,
+  addForceToPlayerMatterBodyFromMouseCoordinate,
+  calculateUpdatedViewportCoordinateFromKeyboard,
+  VERSION
+} from './util';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
 
 /**
@@ -92,7 +97,7 @@ export function gameLoop(
   stage: PIXI.Container
 ): void {
   // 1. Handle player loop first, to account for keyboard inputs to apply changes to the matter body.
-  playerLoop(getState);
+  playerLoop(getState, renderer);
 
   // 2. Handle game element loop next, to account for changes in matter position and rotation.
   gameElementLoop(getState, dispatch);
@@ -111,10 +116,11 @@ export function gameLoop(
 
 // Set forces on player matter from keyboard inputs, and update player coordinate
 // to be aligned with the matter position.
-function playerLoop(getState: GetState): void {
+function playerLoop(getState: GetState, renderer: Renderer): void {
   const state = getState();
   const keyboard = getKeyboard(state);
   const player = getPlayer(state);
+  const viewport = getViewport(state);
 
   const {matterBody: playerMatterBody} = player.gameElement;
 
@@ -122,6 +128,10 @@ function playerLoop(getState: GetState): void {
 
   // Apply forces from keyboard presses, before updating state with values from matter.
   addForceToPlayerMatterBodyFromKeyboard(keyboard, playerMatterBody);
+
+  const mouseCoordinate: Coordinate = renderer.plugins.interaction.mouse.global;
+
+  addForceToPlayerMatterBodyFromMouseCoordinate(mouseCoordinate, viewport.coordinate, playerMatterBody);
 }
 
 // Update game element coordinates to be aligned with their matter positions.
