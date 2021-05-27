@@ -52,6 +52,15 @@ export function calculatePositionRelativeToViewport(
   };
 }
 
+const kp = 0.25;
+const ki = 0.05;
+const kd = 0.05;
+const dt = 1 / 60; // should this be 1 / 60?
+let error = 0;
+let integral = 0;
+let previous_error = 0;
+let derivative = 0;
+
 export function addForceToPlayerMatterBodyFromMouseCoordinate(
   mouseCoordinate: Coordinate,
   viewportCoordinate: Coordinate,
@@ -77,11 +86,18 @@ export function addForceToPlayerMatterBodyFromMouseCoordinate(
   // angleDiff can be between -PI and PI, so we do this to get a percentage away from the target.
   const attack = angleDiff / Math.PI;
 
-  console.log('attack', attack);
+  // BEGIN PID
+  error = attack;
+  integral = integral + error * dt;
+  derivative = (error - previous_error) / dt;
+  const outputAttack = kp * error + ki * integral + kd * derivative;
+  previous_error = error;
 
-  const sideThrusterForce = attack * SIDE_THRUSTER_FORCE;
+  console.log('attack', attack, outputAttack);
 
-  console.log('sideThrusterForce', sideThrusterForce);
+  // END PID
+
+  const sideThrusterForce = outputAttack * SIDE_THRUSTER_FORCE;
 
   // TODO: Compute this based on the width of the ship.
   // Positive is towards front of ship, whereas negative is towards rear.
