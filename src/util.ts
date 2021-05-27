@@ -68,13 +68,18 @@ export function addForceToPlayerMatterBodyFromMouseCoordinate(
     (2 * Math.PI + Matter.Vector.angle(playerRelativeToViewport, mouseCoordinate)) % (2 * Math.PI);
   const sign = playerMatterBody.angle > 0 ? 1 : -1;
   let playerRotation = playerMatterBody.angle % (2 * Math.PI);
-  if (sign === -1) playerRotation = 2 * Math.PI + playerRotation;
-  const angleDiff = playerMouseAngle - playerRotation;
-  console.log('angle', playerMouseAngle / Math.PI, playerRotation / Math.PI, angleDiff / Math.PI);
+  if (sign === -1) playerRotation = (2 * Math.PI + playerRotation) % (2 * Math.PI);
+  let angleDiff = playerMouseAngle - playerRotation;
 
-  const sideDirection = 0;
+  if (angleDiff > Math.PI) angleDiff = -2 * Math.PI + angleDiff;
+  else if (angleDiff < -Math.PI) angleDiff = 2 * Math.PI + angleDiff;
 
-  const sideThrusterForce = sideDirection * SIDE_THRUSTER_FORCE;
+  // angleDiff can be between -PI and PI, so we do this to get a percentage away from the target.
+  const attack = angleDiff / Math.PI;
+
+  console.log('attack', attack);
+
+  const sideThrusterForce = attack * SIDE_THRUSTER_FORCE;
 
   console.log('sideThrusterForce', sideThrusterForce);
 
