@@ -41,7 +41,7 @@ export function createApp(getState: GetState): PIXI.Application {
   const {width, height} = getViewport(state).dimension;
 
   return new PIXI.Application({
-    backgroundColor: 0xa9a9a9,
+    backgroundColor: 0x202020,
     width,
     height,
     resolution: window.devicePixelRatio,
@@ -80,7 +80,8 @@ export async function onLoad(
   getState: GetState,
   dispatch: Dispatch,
   world: Matter.World,
-  stage: PIXI.Container,
+  backgroundStage: PIXI.Container,
+  foregroundStage: PIXI.Container,
   view: HTMLCanvasElement
 ): Promise<void> {
   // Do not append the game view to the DOM, until the assets are loaded.
@@ -88,7 +89,7 @@ export async function onLoad(
 
   document.body.appendChild(view);
 
-  setupWorld(getState, dispatch, world, stage);
+  setupWorld(getState, dispatch, world, backgroundStage, foregroundStage);
 }
 
 /**
@@ -118,20 +119,26 @@ async function loadGameAssets(): Promise<void> {
 /**
  * Setup the stage of the game, by adding initial elements.
  */
-function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World, stage: PIXI.Container) {
+function setupWorld(
+  getState: GetState,
+  dispatch: Dispatch,
+  world: Matter.World,
+  backgroundStage: PIXI.Container,
+  foregroundStage: PIXI.Container
+) {
   const state = getState();
   const viewport = getViewport(state);
 
   const player = createPlayerGameElement(viewport.coordinate);
   dispatch(updatePlayerGameElementAction(player));
-  addGameElement(dispatch, world, stage, player);
+  addGameElement(dispatch, world, foregroundStage, player);
 
   const testRectangle1 = createRectangleGameElement(viewport, {x: 600, y: -100});
   const testRectangle2 = createRectangleGameElement(viewport, {x: -600, y: 100});
-  addGameElement(dispatch, world, stage, testRectangle1);
-  addGameElement(dispatch, world, stage, testRectangle2);
+  addGameElement(dispatch, world, foregroundStage, testRectangle1);
+  addGameElement(dispatch, world, foregroundStage, testRectangle2);
 
-  addStars(stage);
+  addStars(backgroundStage);
 }
 
 function addGameElement(dispatch: Dispatch, world: Matter.World, stage: PIXI.Container, gameElement: GameElement) {
@@ -184,8 +191,8 @@ function createRectangleGameElement(viewport: ViewportState, coordinate: Coordin
 
   const graphics = new PIXI.Graphics();
 
-  graphics.beginFill(0xffff00);
-  graphics.lineStyle(5, 0xffff00);
+  graphics.beginFill(0xa9a9a9);
+  graphics.lineStyle(5, 0xa9a9a9);
   // MatterJS centers automatically, whereas with PixiJS we must set anchor or shift by half of width and height.
   graphics.drawRect(position.x, position.y, width, height);
   graphics.endFill();
@@ -208,21 +215,22 @@ function createRectangleGameElement(viewport: ViewportState, coordinate: Coordin
 
 function addStars(stage: PIXI.Container) {
   for (let i = 0; i < 1000; i++) {
-    const star = createStarSprite();
+    const star = createStarGraphics();
     stage.addChild(star);
   }
 }
 
-function createStarSprite() {
+function createStarGraphics() {
   const viewportDimension = getViewportDimension();
   const {width, height} = viewportDimension;
 
   const x = width * Math.random();
   const y = height * Math.random();
-  const starSize = Math.random() * 5;
+  const starSize = Math.random() * 2;
+  const alpha = Math.random();
 
   const starGraphics = new PIXI.Graphics();
-  starGraphics.beginFill(0xffffff, 1.0);
+  starGraphics.beginFill(0xffffff, alpha);
   starGraphics.lineStyle(0, 0, 1.0);
   starGraphics.drawCircle(0, 0, starSize);
   starGraphics.endFill();

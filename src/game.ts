@@ -61,18 +61,25 @@ export function startGame(): void {
 
   const {renderer, stage, ticker, view} = app;
 
+  const backgroundStage = new PIXI.Container();
+  stage.addChild(backgroundStage);
+
+  const foregroundStage = new PIXI.Container();
+  stage.addChild(foregroundStage);
+
   // Hook for browser window resizes.
   const resize = async (): Promise<void> => onResize(getState, store.dispatch, renderer);
   resize();
 
   // Hook for initial loading of assets.
-  const onload = async (): Promise<void> => onLoad(getState, store.dispatch, engine.world, stage, view);
+  const onload = async (): Promise<void> =>
+    onLoad(getState, store.dispatch, engine.world, backgroundStage, foregroundStage, view);
 
   // Attach hooks to window.
   setupWindowHooks(onload, resize);
 
   // Callback for game loop.
-  const onGameLoop = () => gameLoop(getState, store.dispatch, engine.world, renderer, stage);
+  const onGameLoop = () => gameLoop(getState, store.dispatch, engine.world, renderer, foregroundStage);
 
   // Setup key bindings.
   setupKeybinds(store.dispatch);
