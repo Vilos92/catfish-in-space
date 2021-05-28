@@ -52,10 +52,10 @@ export function calculatePositionRelativeToViewport(
   };
 }
 
-const kp = 0.25;
-const ki = 0.05;
-const kd = 0.05;
-const dt = 1 / 60; // should this be 1 / 60?
+const kp = 0.75;
+const ki = 0.5;
+const kd = 0.5;
+const dt = 1 / 60; // 60 frames per second.
 let error = 0;
 let integral = 0;
 let previous_error = 0;
