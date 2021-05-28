@@ -7,8 +7,8 @@ interface PidConfig {
 
 export interface PidState {
   integral: number;
-  output: number;
   error: number;
+  output: number;
 }
 
 export function createComputeNextPidState(pidConfig: PidConfig): (pidState: PidState, error: number) => PidState {
@@ -23,8 +23,8 @@ export function createComputeNextPidState(pidConfig: PidConfig): (pidState: PidS
 
     return {
       integral,
-      output,
-      error
+      error,
+      output
     };
   };
 }

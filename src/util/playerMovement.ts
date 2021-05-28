@@ -1,26 +1,15 @@
 import Matter from 'matter-js';
 
-import {KeyboardState} from './store/keyboard/reducer';
-import {getViewportDimension} from './store/viewport/selector';
-import {Coordinate, Dimension, KeyCodesEnum} from './type';
-import {createComputeNextPidState, PidState} from './util/pid';
-
-/**
- * Types.
- */
-
-// The direction state which can be computed from two opposing keys.
-enum KeyDirectionsEnum {
-  NEGATIVE = -1,
-  NEUTRAL = 0,
-  POSITIVE = 1
-}
+import {KeyboardState} from '../store/keyboard/reducer';
+import {Coordinate, KeyCodesEnum} from '../type';
+import {computeAngleBetween, computeBoundAngle} from './';
+import {calculateDirectionFromOpposingKeys} from './keyboard';
+import {createComputeNextPidState, PidState} from './pid';
+import {calculatePositionRelativeToViewport} from './viewport';
 
 /**
  * Constants.
  */
-
-export declare const VERSION: string;
 
 // These forces are in Newtons / 1,000,000.
 const STRAIGHT_THRUSTER_FORCE = 1000;
@@ -28,39 +17,16 @@ const SIDE_THRUSTER_FORCE = 500;
 const TURN_THRUSTER_FORCE = 10;
 
 /**
- * Determine a new position for the viewport taking account the
- * screen dimension, and keeping the game element centered.
+ * Force based movement functions.
  */
-export function calculateViewportCoordinate(gameElementCoordinate: Coordinate, screenDimension: Dimension): Coordinate {
-  const x = gameElementCoordinate.x - screenDimension.width / 2;
-  const y = gameElementCoordinate.y - screenDimension.height / 2;
 
-  return {
-    x,
-    y
-  };
-}
-
-/**
- * Determine the position in the canvas by computing a sprite's position relative to the viewport.
- */
-export function calculatePositionRelativeToViewport(
-  coordinate: Coordinate,
-  viewportCoordinate: Coordinate
-): Coordinate {
-  return {
-    x: coordinate.x - viewportCoordinate.x,
-    y: coordinate.y - viewportCoordinate.y
-  };
-}
-
-const kp = 0.75;
-const ki = 0.5;
-const kd = 0.5;
+const kp = 0.1;
+const ki = 0.1;
+const kd = 0.1;
 const dt = 1 / 60; // 60 frames per second.
 
 const computeNextPidState = createComputeNextPidState({kp, ki, kd, dt});
-let pidState: PidState = {integral: 0, output: 0, error: 0};
+let pidState: PidState = {integral: 0, error: 0, output: 0};
 
 export function addForceToPlayerMatterBodyFromMouseCoordinate(
   mouseCoordinate: Coordinate,
@@ -73,7 +39,7 @@ export function addForceToPlayerMatterBodyFromMouseCoordinate(
   const sideThrusterForce = pidState.output * TURN_THRUSTER_FORCE;
 
   // TODO: Compute the thrusterDistanceFromCenter based on the length of the ship.
-  addSideForceToPlayerMatterBody(playerMatterBody, sideThrusterForce, -5);
+  addSideForceToPlayerMatterBody(playerMatterBody, sideThrusterForce, -2.5);
 }
 
 /**
@@ -90,16 +56,13 @@ function computePlayerAngleError(
 
   const playerMouseAngle =
     (2 * Math.PI + Matter.Vector.angle(playerRelativeToViewport, mouseCoordinate)) % (2 * Math.PI);
-  const sign = playerAngle > 0 ? 1 : -1;
-  let playerRotation = playerAngle % (2 * Math.PI);
-  if (sign === -1) playerRotation = (2 * Math.PI + playerRotation) % (2 * Math.PI);
-  let angleDiff = playerMouseAngle - playerRotation;
 
-  if (angleDiff > Math.PI) angleDiff = -2 * Math.PI + angleDiff;
-  else if (angleDiff < -Math.PI) angleDiff = 2 * Math.PI + angleDiff;
+  const playerRotation = computeBoundAngle(playerAngle);
+
+  const angleBetween = computeAngleBetween(playerMouseAngle, playerRotation);
 
   // angleDiff can be between -PI and PI, so we do this to get a percentage away from the target.
-  return angleDiff / Math.PI;
+  return angleBetween / Math.PI;
 }
 
 export function addForceToPlayerMatterBodyFromKeyboard(keyboard: KeyboardState, playerMatterBody: Matter.Body): void {
@@ -164,64 +127,4 @@ function addSideForceToPlayerMatterBody(
   };
 
   Matter.Body.applyForce(playerMatterBody, thrusterCoordinate, playerSideForceVector);
-}
-
-export function calculateUpdatedViewportCoordinateFromKeyboard(
-  keyboard: KeyboardState,
-  viewportCoordinate: Coordinate
-): Coordinate {
-  const {keyStateMap} = keyboard;
-
-  const leftIsActive = keyStateMap[KeyCodesEnum.KEY_J].isActive;
-  const rightIsActive = keyStateMap[KeyCodesEnum.KEY_L].isActive;
-  const upIsActive = keyStateMap[KeyCodesEnum.KEY_I].isActive;
-  const downIsActive = keyStateMap[KeyCodesEnum.KEY_K].isActive;
-
-  const xDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
-  const yDirection = calculateDirectionFromOpposingKeys(upIsActive, downIsActive);
-
-  const viewportDelta = calculateViewportDelta(xDirection, yDirection);
-
-  return {
-    x: viewportCoordinate.x + viewportDelta.x,
-    y: viewportCoordinate.y + viewportDelta.y
-  };
-}
-
-function calculateViewportDelta(xDirection: KeyDirectionsEnum, yDirection: KeyDirectionsEnum): Coordinate {
-  const viewportDimension = getViewportDimension();
-  const {width, height} = viewportDimension;
-
-  // Overall max delta is based on the minimum screen dimension.
-  const maxDelta = Math.min(width, height) / 20;
-
-  // Delta along each axis with direction accounted for.
-  const xDelta = xDirection * maxDelta;
-  const yDelta = yDirection * maxDelta;
-
-  // If both x and y axis have active key presses, we must compute from the diagonal delta.
-  if (xDirection !== KeyDirectionsEnum.NEUTRAL && yDirection !== KeyDirectionsEnum.NEUTRAL) {
-    const angle = Math.atan2(height, width);
-
-    return {
-      x: Math.cos(angle) * xDelta,
-      y: Math.sin(angle) * yDelta
-    };
-  }
-
-  return {
-    x: xDelta,
-    y: yDelta
-  };
-}
-
-// For two key presses which oppose each other, determine the direction.
-function calculateDirectionFromOpposingKeys(negativeIsActive: boolean, positiveIsActive: boolean): KeyDirectionsEnum {
-  if (negativeIsActive === positiveIsActive) return KeyDirectionsEnum.NEUTRAL;
-
-  // If only the negative parameter is active, direction is negative.
-  if (negativeIsActive) return KeyDirectionsEnum.NEGATIVE;
-
-  // If only the positive parameter is active, direction is positive.
-  return KeyDirectionsEnum.POSITIVE;
 }

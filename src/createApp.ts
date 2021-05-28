@@ -10,7 +10,7 @@ import {updateViewportCoordinateAction} from './store/viewport/action';
 import {ViewportState} from './store/viewport/reducer';
 import {getViewport} from './store/viewport/selector';
 import {Callback, CallbackWithArg, Coordinate, GameElement, KeyCodesEnum, Renderer} from './type';
-import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
+import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util/viewport';
 
 /**
  * Browser.
@@ -147,6 +147,7 @@ function createPlayerGameElement(viewportCoordinate: Coordinate): GameElement {
   const spaceshipPosition = calculatePositionRelativeToViewport(initialPlayerCoordinate, viewportCoordinate);
 
   const spaceshipPixi = new PIXI.Sprite(PIXI.Texture.from('spaceship'));
+  spaceshipPixi.scale.set(0.5, 0.5);
   spaceshipPixi.anchor.set(0.5, 0.5);
 
   spaceshipPixi.position.set(spaceshipPosition.x, spaceshipPosition.y);

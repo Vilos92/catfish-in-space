@@ -12,13 +12,13 @@ import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
 import {Coordinate, Renderer} from './type';
+import {VERSION} from './util';
 import {
   addForceToPlayerMatterBodyFromKeyboard,
-  addForceToPlayerMatterBodyFromMouseCoordinate,
-  calculateUpdatedViewportCoordinateFromKeyboard,
-  VERSION
-} from './util';
-import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util';
+  addForceToPlayerMatterBodyFromMouseCoordinate
+} from './util/playerMovement';
+import {calculateUpdatedViewportCoordinateFromKeyboard} from './util/viewport';
+import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util/viewport';
 
 /**
  * Functions.
