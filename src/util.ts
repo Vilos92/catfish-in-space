@@ -3,6 +3,7 @@ import Matter from 'matter-js';
 import {KeyboardState} from './store/keyboard/reducer';
 import {getViewportDimension} from './store/viewport/selector';
 import {Coordinate, Dimension, KeyCodesEnum} from './type';
+import {createComputeNextPidState, PidState} from './util/pid';
 
 /**
  * Types.
@@ -23,7 +24,8 @@ export declare const VERSION: string;
 
 // These forces are in Newtons / 1,000,000.
 const STRAIGHT_THRUSTER_FORCE = 1000;
-const SIDE_THRUSTER_FORCE = 10;
+const SIDE_THRUSTER_FORCE = 500;
+const TURN_THRUSTER_FORCE = 10;
 
 /**
  * Determine a new position for the viewport taking account the
@@ -56,27 +58,40 @@ const kp = 0.75;
 const ki = 0.5;
 const kd = 0.5;
 const dt = 1 / 60; // 60 frames per second.
-let error = 0;
-let integral = 0;
-let previous_error = 0;
-let derivative = 0;
+
+const computeNextPidState = createComputeNextPidState({kp, ki, kd, dt});
+let pidState: PidState = {integral: 0, output: 0, error: 0};
 
 export function addForceToPlayerMatterBodyFromMouseCoordinate(
   mouseCoordinate: Coordinate,
   viewportCoordinate: Coordinate,
   playerMatterBody: Matter.Body
 ): void {
-  const {position: playerPosition} = playerMatterBody;
+  const angleError = computePlayerAngleError(mouseCoordinate, viewportCoordinate, playerMatterBody);
+  pidState = computeNextPidState(pidState, angleError);
+
+  const sideThrusterForce = pidState.output * TURN_THRUSTER_FORCE;
+
+  // TODO: Compute the thrusterDistanceFromCenter based on the length of the ship.
+  addSideForceToPlayerMatterBody(playerMatterBody, sideThrusterForce, -5);
+}
+
+/**
+ * Compute an error value between -1.0 and 1.0, which represents how
+ * far off the ship is from being angled towards the user's cursor.
+ */
+function computePlayerAngleError(
+  mouseCoordinate: Coordinate,
+  viewportCoordinate: Coordinate,
+  playerMatterBody: Matter.Body
+): number {
+  const {position: playerPosition, angle: playerAngle} = playerMatterBody;
   const playerRelativeToViewport = calculatePositionRelativeToViewport(playerPosition, viewportCoordinate);
 
-  // const xDiff = mouseCoordinate.x - playerRelativeToViewport.x;
-  // const yDiff = mouseCoordinate.y - playerRelativeToViewport.y;
-
-  // const playerMouseAngle = Math.atan2(yDiff, xDiff);
   const playerMouseAngle =
     (2 * Math.PI + Matter.Vector.angle(playerRelativeToViewport, mouseCoordinate)) % (2 * Math.PI);
-  const sign = playerMatterBody.angle > 0 ? 1 : -1;
-  let playerRotation = playerMatterBody.angle % (2 * Math.PI);
+  const sign = playerAngle > 0 ? 1 : -1;
+  let playerRotation = playerAngle % (2 * Math.PI);
   if (sign === -1) playerRotation = (2 * Math.PI + playerRotation) % (2 * Math.PI);
   let angleDiff = playerMouseAngle - playerRotation;
 
@@ -84,43 +99,7 @@ export function addForceToPlayerMatterBodyFromMouseCoordinate(
   else if (angleDiff < -Math.PI) angleDiff = 2 * Math.PI + angleDiff;
 
   // angleDiff can be between -PI and PI, so we do this to get a percentage away from the target.
-  const attack = angleDiff / Math.PI;
-
-  // BEGIN PID
-  error = attack;
-  integral = integral + error * dt;
-  derivative = (error - previous_error) / dt;
-  const outputAttack = kp * error + ki * integral + kd * derivative;
-  previous_error = error;
-
-  console.log('attack', attack, outputAttack);
-
-  // END PID
-
-  const sideThrusterForce = outputAttack * SIDE_THRUSTER_FORCE;
-
-  // TODO: Compute this based on the width of the ship.
-  // Positive is towards front of ship, whereas negative is towards rear.
-  const thrusterDistanceFromCenter = -5;
-
-  const thrusterCoordinate = {
-    x: playerMatterBody.position.x + Math.cos(playerMatterBody.angle) * thrusterDistanceFromCenter,
-    y: playerMatterBody.position.y + Math.sin(playerMatterBody.angle) * thrusterDistanceFromCenter
-  };
-
-  // If thruster is at back of ship, we reverse thrust to apply correct rotational force.
-  const thrusterDirection = thrusterDistanceFromCenter < 0 ? -1 : 1;
-
-  // Force should be perpendicular to where the ship is facing.
-  const xSideForce = thrusterDirection * Math.cos(playerMatterBody.angle + Math.PI / 2) * sideThrusterForce;
-  const ySideForce = thrusterDirection * Math.sin(playerMatterBody.angle + Math.PI / 2) * sideThrusterForce;
-
-  const playerSideForceVector: Matter.Vector = {
-    x: xSideForce,
-    y: ySideForce
-  };
-
-  Matter.Body.applyForce(playerMatterBody, thrusterCoordinate, playerSideForceVector);
+  return angleDiff / Math.PI;
 }
 
 export function addForceToPlayerMatterBodyFromKeyboard(keyboard: KeyboardState, playerMatterBody: Matter.Body): void {
@@ -128,61 +107,62 @@ export function addForceToPlayerMatterBodyFromKeyboard(keyboard: KeyboardState, 
 
   const downIsActive = keyStateMap[KeyCodesEnum.KEY_S].isActive;
   const upIsActive = keyStateMap[KeyCodesEnum.KEY_W].isActive;
-  addStraightForceToPlayerMatterBody(downIsActive, upIsActive, playerMatterBody);
-
-  const leftIsActive = keyStateMap[KeyCodesEnum.KEY_A].isActive;
-  const rightIsActive = keyStateMap[KeyCodesEnum.KEY_D].isActive;
-  addSideForceToPlayerMatterBody(leftIsActive, rightIsActive, playerMatterBody);
-}
-
-function addStraightForceToPlayerMatterBody(
-  downIsActive: boolean,
-  upIsActive: boolean,
-  playerMatterBody: Matter.Body
-): void {
   const straightDirection = calculateDirectionFromOpposingKeys(downIsActive, upIsActive);
   const straightThrusterForce = straightDirection * STRAIGHT_THRUSTER_FORCE;
+  addStraightForceToPlayerMatterBody(playerMatterBody, straightThrusterForce);
+
+  // TODO: These should become strafing actions now that we have mouse control.
+  const leftIsActive = keyStateMap[KeyCodesEnum.KEY_A].isActive;
+  const rightIsActive = keyStateMap[KeyCodesEnum.KEY_D].isActive;
+  const sideDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
+  const sideThrusterForce = sideDirection * SIDE_THRUSTER_FORCE;
+  addSideForceToPlayerMatterBody(playerMatterBody, sideThrusterForce);
+}
+
+function addStraightForceToPlayerMatterBody(playerMatterBody: Matter.Body, straightThrusterForce: number): void {
+  const {position: playerPosition, angle: playerAngle} = playerMatterBody;
 
   // Force should be in line with the direction of the ship.
-  const xStraightForce = Math.cos(playerMatterBody.angle) * straightThrusterForce;
-  const yStraightForce = Math.sin(playerMatterBody.angle) * straightThrusterForce;
+  const xStraightForce = Math.cos(playerAngle) * straightThrusterForce;
+  const yStraightForce = Math.sin(playerAngle) * straightThrusterForce;
 
   const playerStraightForceVector: Matter.Vector = {
     x: xStraightForce,
     y: yStraightForce
   };
 
-  Matter.Body.applyForce(playerMatterBody, playerMatterBody.position, playerStraightForceVector);
+  Matter.Body.applyForce(playerMatterBody, playerPosition, playerStraightForceVector);
 }
 
+/**
+ * Add a side force to the player matter body. If a value other than 0 is
+ * provided for the thrusterDistanceFromCenter, a torque will be applied.
+ */
 function addSideForceToPlayerMatterBody(
-  leftIsActive: boolean,
-  rightIsActive: boolean,
-  playerMatterBody: Matter.Body
+  playerMatterBody: Matter.Body,
+  sideThrusterForce: number,
+  thrusterDistanceFromCenter = 0
 ): void {
-  const sideDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
-  const sideThrusterForce = sideDirection * SIDE_THRUSTER_FORCE;
-
-  // TODO: Compute this based on the width of the ship.
-  // Positive is towards front of ship, whereas negative is towards rear.
-  const thrusterDistanceFromCenter = -5;
+  const {position: playerPosition, angle: playerAngle} = playerMatterBody;
 
   const thrusterCoordinate = {
-    x: playerMatterBody.position.x + Math.cos(playerMatterBody.angle) * thrusterDistanceFromCenter,
-    y: playerMatterBody.position.y + Math.sin(playerMatterBody.angle) * thrusterDistanceFromCenter
+    x: playerPosition.x + Math.cos(playerAngle) * thrusterDistanceFromCenter,
+    y: playerPosition.y + Math.sin(playerAngle) * thrusterDistanceFromCenter
   };
 
   // If thruster is at back of ship, we reverse thrust to apply correct rotational force.
   const thrusterDirection = thrusterDistanceFromCenter < 0 ? -1 : 1;
 
   // Force should be perpendicular to where the ship is facing.
-  const xSideForce = thrusterDirection * Math.cos(playerMatterBody.angle + Math.PI / 2) * sideThrusterForce;
-  const ySideForce = thrusterDirection * Math.sin(playerMatterBody.angle + Math.PI / 2) * sideThrusterForce;
+  const xSideForce = thrusterDirection * Math.cos(playerAngle + Math.PI / 2) * sideThrusterForce;
+  const ySideForce = thrusterDirection * Math.sin(playerAngle + Math.PI / 2) * sideThrusterForce;
 
   const playerSideForceVector: Matter.Vector = {
     x: xSideForce,
     y: ySideForce
   };
+
+  console.log('vector', playerSideForceVector);
 
   Matter.Body.applyForce(playerMatterBody, thrusterCoordinate, playerSideForceVector);
 }
@@ -200,9 +180,6 @@ export function calculateUpdatedViewportCoordinateFromKeyboard(
 
   const xDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
   const yDirection = calculateDirectionFromOpposingKeys(upIsActive, downIsActive);
-
-  // TODO: This computation incorrectly gives the player extra velocity at
-  // when moving in a diagonal direction.
 
   const viewportDelta = calculateViewportDelta(xDirection, yDirection);
 
@@ -243,9 +220,9 @@ function calculateViewportDelta(xDirection: KeyDirectionsEnum, yDirection: KeyDi
 function calculateDirectionFromOpposingKeys(negativeIsActive: boolean, positiveIsActive: boolean): KeyDirectionsEnum {
   if (negativeIsActive === positiveIsActive) return KeyDirectionsEnum.NEUTRAL;
 
-  // If only the negative parameter is active, return -1.
+  // If only the negative parameter is active, direction is negative.
   if (negativeIsActive) return KeyDirectionsEnum.NEGATIVE;
 
-  // If only the positive parameter is active, return 1.
+  // If only the positive parameter is active, direction is positive.
   return KeyDirectionsEnum.POSITIVE;
 }
