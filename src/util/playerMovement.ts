@@ -1,7 +1,7 @@
 import Matter from 'matter-js';
 
 import {KeyboardState} from '../store/keyboard/reducer';
-import {Coordinate, KeyCodesEnum} from '../type';
+import {CallbackWithArg, Coordinate, KeyCodesEnum} from '../type';
 import {computeAngleBetween, computeBoundAngle} from './';
 import {calculateDirectionFromOpposingKeys} from './keyboard';
 import {createComputeNextPidState, PidState} from './pid';
@@ -16,30 +16,35 @@ const STRAIGHT_THRUSTER_FORCE = 1000;
 const SIDE_THRUSTER_FORCE = 500;
 const TURN_THRUSTER_FORCE = 10;
 
+// PID tuning for the ship turn thrusters.
+const kp = 0.1;
+const ki = 0.1;
+const kd = 0.1;
+const dt = 1 / 60; // every 1 / 60 seconds.
+
 /**
  * Force based movement functions.
  */
 
-const kp = 0.1;
-const ki = 0.1;
-const kd = 0.1;
-const dt = 1 / 60; // 60 frames per second.
-
 const computeNextPidState = createComputeNextPidState({kp, ki, kd, dt});
-let pidState: PidState = {integral: 0, error: 0, output: 0};
 
 export function addForceToPlayerMatterBodyFromMouseCoordinate(
   mouseCoordinate: Coordinate,
   viewportCoordinate: Coordinate,
-  playerMatterBody: Matter.Body
+  playerMatterBody: Matter.Body,
+  pidState: PidState,
+  updatePidState: CallbackWithArg<PidState>
 ): void {
   const angleError = computePlayerAngleError(mouseCoordinate, viewportCoordinate, playerMatterBody);
-  pidState = computeNextPidState(pidState, angleError);
+  const nextPidState = computeNextPidState(pidState, angleError);
 
-  const sideThrusterForce = pidState.output * TURN_THRUSTER_FORCE;
+  const sideThrusterForce = nextPidState.output * TURN_THRUSTER_FORCE;
 
   // TODO: Compute the thrusterDistanceFromCenter based on the length of the ship.
   addSideForceToPlayerMatterBody(playerMatterBody, sideThrusterForce, -2.5);
+
+  // Update the player's current PID state.
+  updatePidState(nextPidState);
 }
 
 /**

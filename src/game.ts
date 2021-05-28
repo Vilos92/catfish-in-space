@@ -8,11 +8,13 @@ import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
 import {getKeyboard} from './store/keyboard/selector';
+import {updatePlayerPidStateAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
 import {Coordinate, Renderer} from './type';
 import {VERSION} from './util';
+import {PidState} from './util/pid';
 import {
   addForceToPlayerMatterBodyFromKeyboard,
   addForceToPlayerMatterBodyFromMouseCoordinate
@@ -97,7 +99,7 @@ export function gameLoop(
   stage: PIXI.Container
 ): void {
   // 1. Handle player loop first, to account for keyboard inputs to apply changes to the matter body.
-  playerLoop(getState, renderer);
+  playerLoop(getState, dispatch, renderer);
 
   // 2. Handle game element loop next, to account for changes in matter position and rotation.
   gameElementLoop(getState, dispatch);
@@ -116,7 +118,7 @@ export function gameLoop(
 
 // Set forces on player matter from keyboard inputs, and update player coordinate
 // to be aligned with the matter position.
-function playerLoop(getState: GetState, renderer: Renderer): void {
+function playerLoop(getState: GetState, dispatch: Dispatch, renderer: Renderer): void {
   const state = getState();
   const keyboard = getKeyboard(state);
   const player = getPlayer(state);
@@ -131,7 +133,15 @@ function playerLoop(getState: GetState, renderer: Renderer): void {
 
   const mouseCoordinate: Coordinate = renderer.plugins.interaction.mouse.global;
 
-  addForceToPlayerMatterBodyFromMouseCoordinate(mouseCoordinate, viewport.coordinate, playerMatterBody);
+  const updatePlayerPidState = (pidState: PidState) => dispatch(updatePlayerPidStateAction(pidState));
+
+  addForceToPlayerMatterBodyFromMouseCoordinate(
+    mouseCoordinate,
+    viewport.coordinate,
+    playerMatterBody,
+    player.pidState,
+    updatePlayerPidState
+  );
 }
 
 // Update game element coordinates to be aligned with their matter positions.
