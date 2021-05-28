@@ -51,7 +51,7 @@ export interface GameElement {
   // This is in radians. Default orientation (0) is facing right.
   rotation: number;
   matterBody?: Matter.Body;
-  pixiSprite?: PIXI.Sprite | PIXI.AnimatedSprite | PIXI.Graphics;
+  pixiSprite?: PIXI.DisplayObject;
 }
 
 /**
