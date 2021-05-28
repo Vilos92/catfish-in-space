@@ -105,13 +105,14 @@ function computePlayerAngleError(
 export function addForceToPlayerMatterBodyFromKeyboard(keyboard: KeyboardState, playerMatterBody: Matter.Body): void {
   const {keyStateMap} = keyboard;
 
+  // Forward and back.
   const downIsActive = keyStateMap[KeyCodesEnum.KEY_S].isActive;
   const upIsActive = keyStateMap[KeyCodesEnum.KEY_W].isActive;
   const straightDirection = calculateDirectionFromOpposingKeys(downIsActive, upIsActive);
   const straightThrusterForce = straightDirection * STRAIGHT_THRUSTER_FORCE;
   addStraightForceToPlayerMatterBody(playerMatterBody, straightThrusterForce);
 
-  // TODO: These should become strafing actions now that we have mouse control.
+  // Strafing.
   const leftIsActive = keyStateMap[KeyCodesEnum.KEY_A].isActive;
   const rightIsActive = keyStateMap[KeyCodesEnum.KEY_D].isActive;
   const sideDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
@@ -161,8 +162,6 @@ function addSideForceToPlayerMatterBody(
     x: xSideForce,
     y: ySideForce
   };
-
-  console.log('vector', playerSideForceVector);
 
   Matter.Body.applyForce(playerMatterBody, thrusterCoordinate, playerSideForceVector);
 }

@@ -126,14 +126,10 @@ function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World,
   dispatch(updatePlayerGameElementAction(player));
   addGameElement(dispatch, world, stage, player);
 
-  const testRectangle1 = createRectangleGameElement(viewport, {x: 300, y: -100});
-  const testRectangle2 = createRectangleGameElement(viewport, {x: -300, y: 100});
-  const testRectangle3 = createRectangleGameElement(viewport, {x: 0, y: 400});
-  const testRectangle4 = createRectangleGameElement(viewport, {x: 0, y: -400});
+  const testRectangle1 = createRectangleGameElement(viewport, {x: 600, y: -100});
+  const testRectangle2 = createRectangleGameElement(viewport, {x: -600, y: 100});
   addGameElement(dispatch, world, stage, testRectangle1);
   addGameElement(dispatch, world, stage, testRectangle2);
-  addGameElement(dispatch, world, stage, testRectangle3);
-  addGameElement(dispatch, world, stage, testRectangle4);
 }
 
 function addGameElement(dispatch: Dispatch, world: Matter.World, stage: PIXI.Container, gameElement: GameElement) {
@@ -179,6 +175,7 @@ function createPlayerGameElement(viewportCoordinate: Coordinate): GameElement {
 function createRectangleGameElement(viewport: ViewportState, coordinate: Coordinate): GameElement {
   const width = 300;
   const height = 200;
+  const rotation = Math.random() * (2 * Math.PI);
 
   const position = calculatePositionRelativeToViewport(coordinate, viewport.coordinate);
 
@@ -190,13 +187,16 @@ function createRectangleGameElement(viewport: ViewportState, coordinate: Coordin
   graphics.drawRect(position.x, position.y, width, height);
   graphics.pivot.set(position.x + width / 2, position.y + height / 2);
 
+  graphics.rotation = rotation;
+
   const matter = Matter.Bodies.rectangle(coordinate.x, coordinate.y, graphics.width, graphics.height, {
-    mass: 550000
+    mass: 550000,
+    angle: rotation
   });
 
   return {
     coordinate: coordinate,
-    rotation: 0,
+    rotation,
     matterBody: matter,
     pixiSprite: graphics
   };
