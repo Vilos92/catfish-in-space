@@ -4,17 +4,16 @@ import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize, setupKeybinds} from './createApp';
 import {setupWindowHooks} from './createApp';
+import {getStarField} from './store/backgroundStage/selector';
 import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
 import {getKeyboard} from './store/keyboard/selector';
-import {updatePlayerPidStateAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
 import {Coordinate, Renderer} from './type';
 import {VERSION} from './util';
-import {PidState} from './util/pid';
 import {
   addForceToPlayerMatterBodyFromKeyboard,
   addForceToPlayerMatterBodyFromMouseCoordinate
@@ -117,7 +116,10 @@ export function gameLoop(
   // 4. Handle viewport loop last, as it can depend on updated positions of game elements.
   viewportLoop(getState, dispatch);
 
-  // 5. Optionally draw debug wire frames from the Matter world.
+  // 5. Draw the star field.
+  backgroundStageLoop(getState);
+
+  // 6. Optionally draw debug wire frames from the Matter world.
   debugLoop(getState, world, stage);
 
   renderer.render(stage);
@@ -140,14 +142,12 @@ function playerLoop(getState: GetState, dispatch: Dispatch, renderer: Renderer):
 
   const mouseCoordinate: Coordinate = renderer.plugins.interaction.mouse.global;
 
-  const updatePlayerPidState = (pidState: PidState) => dispatch(updatePlayerPidStateAction(pidState));
-
   addForceToPlayerMatterBodyFromMouseCoordinate(
+    dispatch,
     mouseCoordinate,
     viewport.coordinate,
     playerMatterBody,
-    player.pidState,
-    updatePlayerPidState
+    player.pidState
   );
 }
 
@@ -196,6 +196,20 @@ function viewportLoop(getState: GetState, dispatch: Dispatch): void {
   const updatedViewportCoordinate = calculateUpdatedViewportCoordinateFromKeyboard(keyboard, viewport.coordinate);
 
   dispatch(updateViewportCoordinateAction(updatedViewportCoordinate));
+}
+
+function backgroundStageLoop(getState: GetState): void {
+  const state = getState();
+  const viewport = getViewport(state);
+  const starField = getStarField(state);
+
+  Object.values(starField).forEach((col: any) => {
+    Object.values(col).forEach((gameElement: any) => {
+      const position = calculatePositionRelativeToViewport(gameElement.coordinate, viewport.coordinate);
+
+      gameElement.pixiSprite.position.set(position.x, position.y);
+    });
+  });
 }
 
 function debugLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {

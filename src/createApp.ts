@@ -8,8 +8,9 @@ import {updatePlayerGameElementAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {ViewportState} from './store/viewport/reducer';
-import {getViewport, getViewportDimension} from './store/viewport/selector';
+import {getViewport} from './store/viewport/selector';
 import {Callback, CallbackWithArg, Coordinate, GameElement, KeyCodesEnum, Renderer} from './type';
+import {addInitialStars} from './util/star';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util/viewport';
 
 /**
@@ -138,7 +139,7 @@ function setupWorld(
   addGameElement(dispatch, world, foregroundStage, testRectangle1);
   addGameElement(dispatch, world, foregroundStage, testRectangle2);
 
-  addStars(backgroundStage);
+  addInitialStars(getState, dispatch, backgroundStage);
 }
 
 function addGameElement(dispatch: Dispatch, world: Matter.World, stage: PIXI.Container, gameElement: GameElement) {
@@ -211,30 +212,4 @@ function createRectangleGameElement(viewport: ViewportState, coordinate: Coordin
     matterBody: matter,
     pixiSprite: graphics
   };
-}
-
-function addStars(stage: PIXI.Container) {
-  for (let i = 0; i < 1000; i++) {
-    const star = createStarGraphics();
-    stage.addChild(star);
-  }
-}
-
-function createStarGraphics() {
-  const viewportDimension = getViewportDimension();
-  const {width, height} = viewportDimension;
-
-  const x = width * Math.random();
-  const y = height * Math.random();
-  const starSize = Math.random() * 2;
-  const alpha = Math.random();
-
-  const starGraphics = new PIXI.Graphics();
-  starGraphics.beginFill(0xffffff, alpha);
-  starGraphics.lineStyle(0, 0, 1.0);
-  starGraphics.drawCircle(0, 0, starSize);
-  starGraphics.endFill();
-  starGraphics.position.set(x, y);
-
-  return starGraphics;
 }

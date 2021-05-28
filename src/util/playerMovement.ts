@@ -1,7 +1,9 @@
 import Matter from 'matter-js';
 
+import {Dispatch} from '../store/gameReducer';
 import {KeyboardState} from '../store/keyboard/reducer';
-import {CallbackWithArg, Coordinate, KeyCodesEnum} from '../type';
+import {updatePlayerPidStateAction} from '../store/player/action';
+import {Coordinate, KeyCodesEnum} from '../type';
 import {computeAngleBetween, computeBoundAngle} from './';
 import {calculateDirectionFromOpposingKeys} from './keyboard';
 import {createComputeNextPidState, PidState} from './pid';
@@ -29,11 +31,11 @@ const dt = 1 / 60; // every 1 / 60 seconds.
 const computeNextPidState = createComputeNextPidState({kp, ki, kd, dt});
 
 export function addForceToPlayerMatterBodyFromMouseCoordinate(
+  dispatch: Dispatch,
   mouseCoordinate: Coordinate,
   viewportCoordinate: Coordinate,
   playerMatterBody: Matter.Body,
-  pidState: PidState,
-  updatePidState: CallbackWithArg<PidState>
+  pidState: PidState
 ): void {
   const angleError = computePlayerAngleError(mouseCoordinate, viewportCoordinate, playerMatterBody);
   const nextPidState = computeNextPidState(pidState, angleError);
@@ -44,7 +46,7 @@ export function addForceToPlayerMatterBodyFromMouseCoordinate(
   addSideForceToPlayerMatterBody(playerMatterBody, sideThrusterForce, -2.5);
 
   // Update the player's current PID state.
-  updatePidState(nextPidState);
+  dispatch(updatePlayerPidStateAction(nextPidState));
 }
 
 /**
