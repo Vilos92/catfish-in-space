@@ -1,3 +1,6 @@
+/**
+ * Fundamental PID configuration parameters.
+ */
 interface PidConfig {
   kp: number;
   ki: number;
@@ -5,12 +8,19 @@ interface PidConfig {
   dt: number;
 }
 
+/**
+ * State of a PID controller at a single moment.
+ */
 export interface PidState {
   integral: number;
   error: number;
   output: number;
 }
 
+/**
+ * Create a pre-configured function which computes a PID state given
+ * the previous PID state and the current error.
+ */
 export function createComputeNextPidState(pidConfig: PidConfig): (pidState: PidState, error: number) => PidState {
   const {kp, ki, kd, dt} = pidConfig;
 

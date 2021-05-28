@@ -8,7 +8,7 @@ import {updatePlayerGameElementAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {ViewportState} from './store/viewport/reducer';
-import {getViewport} from './store/viewport/selector';
+import {getViewport, getViewportDimension} from './store/viewport/selector';
 import {Callback, CallbackWithArg, Coordinate, GameElement, KeyCodesEnum, Renderer} from './type';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util/viewport';
 
@@ -41,7 +41,7 @@ export function createApp(getState: GetState): PIXI.Application {
   const {width, height} = getViewport(state).dimension;
 
   return new PIXI.Application({
-    backgroundColor: 0xd3d3d3,
+    backgroundColor: 0xa9a9a9,
     width,
     height,
     resolution: window.devicePixelRatio,
@@ -130,6 +130,8 @@ function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World,
   const testRectangle2 = createRectangleGameElement(viewport, {x: -600, y: 100});
   addGameElement(dispatch, world, stage, testRectangle1);
   addGameElement(dispatch, world, stage, testRectangle2);
+
+  addStars(stage);
 }
 
 function addGameElement(dispatch: Dispatch, world: Matter.World, stage: PIXI.Container, gameElement: GameElement) {
@@ -186,6 +188,7 @@ function createRectangleGameElement(viewport: ViewportState, coordinate: Coordin
   graphics.lineStyle(5, 0xffff00);
   // MatterJS centers automatically, whereas with PixiJS we must set anchor or shift by half of width and height.
   graphics.drawRect(position.x, position.y, width, height);
+  graphics.endFill();
   graphics.pivot.set(position.x + width / 2, position.y + height / 2);
 
   graphics.rotation = rotation;
@@ -201,4 +204,29 @@ function createRectangleGameElement(viewport: ViewportState, coordinate: Coordin
     matterBody: matter,
     pixiSprite: graphics
   };
+}
+
+function addStars(stage: PIXI.Container) {
+  for (let i = 0; i < 1000; i++) {
+    const star = createStarSprite();
+    stage.addChild(star);
+  }
+}
+
+function createStarSprite() {
+  const viewportDimension = getViewportDimension();
+  const {width, height} = viewportDimension;
+
+  const x = width * Math.random();
+  const y = height * Math.random();
+  const starSize = Math.random() * 5;
+
+  const starGraphics = new PIXI.Graphics();
+  starGraphics.beginFill(0xffffff, 1.0);
+  starGraphics.lineStyle(0, 0, 1.0);
+  starGraphics.drawCircle(0, 0, starSize);
+  starGraphics.endFill();
+  starGraphics.position.set(x, y);
+
+  return starGraphics;
 }
