@@ -6,18 +6,14 @@ import {BackgroundStageAction, BackgroundStageActionTypesEnum} from './action';
 /**
  * An x-y map of stars.
  */
-export interface StarField {
-  [key: number]: {
-    [key: number]: GameElement;
-  };
-}
+export type StarField = Map<number, Map<number, GameElement>>;
 
 export interface BackgroundStageState {
   starField: StarField;
 }
 
 export const initialState: BackgroundStageState = {
-  starField: {}
+  starField: new Map<number, Map<number, GameElement>>()
 };
 
 export const backgroundStageReducer: Reducer<BackgroundStageState, BackgroundStageAction> = (

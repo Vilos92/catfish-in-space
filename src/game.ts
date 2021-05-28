@@ -12,12 +12,13 @@ import {getKeyboard} from './store/keyboard/selector';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
-import {Coordinate, Renderer} from './type';
+import {Coordinate, GameElement, Renderer} from './type';
 import {VERSION} from './util';
 import {
   addForceToPlayerMatterBodyFromKeyboard,
   addForceToPlayerMatterBodyFromMouseCoordinate
 } from './util/playerMovement';
+import {createStarGraphic} from './util/star';
 import {calculateUpdatedViewportCoordinateFromKeyboard} from './util/viewport';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util/viewport';
 
@@ -203,13 +204,65 @@ function backgroundStageLoop(getState: GetState): void {
   const viewport = getViewport(state);
   const starField = getStarField(state);
 
-  Object.values(starField).forEach((col: any) => {
-    Object.values(col).forEach((gameElement: any) => {
-      const position = calculatePositionRelativeToViewport(gameElement.coordinate, viewport.coordinate);
+  const rowMin = viewport.coordinate.y;
+  const rowMax = rowMin + viewport.dimension.height;
 
-      gameElement.pixiSprite.position.set(position.x, position.y);
-    });
-  });
+  const colMin = viewport.coordinate.x;
+  const colMax = colMin + viewport.dimension.width;
+
+  // Sorted list of key numbers.
+  const rows = starField.keys();
+  for (const row of rows) {
+    if (!starField.has(row)) {
+      starField.set(row, new Map<number, GameElement>());
+    }
+    const cols = starField.get(row)?.keys() ?? [];
+
+    for (const col of cols) {
+      const starGameElement = starField.get(row)?.get(col);
+
+      if (!starGameElement) {
+        if (Math.random() < 1 / 256) {
+          createStarGameElement(viewport.coordinate, {x: col, y: row});
+          // Insert stars in this cell with a probability.
+          // Track if new row had to be created.
+          // If so, for each col randomly insert star.
+          // Track if new col had to be created.
+          // If so, for each row in that col have chance to create star.
+          /**
+          if (Math.random() < 1 / 256) {
+            console.log('insert column of stars');
+          */
+        }
+
+        return;
+      }
+
+      if (row < rowMin || row > rowMax || col < colMin || row > colMax) {
+        console.log('delete this out of bounds star', 'row', rowMin, rowMax, row, 'col', colMin, colMax, col);
+
+        starGameElement.pixiSprite?.destroy();
+        starField.get(row)?.delete(col);
+
+        if (starField.get(row)?.size === 0) starField.delete(row);
+
+        return;
+      }
+
+      const newPosition = calculatePositionRelativeToViewport(starGameElement.coordinate, viewport.coordinate);
+      starGameElement?.pixiSprite?.position.set(newPosition.x, newPosition.y);
+    }
+  }
+}
+
+function createStarGameElement(viewportCoordinate: Coordinate, starCoordinate: Coordinate) {
+  const star = createStarGraphic(viewportCoordinate, starCoordinate);
+
+  return {
+    coordinate: starCoordinate,
+    rotation: 0,
+    pixiSprite: star
+  };
 }
 
 function debugLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {

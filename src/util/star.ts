@@ -4,7 +4,7 @@ import {updateStarFieldAction} from '../store/backgroundStage/action';
 import {StarField} from '../store/backgroundStage/reducer';
 import {Dispatch, GetState} from '../store/gameReducer';
 import {getViewport} from '../store/viewport/selector';
-import {Coordinate} from '../type';
+import {Coordinate, GameElement} from '../type';
 import {calculatePositionRelativeToViewport} from './viewport';
 
 export function addInitialStars(getState: GetState, dispatch: Dispatch, stage: PIXI.Container): void {
@@ -18,22 +18,22 @@ export function addInitialStars(getState: GetState, dispatch: Dispatch, stage: P
 
   const starCount = Math.floor(width * height * starDensity);
 
-  const starField: StarField = {};
+  const starField: StarField = new Map<number, Map<number, GameElement>>();
 
   for (let i = 0; i < starCount; i++) {
-    const x = viewport.coordinate.x + Math.floor(width * Math.random());
     const y = viewport.coordinate.y + Math.floor(height * Math.random());
+    const x = viewport.coordinate.x + Math.floor(width * Math.random());
 
     const coordinate = {x, y};
 
     const star = createStarGraphic(viewport.coordinate, {x, y});
 
-    starField[x] = starField[x] ?? {};
-    starField[x][y] = {
+    if (!starField.has(y)) starField.set(y, new Map<number, GameElement>());
+    starField.get(y)?.set(x, {
       coordinate,
       rotation: 0,
       pixiSprite: star
-    };
+    });
 
     stage.addChild(star);
   }
