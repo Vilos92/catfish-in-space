@@ -18,7 +18,7 @@ import {
   addForceToPlayerMatterBodyFromKeyboard,
   addForceToPlayerMatterBodyFromMouseCoordinate
 } from './util/playerMovement';
-import {createStarGraphic} from './util/star';
+// import {createStarGraphic} from './util/star';
 import {calculateUpdatedViewportCoordinateFromKeyboard} from './util/viewport';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util/viewport';
 
@@ -204,6 +204,8 @@ function backgroundStageLoop(getState: GetState): void {
   const viewport = getViewport(state);
   const starField = getStarField(state);
 
+  // Need to iterate from the min of the starfield, not just the new viewport.
+
   const rowMin = viewport.coordinate.y;
   const rowMax = rowMin + viewport.dimension.height;
 
@@ -221,49 +223,32 @@ function backgroundStageLoop(getState: GetState): void {
     for (const col of cols) {
       const starGameElement = starField.get(row)?.get(col);
 
-      if (!starGameElement) {
-        if (Math.random() < 1 / 256) {
-          createStarGameElement(viewport.coordinate, {x: col, y: row});
-          // Insert stars in this cell with a probability.
-          // Track if new row had to be created.
-          // If so, for each col randomly insert star.
-          // Track if new col had to be created.
-          // If so, for each row in that col have chance to create star.
-          /**
-          if (Math.random() < 1 / 256) {
-            console.log('insert column of stars');
-          */
-        }
+      if (!starGameElement) continue;
 
-        return;
-      }
-
-      if (row < rowMin || row > rowMax || col < colMin || row > colMax) {
-        console.log('delete this out of bounds star', 'row', rowMin, rowMax, row, 'col', colMin, colMax, col);
-
+      if (row < rowMin || row > rowMax || col < colMin || col > colMax) {
         starGameElement.pixiSprite?.destroy();
         starField.get(row)?.delete(col);
 
-        if (starField.get(row)?.size === 0) starField.delete(row);
-
-        return;
+        continue;
       }
 
       const newPosition = calculatePositionRelativeToViewport(starGameElement.coordinate, viewport.coordinate);
       starGameElement?.pixiSprite?.position.set(newPosition.x, newPosition.y);
     }
+
+    if (starField.get(row)?.size === 0) starField.delete(row);
   }
 }
 
-function createStarGameElement(viewportCoordinate: Coordinate, starCoordinate: Coordinate) {
-  const star = createStarGraphic(viewportCoordinate, starCoordinate);
+// function createStarGameElement(viewportCoordinate: Coordinate, starCoordinate: Coordinate) {
+//   const star = createStarGraphic(viewportCoordinate, starCoordinate);
 
-  return {
-    coordinate: starCoordinate,
-    rotation: 0,
-    pixiSprite: star
-  };
-}
+//   return {
+//     coordinate: starCoordinate,
+//     rotation: 0,
+//     pixiSprite: star
+//   };
+// }
 
 function debugLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {
   const state = getState();

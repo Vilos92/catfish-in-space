@@ -26,6 +26,8 @@ export function addInitialStars(getState: GetState, dispatch: Dispatch, stage: P
 
     const coordinate = {x, y};
 
+    console.log('star coords', coordinate);
+
     const star = createStarGraphic(viewport.coordinate, {x, y});
 
     if (!starField.has(y)) starField.set(y, new Map<number, GameElement>());
