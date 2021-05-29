@@ -206,11 +206,15 @@ function backgroundStageLoop(getState: GetState): void {
 
   // Need to iterate from the min of the starfield, not just the new viewport.
 
-  const rowMin = viewport.coordinate.y;
-  const rowMax = rowMin + viewport.dimension.height;
+  // TEST: Do not erase stars until it is outside a threshold of the screen.
+  // This is to make it less obvious that the stars are randomly generated, if moving back and forth.
+  const buffer = 256;
 
-  const colMin = viewport.coordinate.x;
-  const colMax = colMin + viewport.dimension.width;
+  const rowMin = viewport.coordinate.y - buffer;
+  const rowMax = viewport.coordinate.y + viewport.dimension.height + buffer;
+
+  const colMin = viewport.coordinate.x - buffer;
+  const colMax = viewport.coordinate.x + viewport.dimension.width + buffer;
 
   // Sorted list of key numbers.
   const rows = starField.keys();
@@ -238,6 +242,12 @@ function backgroundStageLoop(getState: GetState): void {
 
     if (starField.get(row)?.size === 0) starField.delete(row);
   }
+
+  // After this, insert new stars.
+  // Determine probability if inserting star based on density (use same thing as creating initial stars.)
+  // Track the further left, right, bottom, and top star coords in the above loop.
+  // Given the above coords and what we know about our rowMin, rowMax, colMin, and colMax, determine
+  // remaining area to loop through to insert new stars.
 }
 
 // function createStarGameElement(viewportCoordinate: Coordinate, starCoordinate: Coordinate) {
