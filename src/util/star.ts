@@ -26,11 +26,14 @@ export function addInitialStars(getState: GetState, dispatch: Dispatch, stage: P
 
     const coordinate = {x, y};
 
-    console.log('star coords', coordinate);
-
     const star = createStarGraphic(viewport.coordinate, {x, y});
 
+    // Create a row in the Star Field if we do not already have one.
     if (!starField.has(y)) starField.set(y, new Map<number, GameElement>());
+
+    // If we already have a star at this location, skip.
+    if (starField.get(y)?.has(x)) continue;
+
     starField.get(y)?.set(x, {
       coordinate,
       rotation: 0,
