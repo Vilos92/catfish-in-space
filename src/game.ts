@@ -4,6 +4,7 @@ import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize, setupKeybinds} from './createApp';
 import {setupWindowHooks} from './createApp';
+import {StarField} from './store/backgroundStage/reducer';
 import {getStarField} from './store/backgroundStage/selector';
 import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements} from './store/gameElement/selector';
@@ -18,6 +19,7 @@ import {
   addForceToPlayerMatterBodyFromKeyboard,
   addForceToPlayerMatterBodyFromMouseCoordinate
 } from './util/playerMovement';
+import {createStarGraphic} from './util/star';
 // import {createStarGraphic} from './util/star';
 import {calculateUpdatedViewportCoordinateFromKeyboard} from './util/viewport';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util/viewport';
@@ -79,7 +81,7 @@ export function startGame(): void {
   setupWindowHooks(onload, resize);
 
   // Callback for game loop.
-  const onGameLoop = () => gameLoop(getState, store.dispatch, engine.world, renderer, foregroundStage);
+  const onGameLoop = () => gameLoop(getState, store.dispatch, engine.world, renderer, foregroundStage, backgroundStage);
 
   // Setup key bindings.
   setupKeybinds(store.dispatch);
@@ -103,7 +105,8 @@ export function gameLoop(
   dispatch: Dispatch,
   world: Matter.World,
   renderer: Renderer,
-  stage: PIXI.Container
+  stage: PIXI.Container,
+  backgroundStage: PIXI.Container
 ): void {
   // 1. Handle player loop first, to account for keyboard inputs to apply changes to the matter body.
   playerLoop(getState, dispatch, renderer);
@@ -118,7 +121,7 @@ export function gameLoop(
   viewportLoop(getState, dispatch);
 
   // 5. Draw the star field.
-  backgroundStageLoop(getState);
+  backgroundStageLoop(getState, backgroundStage);
 
   // 6. Optionally draw debug wire frames from the Matter world.
   debugLoop(getState, world, stage);
@@ -199,16 +202,15 @@ function viewportLoop(getState: GetState, dispatch: Dispatch): void {
   dispatch(updateViewportCoordinateAction(updatedViewportCoordinate));
 }
 
-function backgroundStageLoop(getState: GetState): void {
+function backgroundStageLoop(getState: GetState, backgroundStage: PIXI.Container): void {
   const state = getState();
   const viewport = getViewport(state);
   const starField = getStarField(state);
 
-  // Need to iterate from the min of the starfield, not just the new viewport.
-
-  // TEST: Do not erase stars until it is outside a threshold of the screen.
-  // This is to make it less obvious that the stars are randomly generated, if moving back and forth.
-  const buffer = 256;
+  // Do not erase stars until it is outside a threshold of the screen to:
+  // 1. Ensure stars at the edge of the screen do not "pop-in" to existence.
+  // 2. Make it less obvious that the stars are randomly generated, if moving back and forth.
+  const buffer = 32;
 
   const rowMin = viewport.coordinate.y - buffer;
   const rowMax = viewport.coordinate.y + viewport.dimension.height + buffer;
@@ -216,7 +218,15 @@ function backgroundStageLoop(getState: GetState): void {
   const colMin = viewport.coordinate.x - buffer;
   const colMax = viewport.coordinate.x + viewport.dimension.width + buffer;
 
-  // Sorted list of key numbers.
+  let starfieldRowMin: number | undefined;
+  let starfieldRowMax: number | undefined;
+
+  let starfieldColMin: number | undefined;
+  let starfieldColMax: number | undefined;
+
+  // For all cells in the Star Field:
+  // 1. Remove stars which are now outside of the viewport (with a buffer).
+  // 2. Reposition the remaining stars relative to the viewport.
   const rows = starField.keys();
   for (const row of rows) {
     if (!starField.has(row)) {
@@ -227,21 +237,65 @@ function backgroundStageLoop(getState: GetState): void {
     for (const col of cols) {
       const starGameElement = starField.get(row)?.get(col);
 
-      if (!starGameElement) continue;
+      if (!starGameElement || !starGameElement.pixiSprite) continue;
 
       if (row < rowMin || row > rowMax || col < colMin || col > colMax) {
-        starGameElement.pixiSprite?.destroy();
+        starGameElement.pixiSprite.destroy();
         starField.get(row)?.delete(col);
 
         continue;
       }
 
       const newPosition = calculatePositionRelativeToViewport(starGameElement.coordinate, viewport.coordinate);
-      starGameElement?.pixiSprite?.position.set(newPosition.x, newPosition.y);
+      starGameElement.pixiSprite.position.set(newPosition.x, newPosition.y);
+
+      starfieldRowMin = starfieldRowMin ? Math.min(starfieldRowMin, row) : row;
+      starfieldRowMax = starfieldRowMax ? Math.max(starfieldRowMax, row) : row;
+      starfieldColMin = starfieldColMin ? Math.min(starfieldColMin, col) : col;
+      starfieldColMax = starfieldColMax ? Math.max(starfieldColMax, col) : col;
     }
 
+    // If no more columns remain for a row, we no longer need it in the Star Field.
     if (starField.get(row)?.size === 0) starField.delete(row);
   }
+
+  if (!starfieldRowMin || !starfieldRowMax) {
+    // Insert between rowMin and rowMax
+    for (let y = rowMin; y < rowMax; y++) {
+      for (let x = colMin; x < colMax; x++) {
+        addRowStars(backgroundStage, viewport.coordinate, starField, x, y);
+      }
+    }
+  } else {
+    // Must check both cases since viewport could be resized, not just moved.
+
+    if (rowMin < starfieldRowMin) {
+      // Insert rows below current min.
+      for (let y = rowMin; y < starfieldRowMin; y++) {
+        for (let x = colMin; x < colMax; x++) {
+          addRowStars(backgroundStage, viewport.coordinate, starField, x, y);
+        }
+      }
+    }
+
+    if (rowMax > starfieldRowMax) {
+      // Insert rows above current max.
+      for (let y = starfieldRowMax; y < rowMax; y++) {
+        for (let x = colMin; x < colMax; x++) {
+          addRowStars(backgroundStage, viewport.coordinate, starField, x, y);
+        }
+      }
+    }
+  }
+
+  if (!starfieldColMin || colMin < starfieldColMin) {
+    // Insert cols below current max.
+  } else if (!starfieldColMax || colMax > starfieldColMax) {
+    // Insert cols above current max.
+  }
+
+  // Insert rows then cols.
+  // Can ignore entries if a star is already there.
 
   // After this, insert new stars.
   // Determine probability if inserting star based on density (use same thing as creating initial stars.)
@@ -259,6 +313,39 @@ function backgroundStageLoop(getState: GetState): void {
 //     pixiSprite: star
 //   };
 // }
+
+function addRowStars(
+  backgroundStage: PIXI.Container,
+  viewportCoordinate: Coordinate,
+  starField: StarField,
+  x: number,
+  y: number
+) {
+  // Create a row in the Star Field if we do not already have one.
+  if (!starField.has(y)) starField.set(y, new Map<number, GameElement>());
+
+  // If we already have a star at this location, skip.
+  if (starField.get(y)?.has(x)) return;
+
+  if (Math.random() > 1 / 256) return;
+
+  const coordinate = {x, y};
+  const star = createStarGraphic(viewportCoordinate, coordinate);
+
+  starField.get(y)?.set(x, {
+    coordinate,
+    rotation: 0,
+    pixiSprite: star
+  });
+
+  starField.get(y)?.set(x, {
+    coordinate,
+    rotation: 0,
+    pixiSprite: star
+  });
+
+  backgroundStage.addChild(star);
+}
 
 function debugLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {
   const state = getState();

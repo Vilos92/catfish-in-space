@@ -10,7 +10,6 @@ import {updateViewportCoordinateAction} from './store/viewport/action';
 import {ViewportState} from './store/viewport/reducer';
 import {getViewport} from './store/viewport/selector';
 import {Callback, CallbackWithArg, Coordinate, GameElement, KeyCodesEnum, Renderer} from './type';
-import {addInitialStars} from './util/star';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util/viewport';
 
 /**
@@ -139,7 +138,7 @@ function setupWorld(
   addGameElement(dispatch, world, foregroundStage, testRectangle1);
   addGameElement(dispatch, world, foregroundStage, testRectangle2);
 
-  addInitialStars(getState, dispatch, backgroundStage);
+  // addInitialStars(getState, dispatch, backgroundStage);
 }
 
 function addGameElement(dispatch: Dispatch, world: Matter.World, stage: PIXI.Container, gameElement: GameElement) {

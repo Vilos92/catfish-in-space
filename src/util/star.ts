@@ -24,15 +24,14 @@ export function addInitialStars(getState: GetState, dispatch: Dispatch, stage: P
     const y = viewport.coordinate.y + Math.floor(height * Math.random());
     const x = viewport.coordinate.x + Math.floor(width * Math.random());
 
-    const coordinate = {x, y};
-
-    const star = createStarGraphic(viewport.coordinate, {x, y});
-
     // Create a row in the Star Field if we do not already have one.
     if (!starField.has(y)) starField.set(y, new Map<number, GameElement>());
 
     // If we already have a star at this location, skip.
     if (starField.get(y)?.has(x)) continue;
+
+    const coordinate = {x, y};
+    const star = createStarGraphic(viewport.coordinate, coordinate);
 
     starField.get(y)?.set(x, {
       coordinate,
