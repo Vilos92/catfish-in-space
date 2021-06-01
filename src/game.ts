@@ -288,10 +288,33 @@ function backgroundStageLoop(getState: GetState, backgroundStage: PIXI.Container
     }
   }
 
-  if (!starfieldColMin || colMin < starfieldColMin) {
-    // Insert cols below current max.
-  } else if (!starfieldColMax || colMax > starfieldColMax) {
-    // Insert cols above current max.
+  if (!starfieldColMin || !starfieldColMax) {
+    // Insert between rowMin and rowMax
+    for (let y = rowMin; y < rowMax; y++) {
+      for (let x = colMin; x < colMax; x++) {
+        addStarToField(backgroundStage, viewport.coordinate, starField, x, y);
+      }
+    }
+  } else {
+    // Must check both cases since viewport could be resized, not just moved.
+
+    if (colMin < starfieldColMin) {
+      // Insert cols below current min.
+      for (let x = colMin; x < starfieldColMin; x++) {
+        for (let y = rowMin; y < rowMax; y++) {
+          addStarToField(backgroundStage, viewport.coordinate, starField, x, y);
+        }
+      }
+    }
+
+    if (colMax > starfieldColMax) {
+      // Insert cols above current max.
+      for (let x = starfieldColMax + 1; x <= colMax; x++) {
+        for (let y = rowMin; y < rowMax; y++) {
+          addStarToField(backgroundStage, viewport.coordinate, starField, x, y);
+        }
+      }
+    }
   }
 }
 
