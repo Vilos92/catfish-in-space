@@ -4,8 +4,7 @@ import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize, setupKeybinds} from './createApp';
 import {setupWindowHooks} from './createApp';
-import {updateStarFieldAction as updatePrunedStarField} from './store/backgroundStage/action';
-import {StarField} from './store/backgroundStage/reducer';
+import {updateStarFieldAction as updateStarFieldAction} from './store/backgroundStage/action';
 import {getStarField} from './store/backgroundStage/selector';
 import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements} from './store/gameElement/selector';
@@ -14,14 +13,18 @@ import {getKeyboard} from './store/keyboard/selector';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
-import {Coordinate, Dimension, GameElement, Renderer} from './type';
+import {Coordinate, Renderer} from './type';
 import {VERSION} from './util';
 import {
   addForceToPlayerMatterBodyFromKeyboard,
   addForceToPlayerMatterBodyFromMouseCoordinate
 } from './util/playerMovement';
-import {createStarGraphic} from './util/star';
-// import {createStarGraphic} from './util/star';
+import {
+  addStarsToField,
+  calculateStarFieldBoundaries,
+  populateStarField,
+  repositionAndPruneStarField
+} from './util/star';
 import {calculateUpdatedViewportCoordinateFromKeyboard} from './util/viewport';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util/viewport';
 
@@ -208,192 +211,40 @@ function backgroundStageLoop(getState: GetState, dispatch: Dispatch, backgroundS
   const viewport = getViewport(state);
   const starField = getStarField(state);
 
-  const [prunedStarField, starFieldRowMin, starFieldRowMax, starFieldColMin, starFieldColMax] = computePrunedStarField(
-    viewport.coordinate,
-    viewport.dimension,
-    starField
-  );
-
-  const updatedStarField = computeUpdatedStarField(
-    backgroundStage,
-    viewport.coordinate,
-    viewport.dimension,
-    prunedStarField,
-    starFieldRowMin,
-    starFieldRowMax,
-    starFieldColMin,
-    starFieldColMax
-  );
-
-  dispatch(updatePrunedStarField(updatedStarField));
-}
-
-function computePrunedStarField(
-  viewportCoordinate: Coordinate,
-  viewportDimension: Dimension,
-  starField: StarField
-): [StarField, number | undefined, number | undefined, number | undefined, number | undefined] {
-  // Do not erase stars until it is outside a threshold of the screen to:
-  // 1. Ensure stars at the edge of the screen do not "pop-in" to existence.
-  // 2. Make it less obvious that the stars are randomly generated, if moving back and forth.
-  const buffer = 32;
-
-  const rowMin = viewportCoordinate.y - buffer;
-  const rowMax = viewportCoordinate.y + viewportDimension.height + buffer;
-
-  const colMin = viewportCoordinate.x - buffer;
-  const colMax = viewportCoordinate.x + viewportDimension.width + buffer;
-
-  let starFieldRowMin: number | undefined;
-  let starFieldRowMax: number | undefined;
-
-  let starFieldColMin: number | undefined;
-  let starFieldColMax: number | undefined;
-
-  const prunedStarField = new Map(starField);
-
-  // For all cells in the Star Field:
-  // 1. Remove stars which are now outside of the viewport (with a buffer).
-  // 2. Reposition the remaining stars relative to the viewport.
-  const rows = prunedStarField.keys();
-  for (const row of rows) {
-    if (!prunedStarField.has(row)) {
-      prunedStarField.set(row, new Map<number, GameElement>());
-    }
-    const cols = prunedStarField.get(row)?.keys() ?? [];
-
-    for (const col of cols) {
-      const starGameElement = prunedStarField.get(row)?.get(col);
-
-      if (!starGameElement || !starGameElement.pixiSprite) continue;
-
-      if (row < rowMin || row > rowMax || col < colMin || col > colMax) {
-        starGameElement.pixiSprite.destroy();
-        prunedStarField.get(row)?.delete(col);
-
-        continue;
-      }
-
-      const newPosition = calculatePositionRelativeToViewport(starGameElement.coordinate, viewportCoordinate);
-      starGameElement.pixiSprite.position.set(newPosition.x, newPosition.y);
-
-      starFieldRowMin = starFieldRowMin ? Math.min(starFieldRowMin, row) : row;
-      starFieldRowMax = starFieldRowMax ? Math.max(starFieldRowMax, row) : row;
-      starFieldColMin = starFieldColMin ? Math.min(starFieldColMin, col) : col;
-      starFieldColMax = starFieldColMax ? Math.max(starFieldColMax, col) : col;
-    }
-
-    // If no more columns remain for a row, we no longer need it in the Star Field.
-    if (prunedStarField.get(row)?.size === 0) prunedStarField.delete(row);
-  }
-
-  return [prunedStarField, starFieldRowMin, starFieldRowMax, starFieldColMin, starFieldColMax];
-}
-
-function computeUpdatedStarField(
-  backgroundStage: PIXI.Container,
-  viewportCoordinate: Coordinate,
-  viewportDimension: Dimension,
-  starField: StarField,
-  starFieldRowMin: number | undefined,
-  starFieldRowMax: number | undefined,
-  starFieldColMin: number | undefined,
-  starFieldColMax: number | undefined
-): StarField {
-  // Do not erase stars until it is outside a threshold of the screen to:
-  // 1. Ensure stars at the edge of the screen do not "pop-in" to existence.
-  // 2. Make it less obvious that the stars are randomly generated, if moving back and forth.
-  const buffer = 32;
-
-  const rowMin = viewportCoordinate.y - buffer;
-  const rowMax = viewportCoordinate.y + viewportDimension.height + buffer;
-
-  const colMin = viewportCoordinate.x - buffer;
-  const colMax = viewportCoordinate.x + viewportDimension.width + buffer;
-
   const updatedStarField = new Map(starField);
 
-  if (!starFieldRowMin || !starFieldRowMax || !starFieldColMin || !starFieldColMax) {
-    // Insert between rowMin and rowMax
-    for (let y = rowMin; y < rowMax; y++) {
-      for (let x = colMin; x < colMax; x++) {
-        addStarToField(backgroundStage, viewportCoordinate, updatedStarField, x, y);
-      }
-    }
+  const starFieldBoundaries = calculateStarFieldBoundaries(viewport.coordinate, viewport.dimension);
 
-    return updatedStarField;
+  if (updatedStarField.size === 0)
+    addStarsToField(
+      backgroundStage,
+      viewport.coordinate,
+      updatedStarField,
+      starFieldBoundaries.topLeft,
+      starFieldBoundaries.bottomRight
+    );
+  else {
+    const starFieldCorners = repositionAndPruneStarField(
+      viewport.coordinate,
+      updatedStarField,
+      starFieldBoundaries.topLeft,
+      starFieldBoundaries.bottomRight
+    );
+
+    populateStarField(
+      backgroundStage,
+      viewport.coordinate,
+      updatedStarField,
+      starFieldBoundaries.topLeft,
+      starFieldBoundaries.bottomRight,
+      starFieldCorners.topLeft.y,
+      starFieldCorners.bottomRight.y,
+      starFieldCorners.topLeft.x,
+      starFieldCorners.bottomRight.x
+    );
   }
 
-  if (rowMin < starFieldRowMin) {
-    // Insert rows below current min.
-    for (let y = rowMin; y < starFieldRowMin; y++) {
-      for (let x = colMin; x < colMax; x++) {
-        addStarToField(backgroundStage, viewportCoordinate, updatedStarField, x, y);
-      }
-    }
-  }
-
-  if (rowMax > starFieldRowMax) {
-    // Insert rows above current max.
-    for (let y = starFieldRowMax + 1; y <= rowMax; y++) {
-      for (let x = colMin; x < colMax; x++) {
-        addStarToField(backgroundStage, viewportCoordinate, updatedStarField, x, y);
-      }
-    }
-  }
-
-  if (colMin < starFieldColMin) {
-    // Insert cols below current min.
-    for (let x = colMin; x < starFieldColMin; x++) {
-      for (let y = rowMin; y < rowMax; y++) {
-        addStarToField(backgroundStage, viewportCoordinate, updatedStarField, x, y);
-      }
-    }
-  }
-
-  if (colMax > starFieldColMax) {
-    // Insert cols above current max.
-    for (let x = starFieldColMax + 1; x <= colMax; x++) {
-      for (let y = rowMin; y < rowMax; y++) {
-        addStarToField(backgroundStage, viewportCoordinate, updatedStarField, x, y);
-      }
-    }
-  }
-
-  return updatedStarField;
-}
-
-function addStarToField(
-  backgroundStage: PIXI.Container,
-  viewportCoordinate: Coordinate,
-  starField: StarField,
-  x: number,
-  y: number
-) {
-  // Create a row in the Star Field if we do not already have one.
-  if (!starField.has(y)) starField.set(y, new Map<number, GameElement>());
-
-  // If we already have a star at this location, skip.
-  if (starField.get(y)?.has(x)) return;
-
-  if (Math.random() > 1 / 256) return;
-
-  const coordinate = {x, y};
-  const star = createStarGraphic(viewportCoordinate, coordinate);
-
-  starField.get(y)?.set(x, {
-    coordinate,
-    rotation: 0,
-    pixiSprite: star
-  });
-
-  starField.get(y)?.set(x, {
-    coordinate,
-    rotation: 0,
-    pixiSprite: star
-  });
-
-  backgroundStage.addChild(star);
+  dispatch(updateStarFieldAction(updatedStarField));
 }
 
 function debugLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {
