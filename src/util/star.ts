@@ -37,7 +37,8 @@ export function repositionAndPruneStarField(
     if (!starField.has(row)) {
       starField.set(row, new Map<number, GameElement>());
     }
-    const cols = starField.get(row)?.keys() ?? [];
+    const cols = starField.get(row)?.keys();
+    if (!cols) continue;
 
     for (const col of cols) {
       const starGameElement = starField.get(row)?.get(col);
