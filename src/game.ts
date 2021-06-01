@@ -208,17 +208,31 @@ function backgroundStageLoop(getState: GetState, dispatch: Dispatch, backgroundS
   const viewport = getViewport(state);
   const starField = getStarField(state);
 
-  const prunedStarField = computePrunedStarField(backgroundStage, viewport.coordinate, viewport.dimension, starField);
+  const [prunedStarField, starFieldRowMin, starFieldRowMax, starFieldColMin, starFieldColMax] = computePrunedStarField(
+    viewport.coordinate,
+    viewport.dimension,
+    starField
+  );
 
-  dispatch(updatePrunedStarField(prunedStarField));
+  const updatedStarField = computeUpdatedStarField(
+    backgroundStage,
+    viewport.coordinate,
+    viewport.dimension,
+    prunedStarField,
+    starFieldRowMin,
+    starFieldRowMax,
+    starFieldColMin,
+    starFieldColMax
+  );
+
+  dispatch(updatePrunedStarField(updatedStarField));
 }
 
 function computePrunedStarField(
-  backgroundStage: PIXI.Container,
   viewportCoordinate: Coordinate,
   viewportDimension: Dimension,
   starField: StarField
-): StarField {
+): [StarField, number | undefined, number | undefined, number | undefined, number | undefined] {
   // Do not erase stars until it is outside a threshold of the screen to:
   // 1. Ensure stars at the edge of the screen do not "pop-in" to existence.
   // 2. Make it less obvious that the stars are randomly generated, if moving back and forth.
@@ -273,22 +287,48 @@ function computePrunedStarField(
     if (prunedStarField.get(row)?.size === 0) prunedStarField.delete(row);
   }
 
+  return [prunedStarField, starFieldRowMin, starFieldRowMax, starFieldColMin, starFieldColMax];
+}
+
+function computeUpdatedStarField(
+  backgroundStage: PIXI.Container,
+  viewportCoordinate: Coordinate,
+  viewportDimension: Dimension,
+  starField: StarField,
+  starFieldRowMin: number | undefined,
+  starFieldRowMax: number | undefined,
+  starFieldColMin: number | undefined,
+  starFieldColMax: number | undefined
+): StarField {
+  // Do not erase stars until it is outside a threshold of the screen to:
+  // 1. Ensure stars at the edge of the screen do not "pop-in" to existence.
+  // 2. Make it less obvious that the stars are randomly generated, if moving back and forth.
+  const buffer = 32;
+
+  const rowMin = viewportCoordinate.y - buffer;
+  const rowMax = viewportCoordinate.y + viewportDimension.height + buffer;
+
+  const colMin = viewportCoordinate.x - buffer;
+  const colMax = viewportCoordinate.x + viewportDimension.width + buffer;
+
+  const updatedStarField = new Map(starField);
+
   if (!starFieldRowMin || !starFieldRowMax || !starFieldColMin || !starFieldColMax) {
     // Insert between rowMin and rowMax
     for (let y = rowMin; y < rowMax; y++) {
       for (let x = colMin; x < colMax; x++) {
-        addStarToField(backgroundStage, viewportCoordinate, prunedStarField, x, y);
+        addStarToField(backgroundStage, viewportCoordinate, updatedStarField, x, y);
       }
     }
 
-    return prunedStarField;
+    return updatedStarField;
   }
 
   if (rowMin < starFieldRowMin) {
     // Insert rows below current min.
     for (let y = rowMin; y < starFieldRowMin; y++) {
       for (let x = colMin; x < colMax; x++) {
-        addStarToField(backgroundStage, viewportCoordinate, prunedStarField, x, y);
+        addStarToField(backgroundStage, viewportCoordinate, updatedStarField, x, y);
       }
     }
   }
@@ -297,7 +337,7 @@ function computePrunedStarField(
     // Insert rows above current max.
     for (let y = starFieldRowMax + 1; y <= rowMax; y++) {
       for (let x = colMin; x < colMax; x++) {
-        addStarToField(backgroundStage, viewportCoordinate, prunedStarField, x, y);
+        addStarToField(backgroundStage, viewportCoordinate, updatedStarField, x, y);
       }
     }
   }
@@ -306,7 +346,7 @@ function computePrunedStarField(
     // Insert cols below current min.
     for (let x = colMin; x < starFieldColMin; x++) {
       for (let y = rowMin; y < rowMax; y++) {
-        addStarToField(backgroundStage, viewportCoordinate, prunedStarField, x, y);
+        addStarToField(backgroundStage, viewportCoordinate, updatedStarField, x, y);
       }
     }
   }
@@ -315,12 +355,12 @@ function computePrunedStarField(
     // Insert cols above current max.
     for (let x = starFieldColMax + 1; x <= colMax; x++) {
       for (let y = rowMin; y < rowMax; y++) {
-        addStarToField(backgroundStage, viewportCoordinate, prunedStarField, x, y);
+        addStarToField(backgroundStage, viewportCoordinate, updatedStarField, x, y);
       }
     }
   }
 
-  return prunedStarField;
+  return updatedStarField;
 }
 
 function addStarToField(
