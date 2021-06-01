@@ -4,7 +4,7 @@ import {GameElement} from '../../type';
 import {BackgroundStageAction, BackgroundStageActionTypesEnum} from './action';
 
 /**
- * An x-y map of stars.
+ * A row-col (y-x) map of stars.
  */
 export type StarField = Map<number, Map<number, GameElement>>;
 
