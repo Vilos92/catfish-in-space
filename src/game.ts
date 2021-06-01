@@ -213,34 +213,34 @@ function backgroundStageLoop(getState: GetState, dispatch: Dispatch, backgroundS
 
   const updatedStarField = new Map(starField);
 
-  const starFieldBoundaries = calculateStarFieldBoundaries(viewport.coordinate, viewport.dimension);
+  const starFieldExpectedBoundary = calculateStarFieldBoundaries(viewport.coordinate, viewport.dimension);
 
   if (updatedStarField.size === 0)
     addStarsToField(
       backgroundStage,
       viewport.coordinate,
       updatedStarField,
-      starFieldBoundaries.topLeft,
-      starFieldBoundaries.bottomRight
+      starFieldExpectedBoundary.topLeft,
+      starFieldExpectedBoundary.bottomRight
     );
   else {
-    const starFieldCorners = pruneAndRepositionStarField(
+    const starFieldCurrentBoundary = pruneAndRepositionStarField(
       viewport.coordinate,
       updatedStarField,
-      starFieldBoundaries.topLeft,
-      starFieldBoundaries.bottomRight
+      starFieldExpectedBoundary.topLeft,
+      starFieldExpectedBoundary.bottomRight
     );
 
     populateStarField(
       backgroundStage,
       viewport.coordinate,
       updatedStarField,
-      starFieldBoundaries.topLeft,
-      starFieldBoundaries.bottomRight,
-      starFieldCorners.topLeft.y,
-      starFieldCorners.bottomRight.y,
-      starFieldCorners.topLeft.x,
-      starFieldCorners.bottomRight.x
+      starFieldExpectedBoundary.topLeft,
+      starFieldExpectedBoundary.bottomRight,
+      starFieldCurrentBoundary.topLeft.y,
+      starFieldCurrentBoundary.bottomRight.y,
+      starFieldCurrentBoundary.topLeft.x,
+      starFieldCurrentBoundary.bottomRight.x
     );
   }
 
