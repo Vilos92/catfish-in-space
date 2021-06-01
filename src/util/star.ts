@@ -17,7 +17,11 @@ export const STARFIELD_BUFFER = 32;
  * Functions.
  */
 
-export function repositionAndPruneStarField(
+/**
+ * Prune any stars which are outside the current viewport (with buffer),
+ * and reposition the remaining stars relative to the viewport.
+ */
+export function pruneAndRepositionStarField(
   viewportCoordinate: Coordinate,
   starField: StarField,
   minCoordinate: Coordinate,

@@ -23,7 +23,7 @@ import {
   addStarsToField,
   calculateStarFieldBoundaries,
   populateStarField,
-  repositionAndPruneStarField
+  pruneAndRepositionStarField
 } from './util/star';
 import {calculateUpdatedViewportCoordinateFromKeyboard} from './util/viewport';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util/viewport';
@@ -224,7 +224,7 @@ function backgroundStageLoop(getState: GetState, dispatch: Dispatch, backgroundS
       starFieldBoundaries.bottomRight
     );
   else {
-    const starFieldCorners = repositionAndPruneStarField(
+    const starFieldCorners = pruneAndRepositionStarField(
       viewport.coordinate,
       updatedStarField,
       starFieldBoundaries.topLeft,
