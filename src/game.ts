@@ -263,7 +263,7 @@ function backgroundStageLoop(getState: GetState, backgroundStage: PIXI.Container
     // Insert between rowMin and rowMax
     for (let y = rowMin; y < rowMax; y++) {
       for (let x = colMin; x < colMax; x++) {
-        addRowStars(backgroundStage, viewport.coordinate, starField, x, y);
+        addStarToField(backgroundStage, viewport.coordinate, starField, x, y);
       }
     }
   } else {
@@ -273,16 +273,16 @@ function backgroundStageLoop(getState: GetState, backgroundStage: PIXI.Container
       // Insert rows below current min.
       for (let y = rowMin; y < starfieldRowMin; y++) {
         for (let x = colMin; x < colMax; x++) {
-          addRowStars(backgroundStage, viewport.coordinate, starField, x, y);
+          addStarToField(backgroundStage, viewport.coordinate, starField, x, y);
         }
       }
     }
 
     if (rowMax > starfieldRowMax) {
       // Insert rows above current max.
-      for (let y = starfieldRowMax; y < rowMax; y++) {
+      for (let y = starfieldRowMax + 1; y <= rowMax; y++) {
         for (let x = colMin; x < colMax; x++) {
-          addRowStars(backgroundStage, viewport.coordinate, starField, x, y);
+          addStarToField(backgroundStage, viewport.coordinate, starField, x, y);
         }
       }
     }
@@ -293,28 +293,9 @@ function backgroundStageLoop(getState: GetState, backgroundStage: PIXI.Container
   } else if (!starfieldColMax || colMax > starfieldColMax) {
     // Insert cols above current max.
   }
-
-  // Insert rows then cols.
-  // Can ignore entries if a star is already there.
-
-  // After this, insert new stars.
-  // Determine probability if inserting star based on density (use same thing as creating initial stars.)
-  // Track the further left, right, bottom, and top star coords in the above loop.
-  // Given the above coords and what we know about our rowMin, rowMax, colMin, and colMax, determine
-  // remaining area to loop through to insert new stars.
 }
 
-// function createStarGameElement(viewportCoordinate: Coordinate, starCoordinate: Coordinate) {
-//   const star = createStarGraphic(viewportCoordinate, starCoordinate);
-
-//   return {
-//     coordinate: starCoordinate,
-//     rotation: 0,
-//     pixiSprite: star
-//   };
-// }
-
-function addRowStars(
+function addStarToField(
   backgroundStage: PIXI.Container,
   viewportCoordinate: Coordinate,
   starField: StarField,
