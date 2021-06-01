@@ -4,21 +4,27 @@ import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize, setupKeybinds} from './createApp';
 import {setupWindowHooks} from './createApp';
+import {updateStarFieldAction as updateStarFieldAction} from './store/backgroundStage/action';
+import {getStarField} from './store/backgroundStage/selector';
 import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
 import {getKeyboard} from './store/keyboard/selector';
-import {updatePlayerPidStateAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
 import {Coordinate, Renderer} from './type';
 import {VERSION} from './util';
-import {PidState} from './util/pid';
 import {
   addForceToPlayerMatterBodyFromKeyboard,
   addForceToPlayerMatterBodyFromMouseCoordinate
 } from './util/playerMovement';
+import {
+  addStarsToField,
+  calculateStarFieldBoundaries,
+  populateStarField,
+  pruneAndRepositionStarField
+} from './util/star';
 import {calculateUpdatedViewportCoordinateFromKeyboard} from './util/viewport';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util/viewport';
 
@@ -61,18 +67,25 @@ export function startGame(): void {
 
   const {renderer, stage, ticker, view} = app;
 
+  const backgroundStage = new PIXI.Container();
+  stage.addChild(backgroundStage);
+
+  const foregroundStage = new PIXI.Container();
+  stage.addChild(foregroundStage);
+
   // Hook for browser window resizes.
   const resize = async (): Promise<void> => onResize(getState, store.dispatch, renderer);
   resize();
 
   // Hook for initial loading of assets.
-  const onload = async (): Promise<void> => onLoad(getState, store.dispatch, engine.world, stage, view);
+  const onload = async (): Promise<void> =>
+    onLoad(getState, store.dispatch, engine.world, backgroundStage, foregroundStage, view);
 
   // Attach hooks to window.
   setupWindowHooks(onload, resize);
 
   // Callback for game loop.
-  const onGameLoop = () => gameLoop(getState, store.dispatch, engine.world, renderer, stage);
+  const onGameLoop = () => gameLoop(getState, store.dispatch, engine.world, renderer, foregroundStage, backgroundStage);
 
   // Setup key bindings.
   setupKeybinds(store.dispatch);
@@ -96,7 +109,8 @@ export function gameLoop(
   dispatch: Dispatch,
   world: Matter.World,
   renderer: Renderer,
-  stage: PIXI.Container
+  stage: PIXI.Container,
+  backgroundStage: PIXI.Container
 ): void {
   // 1. Handle player loop first, to account for keyboard inputs to apply changes to the matter body.
   playerLoop(getState, dispatch, renderer);
@@ -110,7 +124,10 @@ export function gameLoop(
   // 4. Handle viewport loop last, as it can depend on updated positions of game elements.
   viewportLoop(getState, dispatch);
 
-  // 5. Optionally draw debug wire frames from the Matter world.
+  // 5. Draw the star field.
+  backgroundStageLoop(getState, dispatch, backgroundStage);
+
+  // 6. Optionally draw debug wire frames from the Matter world.
   debugLoop(getState, world, stage);
 
   renderer.render(stage);
@@ -133,14 +150,12 @@ function playerLoop(getState: GetState, dispatch: Dispatch, renderer: Renderer):
 
   const mouseCoordinate: Coordinate = renderer.plugins.interaction.mouse.global;
 
-  const updatePlayerPidState = (pidState: PidState) => dispatch(updatePlayerPidStateAction(pidState));
-
   addForceToPlayerMatterBodyFromMouseCoordinate(
+    dispatch,
     mouseCoordinate,
     viewport.coordinate,
     playerMatterBody,
-    player.pidState,
-    updatePlayerPidState
+    player.pidState
   );
 }
 
@@ -189,6 +204,47 @@ function viewportLoop(getState: GetState, dispatch: Dispatch): void {
   const updatedViewportCoordinate = calculateUpdatedViewportCoordinateFromKeyboard(keyboard, viewport.coordinate);
 
   dispatch(updateViewportCoordinateAction(updatedViewportCoordinate));
+}
+
+function backgroundStageLoop(getState: GetState, dispatch: Dispatch, backgroundStage: PIXI.Container): void {
+  const state = getState();
+  const viewport = getViewport(state);
+  const starField = getStarField(state);
+
+  const updatedStarField = new Map(starField);
+
+  const starFieldExpectedBoundary = calculateStarFieldBoundaries(viewport.coordinate, viewport.dimension);
+
+  if (updatedStarField.size === 0)
+    addStarsToField(
+      backgroundStage,
+      viewport.coordinate,
+      updatedStarField,
+      starFieldExpectedBoundary.topLeft,
+      starFieldExpectedBoundary.bottomRight
+    );
+  else {
+    const starFieldCurrentBoundary = pruneAndRepositionStarField(
+      viewport.coordinate,
+      updatedStarField,
+      starFieldExpectedBoundary.topLeft,
+      starFieldExpectedBoundary.bottomRight
+    );
+
+    populateStarField(
+      backgroundStage,
+      viewport.coordinate,
+      updatedStarField,
+      starFieldExpectedBoundary.topLeft,
+      starFieldExpectedBoundary.bottomRight,
+      starFieldCurrentBoundary.topLeft.y,
+      starFieldCurrentBoundary.bottomRight.y,
+      starFieldCurrentBoundary.topLeft.x,
+      starFieldCurrentBoundary.bottomRight.x
+    );
+  }
+
+  dispatch(updateStarFieldAction(updatedStarField));
 }
 
 function debugLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {

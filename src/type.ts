@@ -45,6 +45,11 @@ export interface Dimension {
   height: number;
 }
 
+export interface Rectangle {
+  topLeft: Coordinate;
+  bottomRight: Coordinate;
+}
+
 export interface GameElement {
   // This is the coordinate in our game, not the canvas.
   coordinate: Coordinate;

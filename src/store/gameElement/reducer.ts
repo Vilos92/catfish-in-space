@@ -7,7 +7,7 @@ export interface GameElementState {
   gameElements: ReadonlyArray<GameElement>;
 }
 
-export const initialState: GameElementState = {
+const initialState: GameElementState = {
   gameElements: []
 };
 
