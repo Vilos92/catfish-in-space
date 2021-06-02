@@ -60,6 +60,7 @@
         "eslint-loader": "^4.0.2",
         "eslint-plugin-prettier": "^3.4.0",
         "html-webpack-plugin": "^5.3.1",
+        "husky": "^6.0.0",
         "identity-obj-proxy": "^3.0.0",
         "jest": "^26.6.3",
         "jest-canvas-mock": "^2.3.1",
