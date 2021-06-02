@@ -21,6 +21,8 @@ import {
 } from './util/playerMovement';
 import {
   addStarsToField,
+  BACKGROUND_PARALLAX_RATIO,
+  calculateParallaxViewportCoordinate,
   calculateStarFieldBoundary,
   populateStarField,
   pruneStarField,
@@ -214,7 +216,12 @@ function backgroundStageLoop(getState: GetState, dispatch: Dispatch, backgroundS
 
   const updatedStarField = new Map(starField);
 
-  const starFieldExpectedBoundary = calculateStarFieldBoundary(viewport.coordinate, viewport.dimension);
+  const parallaxViewportCoordinate = calculateParallaxViewportCoordinate(
+    viewport.coordinate,
+    BACKGROUND_PARALLAX_RATIO
+  );
+
+  const starFieldExpectedBoundary = calculateStarFieldBoundary(parallaxViewportCoordinate, viewport.dimension);
 
   if (updatedStarField.size === 0)
     addStarsToField(
@@ -227,11 +234,11 @@ function backgroundStageLoop(getState: GetState, dispatch: Dispatch, backgroundS
   else {
     pruneStarField(updatedStarField, starFieldExpectedBoundary.topLeft, starFieldExpectedBoundary.bottomRight);
 
-    const starFieldCurrentBoundary = repositionStarField(viewport.coordinate, updatedStarField);
+    const starFieldCurrentBoundary = repositionStarField(parallaxViewportCoordinate, updatedStarField);
 
     populateStarField(
       backgroundStage,
-      viewport.coordinate,
+      parallaxViewportCoordinate,
       updatedStarField,
       starFieldExpectedBoundary.topLeft,
       starFieldExpectedBoundary.bottomRight,

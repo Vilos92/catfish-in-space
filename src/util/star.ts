@@ -2,7 +2,6 @@ import * as PIXI from 'pixi.js';
 
 import {StarField} from '../store/backgroundStage/reducer';
 import {Coordinate, Dimension, GameElement, Rectangle} from '../type';
-import {calculatePositionRelativeToViewport} from './viewport';
 
 /**
  * Constants.
@@ -11,7 +10,9 @@ import {calculatePositionRelativeToViewport} from './viewport';
 // Do not erase stars until it is outside a threshold of the screen to:
 // 1. Ensure stars at the edge of the screen do not "pop-in" to existence.
 // 2. Make it less obvious that the stars are randomly generated, if moving back and forth.
-export const STARFIELD_BUFFER = 32;
+const STARFIELD_BUFFER = 32;
+
+export const BACKGROUND_PARALLAX_RATIO = 0.1;
 
 /**
  * Functions.
@@ -68,7 +69,7 @@ export function repositionStarField(viewportCoordinate: Coordinate, starField: S
 
       if (!starGameElement) continue;
 
-      const newPosition = calculatePositionRelativeToViewport(starGameElement.coordinate, viewportCoordinate);
+      const newPosition = calculateBackgroundPositionRelativeToViewport(starGameElement.coordinate, viewportCoordinate);
       starGameElement.pixiSprite.position.set(newPosition.x, newPosition.y);
 
       starFieldRowMin = starFieldRowMin ? Math.min(starFieldRowMin, row) : row;
@@ -185,7 +186,7 @@ function addStarToField(
 }
 
 function createStarGraphic(viewportCoordinate: Coordinate, coordinate: Coordinate): PIXI.Graphics {
-  const position = calculatePositionRelativeToViewport(coordinate, viewportCoordinate);
+  const position = calculateBackgroundPositionRelativeToViewport(coordinate, viewportCoordinate);
 
   const starSize = Math.random() * 2;
   const alpha = Math.random();
@@ -210,5 +211,25 @@ export function calculateStarFieldBoundary(viewportCoordinate: Coordinate, viewp
   return {
     topLeft: {x: colMin, y: rowMin},
     bottomRight: {x: colMax, y: rowMax}
+  };
+}
+
+/**
+ * Determine background sprite's position relative to the viewport.
+ */
+function calculateBackgroundPositionRelativeToViewport(
+  coordinate: Coordinate,
+  viewportCoordinate: Coordinate
+): Coordinate {
+  return {
+    x: coordinate.x - viewportCoordinate.x,
+    y: coordinate.y - viewportCoordinate.y
+  };
+}
+
+export function calculateParallaxViewportCoordinate(viewportCoordinate: Coordinate, parallaxRatio: number): Coordinate {
+  return {
+    x: viewportCoordinate.x * parallaxRatio,
+    y: viewportCoordinate.y * parallaxRatio
   };
 }
