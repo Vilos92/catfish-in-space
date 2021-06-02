@@ -6,15 +6,22 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v2.3.1
-
-      - name: Install and Build 🔧
+      - name: npm install
         run: |
-          npm install
+          npm ci
+      - name: code style check
+        run: |
+          npm run code-style-check
+      - name: build, and test
+        run: |
           npm run build
-
+          npm test --if-present
+        env:
+          CI: true
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@4.1.3
         with:
