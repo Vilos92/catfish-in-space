@@ -19,7 +19,13 @@ import {
   addForceToPlayerMatterBodyFromKeyboard,
   addForceToPlayerMatterBodyFromMouseCoordinate
 } from './util/playerMovement';
-import {addStarsToField, calculateStarFieldBoundary, populateStarField, pruneAndRepositionStarField} from './util/star';
+import {
+  addStarsToField,
+  calculateStarFieldBoundary,
+  populateStarField,
+  pruneStarField,
+  repositionStarField
+} from './util/star';
 import {calculateUpdatedViewportCoordinateFromKeyboard} from './util/viewport';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util/viewport';
 
@@ -219,12 +225,9 @@ function backgroundStageLoop(getState: GetState, dispatch: Dispatch, backgroundS
       starFieldExpectedBoundary.bottomRight
     );
   else {
-    const starFieldCurrentBoundary = pruneAndRepositionStarField(
-      viewport.coordinate,
-      updatedStarField,
-      starFieldExpectedBoundary.topLeft,
-      starFieldExpectedBoundary.bottomRight
-    );
+    pruneStarField(updatedStarField, starFieldExpectedBoundary.topLeft, starFieldExpectedBoundary.bottomRight);
+
+    const starFieldCurrentBoundary = repositionStarField(viewport.coordinate, updatedStarField);
 
     populateStarField(
       backgroundStage,

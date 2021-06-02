@@ -18,24 +18,9 @@ export const STARFIELD_BUFFER = 32;
  */
 
 /**
- * Prune any stars which are outside the current viewport (with buffer),
- * and reposition the remaining stars relative to the viewport.
+ * Prune any stars which are outside the current viewport (with buffer).
  */
-export function pruneAndRepositionStarField(
-  viewportCoordinate: Coordinate,
-  starField: StarField,
-  minCoordinate: Coordinate,
-  maxCoordinate: Coordinate
-): Rectangle {
-  let starFieldRowMin: number | undefined;
-  let starFieldRowMax: number | undefined;
-
-  let starFieldColMin: number | undefined;
-  let starFieldColMax: number | undefined;
-
-  // For all cells in the Star Field:
-  // 1. Remove stars which are now outside of the viewport (with a buffer).
-  // 2. Reposition the remaining stars relative to the viewport.
+export function pruneStarField(starField: StarField, minCoordinate: Coordinate, maxCoordinate: Coordinate): void {
   const rows = starField.keys();
   for (const row of rows) {
     if (!starField.has(row)) {
@@ -55,6 +40,36 @@ export function pruneAndRepositionStarField(
 
         continue;
       }
+    }
+
+    // If no more columns remain for a row, we no longer need it in the Star Field.
+    if (starField.get(row)?.size === 0) starField.delete(row);
+  }
+}
+
+/**
+ * Reposition the stars relative to the viewport.
+ * Return the current boundaries of the Star Field in the form of a Rectangle.
+ */
+export function repositionStarField(viewportCoordinate: Coordinate, starField: StarField): Rectangle {
+  let starFieldRowMin: number | undefined;
+  let starFieldRowMax: number | undefined;
+
+  let starFieldColMin: number | undefined;
+  let starFieldColMax: number | undefined;
+
+  const rows = starField.keys();
+  for (const row of rows) {
+    if (!starField.has(row)) {
+      starField.set(row, new Map<number, GameElement>());
+    }
+    const cols = starField.get(row)?.keys();
+    if (!cols) continue;
+
+    for (const col of cols) {
+      const starGameElement = starField.get(row)?.get(col);
+
+      if (!starGameElement || !starGameElement.pixiSprite) continue;
 
       const newPosition = calculatePositionRelativeToViewport(starGameElement.coordinate, viewportCoordinate);
       starGameElement.pixiSprite.position.set(newPosition.x, newPosition.y);
@@ -64,9 +79,6 @@ export function pruneAndRepositionStarField(
       starFieldColMin = starFieldColMin ? Math.min(starFieldColMin, col) : col;
       starFieldColMax = starFieldColMax ? Math.max(starFieldColMax, col) : col;
     }
-
-    // If no more columns remain for a row, we no longer need it in the Star Field.
-    if (starField.get(row)?.size === 0) starField.delete(row);
   }
 
   if (!starFieldRowMin || !starFieldRowMax || !starFieldColMin || !starFieldColMax)
