@@ -23,9 +23,6 @@ export const STARFIELD_BUFFER = 32;
 export function pruneStarField(starField: StarField, minCoordinate: Coordinate, maxCoordinate: Coordinate): void {
   const rows = starField.keys();
   for (const row of rows) {
-    if (!starField.has(row)) {
-      starField.set(row, new Map<number, GameElement>());
-    }
     const cols = starField.get(row)?.keys();
     if (!cols) continue;
 
