@@ -19,16 +19,18 @@ const SIDE_THRUSTER_FORCE = 500;
 const TURN_THRUSTER_FORCE = 10;
 
 // PID tuning for the ship turn thrusters.
-const kp = 0.1;
-const ki = 0.1;
-const kd = 0.1;
-const dt = 1 / 60; // every 1 / 60 seconds.
+const pidConfig = {
+  kp: 0.1,
+  ki: 0.1,
+  kd: 0.1,
+  dt: 1 / 60 // every 1 / 60 seconds.
+};
 
 /**
  * Force based movement functions.
  */
 
-const computeNextPidState = createComputeNextPidState({kp, ki, kd, dt});
+const computeNextPidState = createComputeNextPidState(pidConfig);
 
 export function addForceToPlayerMatterBodyFromMouseCoordinate(
   dispatch: Dispatch,

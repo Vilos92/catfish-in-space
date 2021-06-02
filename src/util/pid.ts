@@ -17,11 +17,13 @@ export interface PidState {
   output: number;
 }
 
+type ComputeNextPidState = (pidState: PidState, error: number) => PidState;
+
 /**
  * Create a pre-configured function which computes a PID state given
  * the previous PID state and the current error.
  */
-export function createComputeNextPidState(pidConfig: PidConfig): (pidState: PidState, error: number) => PidState {
+export function createComputeNextPidState(pidConfig: PidConfig): ComputeNextPidState {
   const {kp, ki, kd, dt} = pidConfig;
 
   return (pidState: PidState, error: number): PidState => {
