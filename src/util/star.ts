@@ -227,6 +227,9 @@ function calculateBackgroundPositionRelativeToViewport(
   };
 }
 
+/**
+ * Determine the location of the viewport while scaling its position by a parallax ratio.
+ */
 export function calculateParallaxViewportCoordinate(viewportCoordinate: Coordinate, parallaxRatio: number): Coordinate {
   return {
     x: viewportCoordinate.x * parallaxRatio,
