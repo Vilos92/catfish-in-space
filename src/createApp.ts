@@ -10,7 +10,7 @@ import {updateViewportCoordinateAction} from './store/viewport/action';
 import {ViewportState} from './store/viewport/reducer';
 import {getViewport} from './store/viewport/selector';
 import {Callback, CallbackWithArg, Coordinate, GameElement, KeyCodesEnum, Renderer} from './type';
-import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util/viewport';
+import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './utility/viewport';
 
 /**
  * Browser.

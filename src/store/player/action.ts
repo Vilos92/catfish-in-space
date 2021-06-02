@@ -1,5 +1,5 @@
 import {GameElement} from '../../type';
-import {PidState} from '../../util/pid';
+import {PidState} from '../../utility/pid';
 
 export enum PlayerActionTypesEnum {
   UPDATE_PLAYER_GAME_ELEMENT_ACTION = 'UPDATE_PLAYER_GAME_ELEMENT_ACTION',

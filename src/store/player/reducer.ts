@@ -1,7 +1,7 @@
 import {Reducer} from 'redux';
 
 import {GameElement} from '../../type';
-import {PidState} from '../../util/pid';
+import {PidState} from '../../utility/pid';
 import {PlayerAction, PlayerActionTypesEnum} from './action';
 
 export interface PlayerState {

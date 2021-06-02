@@ -8,13 +8,15 @@ const merge = require('webpack-merge').merge;
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
 module.exports = (env) => {
   const config = {
     entry: './src/index.ts',
 
     resolve: {
-      extensions: ['.ts', '.tsx', '.js', '.json']
+      extensions: ['.ts', '.tsx', '.js', '.json'],
+      plugins: [new TsconfigPathsPlugin()]
     },
 
     module: {

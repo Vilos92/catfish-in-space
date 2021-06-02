@@ -14,11 +14,11 @@ import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
 import {Coordinate, Renderer} from './type';
-import {VERSION} from './util';
+import {VERSION} from './utility';
 import {
   addForceToPlayerMatterBodyFromKeyboard,
   addForceToPlayerMatterBodyFromMouseCoordinate
-} from './util/playerMovement';
+} from './utility/playerMovement';
 import {
   addStarsToField,
   BACKGROUND_PARALLAX_RATIO,
@@ -27,9 +27,12 @@ import {
   populateStarField,
   pruneStarField,
   repositionStarField
-} from './util/star';
-import {calculateUpdatedViewportCoordinateFromKeyboard} from './util/viewport';
-import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './util/viewport';
+} from './utility/star';
+import {
+  calculatePositionRelativeToViewport,
+  calculateUpdatedViewportCoordinateFromKeyboard,
+  calculateViewportCoordinate
+} from './utility/viewport';
 
 /**
  * Functions.
