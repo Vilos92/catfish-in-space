@@ -32,7 +32,7 @@ export function pruneStarField(starField: StarField, minCoordinate: Coordinate, 
     for (const col of cols) {
       const starGameElement = starField.get(row)?.get(col);
 
-      if (!starGameElement || !starGameElement.pixiSprite) continue;
+      if (!starGameElement) continue;
 
       if (row < minCoordinate.y || row > maxCoordinate.y || col < minCoordinate.x || col > maxCoordinate.x) {
         starGameElement.pixiSprite.destroy();
@@ -69,7 +69,7 @@ export function repositionStarField(viewportCoordinate: Coordinate, starField: S
     for (const col of cols) {
       const starGameElement = starField.get(row)?.get(col);
 
-      if (!starGameElement || !starGameElement.pixiSprite) continue;
+      if (!starGameElement) continue;
 
       const newPosition = calculatePositionRelativeToViewport(starGameElement.coordinate, viewportCoordinate);
       starGameElement.pixiSprite.position.set(newPosition.x, newPosition.y);

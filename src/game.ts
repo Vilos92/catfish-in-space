@@ -142,6 +142,8 @@ function playerLoop(getState: GetState, dispatch: Dispatch, renderer: Renderer):
   const player = getPlayer(state);
   const viewport = getViewport(state);
 
+  if (!player.gameElement) return;
+
   const {matterBody: playerMatterBody} = player.gameElement;
 
   if (!playerMatterBody) return;
@@ -188,8 +190,6 @@ function spriteLoop(getState: GetState): void {
 
   const gameElements = getGameElements(state);
   gameElements.forEach(gameElement => {
-    if (!gameElement.pixiSprite) return;
-
     const gameElementPosition = calculatePositionRelativeToViewport(gameElement.coordinate, viewportCoordinate);
 
     gameElement.pixiSprite.position.set(gameElementPosition.x, gameElementPosition.y);

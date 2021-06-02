@@ -61,19 +61,19 @@ export async function onResize(getState: GetState, dispatch: Dispatch, renderer:
 
   const player = getPlayer(state);
 
+  renderer.resize(viewportDimension.width, viewportDimension.height);
+
+  if (!player.gameElement) return;
+
   // We should re-arrange the viewport to be centered on our player.
   const viewportCoordinate = calculateViewportCoordinate(player.gameElement.coordinate, viewportDimension);
   dispatch(updateViewportCoordinateAction(viewportCoordinate));
 
   const {pixiSprite: playerSprite} = player.gameElement;
 
-  if (playerSprite) {
-    const position = calculatePositionRelativeToViewport(playerSprite, getViewport(state).coordinate);
+  const position = calculatePositionRelativeToViewport(playerSprite, getViewport(state).coordinate);
 
-    playerSprite.position.set(position.x, position.y);
-  }
-
-  renderer.resize(viewportDimension.width, viewportDimension.height);
+  playerSprite.position.set(position.x, position.y);
 }
 
 export async function onLoad(
@@ -144,7 +144,7 @@ function setupWorld(
 function addGameElement(dispatch: Dispatch, world: Matter.World, stage: PIXI.Container, gameElement: GameElement) {
   if (gameElement.matterBody) Matter.Composite.add(world, gameElement.matterBody);
 
-  if (gameElement.pixiSprite) stage.addChild(gameElement.pixiSprite);
+  stage.addChild(gameElement.pixiSprite);
 
   dispatch(pushGameElementAction(gameElement));
 }
