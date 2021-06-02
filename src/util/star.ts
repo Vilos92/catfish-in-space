@@ -87,41 +87,39 @@ export function populateStarField(
   starField: StarField,
   minCoordinate: Coordinate,
   maxCoordinate: Coordinate,
-  starFieldRowMin: number,
-  starFieldRowMax: number,
-  starFieldColMin: number,
-  starFieldColMax: number
+  starFieldMinCoordinate: Coordinate,
+  starFieldMaxCoordinate: Coordinate
 ): void {
-  if (minCoordinate.y < starFieldRowMin) {
+  if (minCoordinate.y < starFieldMinCoordinate.y) {
     // Insert rows below current min.
-    for (let y = minCoordinate.y; y < starFieldRowMin; y++) {
+    for (let y = minCoordinate.y; y < starFieldMinCoordinate.y; y++) {
       for (let x = minCoordinate.x; x < maxCoordinate.x; x++) {
         addStarToField(backgroundStage, viewportCoordinate, starField, x, y);
       }
     }
   }
 
-  if (maxCoordinate.y > starFieldRowMax) {
+  if (maxCoordinate.y > starFieldMaxCoordinate.y) {
     // Insert rows above current max.
-    for (let y = starFieldRowMax + 1; y <= maxCoordinate.y; y++) {
+    for (let y = starFieldMaxCoordinate.y + 1; y <= maxCoordinate.y; y++) {
       for (let x = minCoordinate.x; x < maxCoordinate.x; x++) {
         addStarToField(backgroundStage, viewportCoordinate, starField, x, y);
       }
     }
   }
 
-  if (minCoordinate.x < starFieldColMin) {
+  if (minCoordinate.x < starFieldMinCoordinate.x) {
     // Insert cols below current min.
-    for (let x = minCoordinate.x; x < starFieldColMin; x++) {
+    for (let x = minCoordinate.x; x < starFieldMinCoordinate.x; x++) {
       for (let y = minCoordinate.y; y < maxCoordinate.y; y++) {
         addStarToField(backgroundStage, viewportCoordinate, starField, x, y);
       }
     }
   }
 
-  if (maxCoordinate.x > starFieldColMax) {
+  if (maxCoordinate.x > starFieldMaxCoordinate.x) {
     // Insert cols above current max.
-    for (let x = starFieldColMax + 1; x <= maxCoordinate.x; x++) {
+    for (let x = starFieldMaxCoordinate.x + 1; x <= maxCoordinate.x; x++) {
       for (let y = minCoordinate.y; y < maxCoordinate.y; y++) {
         addStarToField(backgroundStage, viewportCoordinate, starField, x, y);
       }
@@ -193,7 +191,7 @@ function createStarGraphic(viewportCoordinate: Coordinate, coordinate: Coordinat
   return starGraphics;
 }
 
-export function calculateStarFieldBoundaries(viewportCoordinate: Coordinate, viewportDimension: Dimension): Rectangle {
+export function calculateStarFieldBoundary(viewportCoordinate: Coordinate, viewportDimension: Dimension): Rectangle {
   const rowMin = viewportCoordinate.y - STARFIELD_BUFFER;
   const rowMax = viewportCoordinate.y + viewportDimension.height + STARFIELD_BUFFER;
 
