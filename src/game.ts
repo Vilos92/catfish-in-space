@@ -10,12 +10,13 @@ import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
 import {getKeyboard} from './store/keyboard/selector';
-import {updatePlayerGameElementAction} from './store/player/action';
+import {updatePlayerGameElementAction, updatePlayerIsViewportLockedAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
 import {Coordinate, GameElement, Renderer} from './type';
 import {VERSION} from './utility';
+import {createComputeIsKeyClicked} from './utility/keyboard';
 import {
   addForceToPlayerMatterBodyFromKeyboard,
   addForceToPlayerMatterBodyFromMouseCoordinate
@@ -212,14 +213,20 @@ function spriteLoop(getState: GetState): void {
   });
 }
 
+const computeIsViewportKeyClicked = createComputeIsKeyClicked();
+
 function viewportLoop(getState: GetState, dispatch: Dispatch): void {
   const state = getState();
   const keyboard = getKeyboard(state);
   const player = getPlayer(state);
   const viewport = getViewport(state);
 
+  if (computeIsViewportKeyClicked(keyboard.keyStateMap.KeyV.isActive)) {
+    dispatch(updatePlayerIsViewportLockedAction(!player.isViewportLocked));
+  }
+
   const updatedViewportCoordinate: Coordinate =
-    player.gameElement && keyboard.keyStateMap.KeyV.isActive
+    player.isViewportLocked && player.gameElement
       ? calculateViewportCoordinate(player.gameElement.coordinate, viewport.dimension)
       : calculateUpdatedViewportCoordinateFromKeyboard(keyboard, viewport.coordinate);
 

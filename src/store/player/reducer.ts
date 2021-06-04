@@ -7,10 +7,12 @@ import {PlayerAction, PlayerActionTypesEnum} from './action';
 export interface PlayerState {
   gameElement?: GameElement;
   pidState: PidState;
+  isViewportLocked: boolean;
 }
 
 export const initialState: PlayerState = {
-  pidState: {integral: 0, error: 0, output: 0}
+  pidState: {integral: 0, error: 0, output: 0},
+  isViewportLocked: true
 };
 
 export const playerReducer: Reducer<PlayerState, PlayerAction> = (
@@ -23,6 +25,9 @@ export const playerReducer: Reducer<PlayerState, PlayerAction> = (
     }
     case PlayerActionTypesEnum.UPDATE_PLAYER_PID_STATE_ACTION: {
       return {...state, pidState: action.pidState};
+    }
+    case PlayerActionTypesEnum.UPDATE_PLAYER_IS_VIEWPORT_LOCKED_ACTION: {
+      return {...state, isViewportLocked: action.isViewportLocked};
     }
     default:
       return state;

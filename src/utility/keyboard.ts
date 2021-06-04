@@ -9,6 +9,10 @@ export enum KeyDirectionsEnum {
   POSITIVE = 1
 }
 
+/**
+ * Helpers.
+ */
+
 // For two key presses which oppose each other, determine the direction.
 export function calculateDirectionFromOpposingKeys(
   negativeIsActive: boolean,
@@ -21,4 +25,21 @@ export function calculateDirectionFromOpposingKeys(
 
   // If only the positive parameter is active, direction is positive.
   return KeyDirectionsEnum.POSITIVE;
+}
+
+/**
+ * Creates a function which tracks the previous keyIsActive state, to determine
+ * whether a key click has been completed.
+ */
+export function createComputeIsKeyClicked(): (newKeyIsActive: boolean) => boolean {
+  let keyIsActive = false;
+
+  return (newKeyIsActive: boolean) => {
+    const prevKeyIsActive = keyIsActive;
+    keyIsActive = newKeyIsActive;
+
+    // Considered clicked if a key toggles from
+    // active to inactive.
+    return !newKeyIsActive && prevKeyIsActive;
+  };
 }

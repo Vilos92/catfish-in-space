@@ -3,7 +3,8 @@ import {PidState} from '../../utility/pid';
 
 export enum PlayerActionTypesEnum {
   UPDATE_PLAYER_GAME_ELEMENT_ACTION = 'UPDATE_PLAYER_GAME_ELEMENT_ACTION',
-  UPDATE_PLAYER_PID_STATE_ACTION = 'UPDATE_PLAYER_PID_STATE_ACTION'
+  UPDATE_PLAYER_PID_STATE_ACTION = 'UPDATE_PLAYER_PID_STATE_ACTION',
+  UPDATE_PLAYER_IS_VIEWPORT_LOCKED_ACTION = 'UPDATE_PLAYER_IS_VIEWPORT_LOCKED_ACTION'
 }
 
 export interface UpdatePlayerGameElementAction {
@@ -16,7 +17,15 @@ export interface UpdatePlayerPidStateAction {
   pidState: PidState;
 }
 
-export type PlayerAction = UpdatePlayerGameElementAction | UpdatePlayerPidStateAction;
+export interface UpdatePlayerIsViewportLockedAction {
+  type: PlayerActionTypesEnum.UPDATE_PLAYER_IS_VIEWPORT_LOCKED_ACTION;
+  isViewportLocked: boolean;
+}
+
+export type PlayerAction =
+  | UpdatePlayerGameElementAction
+  | UpdatePlayerPidStateAction
+  | UpdatePlayerIsViewportLockedAction;
 
 export function updatePlayerGameElementAction(gameElement: GameElement): UpdatePlayerGameElementAction {
   return {
@@ -29,5 +38,12 @@ export function updatePlayerPidStateAction(pidState: PidState): UpdatePlayerPidS
   return {
     type: PlayerActionTypesEnum.UPDATE_PLAYER_PID_STATE_ACTION,
     pidState
+  };
+}
+
+export function updatePlayerIsViewportLockedAction(isViewportLocked: boolean): UpdatePlayerIsViewportLockedAction {
+  return {
+    type: PlayerActionTypesEnum.UPDATE_PLAYER_IS_VIEWPORT_LOCKED_ACTION,
+    isViewportLocked
   };
 }
