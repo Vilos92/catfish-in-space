@@ -16,7 +16,10 @@ export enum KeyCodesEnum {
   KEY_I = 'KeyI',
   KEY_J = 'KeyJ',
   KEY_K = 'KeyK',
-  KEY_L = 'KeyL'
+  KEY_L = 'KeyL',
+
+  // Preferences.
+  KEY_V = 'KeyV'
 }
 
 /**

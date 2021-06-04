@@ -80,8 +80,14 @@ export function repositionStarField(viewportCoordinate: Coordinate, starField: S
     }
   }
 
-  if (!starFieldRowMin || !starFieldRowMax || !starFieldColMin || !starFieldColMax)
+  if (
+    starFieldRowMin === undefined ||
+    starFieldRowMax === undefined ||
+    starFieldColMin === undefined ||
+    starFieldColMax === undefined
+  ) {
     throw new Error('No stars were found in the Star Field.');
+  }
 
   return {
     topLeft: {x: starFieldColMin, y: starFieldRowMin},

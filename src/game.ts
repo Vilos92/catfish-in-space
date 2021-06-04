@@ -10,10 +10,11 @@ import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
 import {getKeyboard} from './store/keyboard/selector';
+import {updatePlayerGameElementAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
-import {Coordinate, Renderer} from './type';
+import {Coordinate, GameElement, Renderer} from './type';
 import {VERSION} from './utility';
 import {
   addForceToPlayerMatterBodyFromKeyboard,
@@ -165,6 +166,15 @@ function playerLoop(getState: GetState, dispatch: Dispatch, renderer: Renderer):
     playerMatterBody,
     player.pidState
   );
+
+  // We must update the player GameElement here to account for the coordinate
+  // and rotation needed by the viewport. The sprite loop is responsible for
+  // other operations regarding presentation.
+  const coordinate: Coordinate = playerMatterBody.position;
+  const rotation = playerMatterBody.angle % (2 * Math.PI);
+
+  const updatedPlayerGameElement: GameElement = {...player.gameElement, coordinate, rotation};
+  dispatch(updatePlayerGameElementAction(updatedPlayerGameElement));
 }
 
 // Update game element coordinates to be aligned with their matter positions.
@@ -205,9 +215,13 @@ function spriteLoop(getState: GetState): void {
 function viewportLoop(getState: GetState, dispatch: Dispatch): void {
   const state = getState();
   const keyboard = getKeyboard(state);
+  const player = getPlayer(state);
   const viewport = getViewport(state);
 
-  const updatedViewportCoordinate = calculateUpdatedViewportCoordinateFromKeyboard(keyboard, viewport.coordinate);
+  const updatedViewportCoordinate: Coordinate =
+    player.gameElement && keyboard.keyStateMap.KeyV.isActive
+      ? calculateViewportCoordinate(player.gameElement.coordinate, viewport.dimension)
+      : calculateUpdatedViewportCoordinateFromKeyboard(keyboard, viewport.coordinate);
 
   dispatch(updateViewportCoordinateAction(updatedViewportCoordinate));
 }

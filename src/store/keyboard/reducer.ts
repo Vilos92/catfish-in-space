@@ -29,7 +29,10 @@ const initialKeyStateMap = {
   [KeyCodesEnum.KEY_I]: initialKeyState,
   [KeyCodesEnum.KEY_J]: initialKeyState,
   [KeyCodesEnum.KEY_K]: initialKeyState,
-  [KeyCodesEnum.KEY_L]: initialKeyState
+  [KeyCodesEnum.KEY_L]: initialKeyState,
+
+  // Preference keys.
+  [KeyCodesEnum.KEY_V]: initialKeyState
 };
 
 const initialState: KeyboardState = {
