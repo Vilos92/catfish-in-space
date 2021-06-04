@@ -220,14 +220,3 @@ export function calculateStarFieldBoundary(viewportCoordinate: Coordinate, viewp
     bottomRight: {x: colMax, y: rowMax}
   };
 }
-
-/**
- * Determine the location of the viewport while scaling its position by a parallax ratio.
- */
-export function calculateParallaxViewportCoordinate(viewportCoordinate: Coordinate, parallaxRatio: number): Coordinate {
-  // Not flooring the results will lead to a large number of overlapping stars in the Star Field.
-  return {
-    x: Math.floor(viewportCoordinate.x * parallaxRatio),
-    y: Math.floor(viewportCoordinate.y * parallaxRatio)
-  };
-}

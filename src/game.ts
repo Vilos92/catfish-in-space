@@ -23,13 +23,13 @@ import {
 import {
   addStarsToField,
   BACKGROUND_PARALLAX_RATIO,
-  calculateParallaxViewportCoordinate,
   calculateStarFieldBoundary,
   populateStarField,
   pruneStarField,
   repositionStarField
 } from './utility/star';
 import {
+  calculateParallaxViewportCoordinate,
   calculatePositionRelativeToViewport,
   calculateUpdatedViewportCoordinateFromKeyboard,
   calculateViewportCoordinate
