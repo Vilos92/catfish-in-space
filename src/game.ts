@@ -112,23 +112,23 @@ export function gameLoop(
   stage: PIXI.Container,
   backgroundStage: PIXI.Container
 ): void {
-  // 1. Handle player loop first, to account for keyboard inputs to apply changes to the matter body.
+  // 1. Optionally draw debug wire frames from the Matter world.
+  debugLoop(getState, world, stage);
+
+  // Handle player loop first, to account for keyboard inputs to apply changes to the matter body.
   playerLoop(getState, dispatch, renderer);
 
-  // 2. Handle game element loop next, to account for changes in matter position and rotation.
+  // Handle game element loop next, to account for changes in matter position and rotation.
   gameElementLoop(getState, dispatch);
 
-  // 3. Handle sprite loop afterwards, to align canvas with the game world's coordinates (relative to the viewport).
+  // Handle sprite loop afterwards, to align canvas with the game world's coordinates (relative to the viewport).
   spriteLoop(getState);
 
-  // 4. Handle viewport loop last, as it can depend on updated positions of game elements.
+  // Handle viewport loop last, as it can depend on updated positions of game elements.
   viewportLoop(getState, dispatch);
 
-  // 5. Draw the star field.
+  // Draw the star field.
   backgroundStageLoop(getState, dispatch, backgroundStage);
-
-  // 6. Optionally draw debug wire frames from the Matter world.
-  debugLoop(getState, world, stage);
 
   renderer.render(stage);
 }
