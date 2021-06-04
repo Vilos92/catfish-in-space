@@ -179,7 +179,7 @@ function gameElementLoop(getState: GetState, dispatch: Dispatch) {
     if (!matterBody) return gameElement;
 
     const coordinate: Coordinate = matterBody.position;
-    const rotation = (2 * Math.PI + matterBody.angle) % (2 * Math.PI);
+    const rotation = matterBody.angle % (2 * Math.PI);
 
     return {...gameElement, coordinate, rotation};
   });

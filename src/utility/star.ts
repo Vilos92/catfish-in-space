@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 
 import {StarField} from '../store/backgroundStage/reducer';
 import {Coordinate, Dimension, GameElement, Rectangle} from '../type';
+import {calculatePositionRelativeToViewport} from './viewport';
 
 /**
  * Constants.
@@ -69,7 +70,7 @@ export function repositionStarField(viewportCoordinate: Coordinate, starField: S
 
       if (!starGameElement) continue;
 
-      const newPosition = calculateBackgroundPositionRelativeToViewport(starGameElement.coordinate, viewportCoordinate);
+      const newPosition = calculatePositionRelativeToViewport(starGameElement.coordinate, viewportCoordinate);
       starGameElement.pixiSprite.position.set(newPosition.x, newPosition.y);
 
       starFieldRowMin = starFieldRowMin ? Math.min(starFieldRowMin, row) : row;
@@ -186,7 +187,7 @@ function addStarToField(
 }
 
 function createStarGraphic(viewportCoordinate: Coordinate, coordinate: Coordinate): PIXI.Graphics {
-  const position = calculateBackgroundPositionRelativeToViewport(coordinate, viewportCoordinate);
+  const position = calculatePositionRelativeToViewport(coordinate, viewportCoordinate);
 
   const starSize = Math.random() * 2;
   const alpha = Math.random();
@@ -215,24 +216,12 @@ export function calculateStarFieldBoundary(viewportCoordinate: Coordinate, viewp
 }
 
 /**
- * Determine background sprite's position relative to the viewport.
- */
-function calculateBackgroundPositionRelativeToViewport(
-  coordinate: Coordinate,
-  viewportCoordinate: Coordinate
-): Coordinate {
-  return {
-    x: coordinate.x - viewportCoordinate.x,
-    y: coordinate.y - viewportCoordinate.y
-  };
-}
-
-/**
  * Determine the location of the viewport while scaling its position by a parallax ratio.
  */
 export function calculateParallaxViewportCoordinate(viewportCoordinate: Coordinate, parallaxRatio: number): Coordinate {
+  // Not flooring the results will lead to a large number of overlapping stars in the Star Field.
   return {
-    x: viewportCoordinate.x * parallaxRatio,
-    y: viewportCoordinate.y * parallaxRatio
+    x: Math.floor(viewportCoordinate.x * parallaxRatio),
+    y: Math.floor(viewportCoordinate.y * parallaxRatio)
   };
 }
