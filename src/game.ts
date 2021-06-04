@@ -4,8 +4,8 @@ import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize, setupKeybinds} from './createApp';
 import {setupWindowHooks} from './createApp';
-import {updateStarFieldAction as updateStarFieldAction} from './store/backgroundStage/action';
-import {getStarField} from './store/backgroundStage/selector';
+import {updateStarFieldAAction, updateStarFieldBAction} from './store/backgroundStage/action';
+import {getStarFieldA, getStarFieldB} from './store/backgroundStage/selector';
 import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
@@ -21,16 +21,8 @@ import {
   addForceToPlayerMatterBodyFromKeyboard,
   addForceToPlayerMatterBodyFromMouseCoordinate
 } from './utility/playerMovement';
+import {BACKGROUND_PARALLAX_SCALE_A, BACKGROUND_PARALLAX_SCALE_B, updateStarField} from './utility/star';
 import {
-  addStarsToField,
-  BACKGROUND_PARALLAX_RATIO,
-  calculateStarFieldBoundary,
-  populateStarField,
-  pruneStarField,
-  repositionStarField
-} from './utility/star';
-import {
-  calculateParallaxViewportCoordinate,
   calculatePositionRelativeToViewport,
   calculateUpdatedViewportCoordinateFromKeyboard,
   calculateViewportCoordinate
@@ -236,42 +228,27 @@ function viewportLoop(getState: GetState, dispatch: Dispatch): void {
 function backgroundStageLoop(getState: GetState, dispatch: Dispatch, backgroundStage: PIXI.Container): void {
   const state = getState();
   const viewport = getViewport(state);
-  const starField = getStarField(state);
+  const starFieldA = getStarFieldA(state);
+  const starFieldB = getStarFieldB(state);
 
-  const updatedStarField = new Map(starField);
-
-  const parallaxViewportCoordinate = calculateParallaxViewportCoordinate(
+  const updatedStarFieldA = updateStarField(
+    backgroundStage,
     viewport.coordinate,
-    BACKGROUND_PARALLAX_RATIO
+    viewport.dimension,
+    starFieldA,
+    BACKGROUND_PARALLAX_SCALE_A
   );
 
-  const starFieldExpectedBoundary = calculateStarFieldBoundary(parallaxViewportCoordinate, viewport.dimension);
+  const updatedStarFieldB = updateStarField(
+    backgroundStage,
+    viewport.coordinate,
+    viewport.dimension,
+    starFieldB,
+    BACKGROUND_PARALLAX_SCALE_B
+  );
 
-  if (updatedStarField.size === 0)
-    addStarsToField(
-      backgroundStage,
-      viewport.coordinate,
-      updatedStarField,
-      starFieldExpectedBoundary.topLeft,
-      starFieldExpectedBoundary.bottomRight
-    );
-  else {
-    pruneStarField(updatedStarField, starFieldExpectedBoundary.topLeft, starFieldExpectedBoundary.bottomRight);
-
-    const starFieldCurrentBoundary = repositionStarField(parallaxViewportCoordinate, updatedStarField);
-
-    populateStarField(
-      backgroundStage,
-      parallaxViewportCoordinate,
-      updatedStarField,
-      starFieldExpectedBoundary.topLeft,
-      starFieldExpectedBoundary.bottomRight,
-      starFieldCurrentBoundary.topLeft,
-      starFieldCurrentBoundary.bottomRight
-    );
-  }
-
-  dispatch(updateStarFieldAction(updatedStarField));
+  dispatch(updateStarFieldAAction(updatedStarFieldA));
+  dispatch(updateStarFieldBAction(updatedStarFieldB));
 }
 
 function debugLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {

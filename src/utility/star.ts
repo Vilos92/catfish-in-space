@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js';
 
 import {StarField} from '../store/backgroundStage/reducer';
 import {Coordinate, Dimension, GameElement, Rectangle} from '../type';
-import {calculatePositionRelativeToViewport} from './viewport';
+import {calculateParallaxViewportCoordinate, calculatePositionRelativeToViewport} from './viewport';
 
 /**
  * Constants.
@@ -13,16 +13,61 @@ import {calculatePositionRelativeToViewport} from './viewport';
 // 2. Make it less obvious that the stars are randomly generated, if moving back and forth.
 const STARFIELD_BUFFER = 32;
 
-export const BACKGROUND_PARALLAX_RATIO = 0.1;
+const STAR_CHANCE = 1 / 10;
+
+export const BACKGROUND_PARALLAX_SCALE_A = 30;
+export const BACKGROUND_PARALLAX_SCALE_B = 50;
 
 /**
  * Functions.
  */
 
+export function updateStarField(
+  backgroundStage: PIXI.Container,
+  viewportCoordinate: Coordinate,
+  viewportDimension: Dimension,
+  starField: StarField,
+  parallaxScale = 1.0
+): StarField {
+  const updatedStarField = new Map(starField);
+
+  const parallaxViewportCoordinate = calculateParallaxViewportCoordinate(viewportCoordinate, parallaxScale);
+
+  const starFieldExpectedBoundary = calculateStarFieldBoundary(parallaxViewportCoordinate, viewportDimension);
+
+  if (updatedStarField.size === 0)
+    addStarsToField(
+      backgroundStage,
+      viewportCoordinate,
+      updatedStarField,
+      starFieldExpectedBoundary.topLeft,
+      starFieldExpectedBoundary.bottomRight,
+      parallaxScale
+    );
+  else {
+    pruneStarField(updatedStarField, starFieldExpectedBoundary.topLeft, starFieldExpectedBoundary.bottomRight);
+
+    const starFieldCurrentBoundary = repositionStarField(parallaxViewportCoordinate, updatedStarField);
+
+    populateStarField(
+      backgroundStage,
+      parallaxViewportCoordinate,
+      updatedStarField,
+      starFieldExpectedBoundary.topLeft,
+      starFieldExpectedBoundary.bottomRight,
+      starFieldCurrentBoundary.topLeft,
+      starFieldCurrentBoundary.bottomRight,
+      parallaxScale
+    );
+  }
+
+  return updatedStarField;
+}
+
 /**
  * Prune any stars which are outside the current viewport (with buffer).
  */
-export function pruneStarField(starField: StarField, minCoordinate: Coordinate, maxCoordinate: Coordinate): void {
+function pruneStarField(starField: StarField, minCoordinate: Coordinate, maxCoordinate: Coordinate): void {
   const rows = starField.keys();
   for (const row of rows) {
     const cols = starField.get(row)?.keys();
@@ -50,7 +95,7 @@ export function pruneStarField(starField: StarField, minCoordinate: Coordinate, 
  * Reposition the stars relative to the viewport.
  * Return the current boundaries of the Star Field in the form of a Rectangle.
  */
-export function repositionStarField(viewportCoordinate: Coordinate, starField: StarField): Rectangle {
+function repositionStarField(viewportCoordinate: Coordinate, starField: StarField): Rectangle {
   let starFieldRowMin: number | undefined;
   let starFieldRowMax: number | undefined;
 
@@ -98,20 +143,21 @@ export function repositionStarField(viewportCoordinate: Coordinate, starField: S
 /**
  * Add stars to the empty portions of the viewport (with the included buffer).
  */
-export function populateStarField(
+function populateStarField(
   backgroundStage: PIXI.Container,
   viewportCoordinate: Coordinate,
   starField: StarField,
   minCoordinate: Coordinate,
   maxCoordinate: Coordinate,
   starFieldMinCoordinate: Coordinate,
-  starFieldMaxCoordinate: Coordinate
+  starFieldMaxCoordinate: Coordinate,
+  parallaxScale = 1.0
 ): void {
   if (minCoordinate.y < starFieldMinCoordinate.y) {
     // Insert rows below current min.
     for (let y = minCoordinate.y; y < starFieldMinCoordinate.y; y++) {
       for (let x = minCoordinate.x; x < maxCoordinate.x; x++) {
-        addStarToField(backgroundStage, viewportCoordinate, starField, x, y);
+        addStarToField(backgroundStage, viewportCoordinate, starField, x, y, parallaxScale);
       }
     }
   }
@@ -120,7 +166,7 @@ export function populateStarField(
     // Insert rows above current max.
     for (let y = starFieldMaxCoordinate.y + 1; y <= maxCoordinate.y; y++) {
       for (let x = minCoordinate.x; x < maxCoordinate.x; x++) {
-        addStarToField(backgroundStage, viewportCoordinate, starField, x, y);
+        addStarToField(backgroundStage, viewportCoordinate, starField, x, y, parallaxScale);
       }
     }
   }
@@ -129,7 +175,7 @@ export function populateStarField(
     // Insert cols below current min.
     for (let x = minCoordinate.x; x < starFieldMinCoordinate.x; x++) {
       for (let y = minCoordinate.y; y < maxCoordinate.y; y++) {
-        addStarToField(backgroundStage, viewportCoordinate, starField, x, y);
+        addStarToField(backgroundStage, viewportCoordinate, starField, x, y, parallaxScale);
       }
     }
   }
@@ -138,23 +184,24 @@ export function populateStarField(
     // Insert cols above current max.
     for (let x = starFieldMaxCoordinate.x + 1; x <= maxCoordinate.x; x++) {
       for (let y = minCoordinate.y; y < maxCoordinate.y; y++) {
-        addStarToField(backgroundStage, viewportCoordinate, starField, x, y);
+        addStarToField(backgroundStage, viewportCoordinate, starField, x, y, parallaxScale);
       }
     }
   }
 }
 
-export function addStarsToField(
+function addStarsToField(
   backgroundStage: PIXI.Container,
   viewportCoordinate: Coordinate,
   starField: StarField,
   minCoordinate: Coordinate,
-  maxCoordinate: Coordinate
+  maxCoordinate: Coordinate,
+  parallaxScale = 1.0
 ): void {
   // Insert between rowMin and rowMax
   for (let y = minCoordinate.y; y <= maxCoordinate.y; y++) {
     for (let x = minCoordinate.x; x <= maxCoordinate.x; x++) {
-      addStarToField(backgroundStage, viewportCoordinate, starField, x, y);
+      addStarToField(backgroundStage, viewportCoordinate, starField, x, y, parallaxScale);
     }
   }
 }
@@ -164,7 +211,8 @@ function addStarToField(
   viewportCoordinate: Coordinate,
   starField: StarField,
   x: number,
-  y: number
+  y: number,
+  parallaxScale = 1.0
 ): void {
   // Create a row in the Star Field if we do not already have one.
   if (!starField.has(y)) starField.set(y, new Map<number, GameElement>());
@@ -172,10 +220,10 @@ function addStarToField(
   // If we already have a star at this location, skip.
   if (starField.get(y)?.has(x)) return;
 
-  if (Math.random() > 1 / 256) return;
+  if (Math.random() > STAR_CHANCE / parallaxScale) return;
 
   const coordinate = {x, y};
-  const star = createStarGraphic(viewportCoordinate, coordinate);
+  const star = createStarGraphic(viewportCoordinate, coordinate, parallaxScale);
 
   starField.get(y)?.set(x, {
     coordinate,
@@ -192,11 +240,11 @@ function addStarToField(
   backgroundStage.addChild(star);
 }
 
-function createStarGraphic(viewportCoordinate: Coordinate, coordinate: Coordinate): PIXI.Graphics {
+function createStarGraphic(viewportCoordinate: Coordinate, coordinate: Coordinate, parallaxScale = 1.0): PIXI.Graphics {
   const position = calculatePositionRelativeToViewport(coordinate, viewportCoordinate);
 
-  const starSize = Math.random() * 2;
-  const alpha = Math.random();
+  const starSize = Math.floor((Math.random() * 80.0) / parallaxScale);
+  const alpha = (Math.random() * 20.0) / parallaxScale;
 
   const starGraphics = new PIXI.Graphics();
   starGraphics.beginFill(0xffffff, alpha);
@@ -208,7 +256,7 @@ function createStarGraphic(viewportCoordinate: Coordinate, coordinate: Coordinat
   return starGraphics;
 }
 
-export function calculateStarFieldBoundary(viewportCoordinate: Coordinate, viewportDimension: Dimension): Rectangle {
+function calculateStarFieldBoundary(viewportCoordinate: Coordinate, viewportDimension: Dimension): Rectangle {
   const rowMin = viewportCoordinate.y - STARFIELD_BUFFER;
   const rowMax = viewportCoordinate.y + viewportDimension.height + STARFIELD_BUFFER;
 

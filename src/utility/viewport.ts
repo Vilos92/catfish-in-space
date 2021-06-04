@@ -36,8 +36,8 @@ export function calculatePositionRelativeToViewport(
 export function calculateParallaxViewportCoordinate(viewportCoordinate: Coordinate, parallaxRatio: number): Coordinate {
   // Not flooring the results will lead to a large number of overlapping stars in the Star Field.
   return {
-    x: Math.floor(viewportCoordinate.x * parallaxRatio),
-    y: Math.floor(viewportCoordinate.y * parallaxRatio)
+    x: Math.floor(viewportCoordinate.x * (1.0 / parallaxRatio)),
+    y: Math.floor(viewportCoordinate.y * (1.0 / parallaxRatio))
   };
 }
 

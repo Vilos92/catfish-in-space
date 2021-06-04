@@ -9,11 +9,13 @@ import {BackgroundStageAction, BackgroundStageActionTypesEnum} from './action';
 export type StarField = Map<number, Map<number, GameElement>>;
 
 export interface BackgroundStageState {
-  starField: StarField;
+  starFieldA: StarField;
+  starFieldB: StarField;
 }
 
 export const initialState: BackgroundStageState = {
-  starField: new Map<number, Map<number, GameElement>>()
+  starFieldA: new Map<number, Map<number, GameElement>>(),
+  starFieldB: new Map<number, Map<number, GameElement>>()
 };
 
 export const backgroundStageReducer: Reducer<BackgroundStageState, BackgroundStageAction> = (
@@ -21,8 +23,11 @@ export const backgroundStageReducer: Reducer<BackgroundStageState, BackgroundSta
   action: BackgroundStageAction
 ) => {
   switch (action.type) {
-    case BackgroundStageActionTypesEnum.UPDATE_STAR_FIELD_ACTION: {
-      return {...state, starField: action.starField};
+    case BackgroundStageActionTypesEnum.UPDATE_STAR_FIELD_A_ACTION: {
+      return {...state, starFieldA: action.starField};
+    }
+    case BackgroundStageActionTypesEnum.UPDATE_STAR_FIELD_B_ACTION: {
+      return {...state, starFieldB: action.starField};
     }
     default:
       return state;
