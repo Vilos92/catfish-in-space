@@ -23,6 +23,16 @@ export enum KeyCodesEnum {
 }
 
 /**
+ * Mouse Button Events.
+ */
+
+export enum MouseButtonCodesEnum {
+  MOUSE_BUTTON_PRIMARY = 0,
+  MOUSE_BUTTON_AUXILARY = 1,
+  MOUSE_BUTTON_SECONDARY = 2
+}
+
+/**
  * Callbacks.
  */
 

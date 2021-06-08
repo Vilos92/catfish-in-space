@@ -4,7 +4,7 @@ import * as PIXI from 'pixi.js';
 import {pushGameElementAction} from './store/gameElement/action';
 import {Dispatch, GetState} from './store/gameReducer';
 import {keyDownAction, keyUpAction} from './store/keyboard/action';
-import {mouseButtonDownAction} from './store/mouse/action';
+import {mouseButtonDownAction, mouseButtonUpAction} from './store/mouse/action';
 import {updatePlayerGameElementAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
@@ -33,10 +33,16 @@ export function setupKeybinds(dispatch: Dispatch, view: HTMLCanvasElement): void
     dispatch(mouseButtonDownAction(buttonCode));
   };
 
+  const handleMouseup: CallbackWithArg<MouseEvent> = (event: MouseEvent): void => {
+    const buttonCode = event.button;
+    dispatch(mouseButtonUpAction(buttonCode));
+  };
+
   window.addEventListener('keydown', handleKeydown, false);
   window.addEventListener('keyup', handleKeyup, false);
 
   view.addEventListener('mousedown', handleMousedown, false);
+  view.addEventListener('mouseup', handleMouseup, false);
   // This disables the right-click context menu on the game canvas.
   view.addEventListener('contextmenu', event => event.preventDefault(), false);
 }

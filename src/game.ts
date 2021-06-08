@@ -10,11 +10,12 @@ import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
 import {getKeyboard} from './store/keyboard/selector';
+import {getMouse} from './store/mouse/selector';
 import {updatePlayerGameElementAction, updatePlayerIsViewportLockedAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
-import {Coordinate, GameElement, Renderer} from './type';
+import {Coordinate, GameElement, MouseButtonCodesEnum, Renderer} from './type';
 import {VERSION} from './utility';
 import {createComputeIsKeyClicked} from './utility/keyboard';
 import {
@@ -138,6 +139,7 @@ export function gameLoop(
 function playerLoop(getState: GetState, dispatch: Dispatch, renderer: Renderer): void {
   const state = getState();
   const keyboard = getKeyboard(state);
+  const mouse = getMouse(state);
   const player = getPlayer(state);
   const viewport = getViewport(state);
 
@@ -168,6 +170,11 @@ function playerLoop(getState: GetState, dispatch: Dispatch, renderer: Renderer):
 
   const updatedPlayerGameElement: GameElement = {...player.gameElement, coordinate, rotation};
   dispatch(updatePlayerGameElementAction(updatedPlayerGameElement));
+
+  // Lasers go pew.
+  if (mouse.buttonStateMap[MouseButtonCodesEnum.MOUSE_BUTTON_PRIMARY].isActive) {
+    console.log('lasers go pew');
+  }
 }
 
 // Update game element coordinates to be aligned with their matter positions.

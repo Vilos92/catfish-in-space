@@ -1,5 +1,6 @@
 import produce from 'immer';
 import {Reducer} from 'redux';
+import {MouseButtonCodesEnum} from 'src/type';
 
 import {MouseAction, MouseActionTypesEnum} from './action';
 
@@ -15,31 +16,25 @@ export interface MouseState {
   buttonStateMap: KeyStateMap;
 }
 
-const mouseKeys = [
-  // Primary key.
-  0,
-  // Auxilary (middle) key.
-  1,
-  // Secondary key.
-  2
-];
+const mouseButtonCodes = Object.values(MouseButtonCodesEnum);
 
 const initialButtonState = {isActive: false};
-const initialButtonStateMap = Object.assign({}, ...mouseKeys.map(mouseKey => ({[mouseKey]: initialButtonState})));
+const initialButtonStateMap = Object.assign(
+  {},
+  ...mouseButtonCodes.map(mouseKey => ({[mouseKey]: initialButtonState}))
+);
 
 const initialState: MouseState = {
   buttonStateMap: initialButtonStateMap
 };
 
 // We use a set to quickly validate if keys are mapped in the game.
-const mouseKeysSet = new Set(mouseKeys);
+const mouseKeysSet = new Set(mouseButtonCodes);
 
 export const mouseReducer: Reducer<MouseState, MouseAction> = produce((state: MouseState, action: MouseAction) => {
   const {buttonCode} = action;
 
   if (!mouseKeysSet.has(buttonCode)) return;
-
-  console.log('mouse action', action);
 
   switch (action.type) {
     case MouseActionTypesEnum.MOUSE_BUTTON_DOWN_ACTION: {
