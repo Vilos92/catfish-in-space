@@ -1,7 +1,6 @@
 import Matter from 'matter-js';
 import * as PIXI from 'pixi.js';
 
-import {pushGameElementAction} from './store/gameElement/action';
 import {Dispatch, GetState} from './store/gameReducer';
 import {keyDownAction, keyUpAction} from './store/keyboard/action';
 import {mouseButtonDownAction, mouseButtonUpAction} from './store/mouse/action';
@@ -11,6 +10,7 @@ import {updateViewportCoordinateAction} from './store/viewport/action';
 import {ViewportState} from './store/viewport/reducer';
 import {getViewport} from './store/viewport/selector';
 import {Callback, CallbackWithArg, Coordinate, GameElement, KeyCodesEnum, Renderer} from './type';
+import {addGameElement} from './utility';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './utility/viewport';
 
 /**
@@ -120,6 +120,8 @@ async function loadGameAssets(): Promise<void> {
 
     loader.add('spaceship', './assets/sprites/nightraiderfixed.png');
 
+    loader.add('laserBullet1', './assets/sprites/laserBullet1.png');
+
     loader.onComplete.once(() => {
       res();
     });
@@ -153,16 +155,6 @@ function setupWorld(
   const testRectangle2 = createRectangleGameElement(viewport, {x: -600, y: 100});
   addGameElement(dispatch, world, foregroundStage, testRectangle1);
   addGameElement(dispatch, world, foregroundStage, testRectangle2);
-
-  // addInitialStars(getState, dispatch, backgroundStage);
-}
-
-function addGameElement(dispatch: Dispatch, world: Matter.World, stage: PIXI.Container, gameElement: GameElement) {
-  if (gameElement.matterBody) Matter.Composite.add(world, gameElement.matterBody);
-
-  stage.addChild(gameElement.pixiSprite);
-
-  dispatch(pushGameElementAction(gameElement));
 }
 
 function createPlayerGameElement(viewportCoordinate: Coordinate): GameElement {

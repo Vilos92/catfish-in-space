@@ -53,6 +53,11 @@ export interface Coordinate {
   y: number;
 }
 
+export interface Velocity {
+  x: number;
+  y: number;
+}
+
 export interface Dimension {
   width: number;
   height: number;

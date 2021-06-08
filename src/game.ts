@@ -15,8 +15,8 @@ import {updatePlayerGameElementAction, updatePlayerIsViewportLockedAction} from 
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
-import {Coordinate, GameElement, MouseButtonCodesEnum, Renderer} from './type';
-import {VERSION} from './utility';
+import {Coordinate, GameElement, MouseButtonCodesEnum, Renderer, Velocity} from './type';
+import {addGameElement, VERSION} from './utility';
 import {createComputeIsKeyClicked} from './utility/keyboard';
 import {
   addForceToPlayerMatterBodyFromKeyboard,
@@ -117,7 +117,7 @@ export function gameLoop(
   debugLoop(getState, world, stage);
 
   // Handle player loop first, to account for keyboard inputs to apply changes to the matter body.
-  playerLoop(getState, dispatch, renderer);
+  playerLoop(getState, dispatch, world, renderer, stage);
 
   // Handle game element loop next, to account for changes in matter position and rotation.
   gameElementLoop(getState, dispatch);
@@ -136,7 +136,13 @@ export function gameLoop(
 
 // Set forces on player matter from keyboard inputs, and update player coordinate
 // to be aligned with the matter position.
-function playerLoop(getState: GetState, dispatch: Dispatch, renderer: Renderer): void {
+function playerLoop(
+  getState: GetState,
+  dispatch: Dispatch,
+  world: Matter.World,
+  renderer: Renderer,
+  stage: PIXI.Container
+): void {
   const state = getState();
   const keyboard = getKeyboard(state);
   const mouse = getMouse(state);
@@ -172,8 +178,16 @@ function playerLoop(getState: GetState, dispatch: Dispatch, renderer: Renderer):
   dispatch(updatePlayerGameElementAction(updatedPlayerGameElement));
 
   // Lasers go pew.
-  if (mouse.buttonStateMap[MouseButtonCodesEnum.MOUSE_BUTTON_PRIMARY].isActive) {
+  if (player.gameElement.matterBody && mouse.buttonStateMap[MouseButtonCodesEnum.MOUSE_BUTTON_PRIMARY].isActive) {
     console.log('lasers go pew');
+    const laserBullet = createLaserBulletGameElement(
+      viewport.coordinate,
+      player.gameElement.pixiSprite.getBounds().width,
+      player.gameElement.matterBody.position,
+      player.gameElement.matterBody.angle,
+      player.gameElement.matterBody.velocity
+    );
+    addGameElement(dispatch, world, stage, laserBullet);
   }
 }
 
@@ -294,4 +308,56 @@ function drawWireFrameGraphics(viewportCoordinate: Coordinate, world: Matter.Wor
 
   stage.addChild(wireFrameGraphics);
   lastWireFrameGraphics = wireFrameGraphics;
+}
+
+function createLaserBulletGameElement(
+  viewportCoordinate: Coordinate,
+  playerWidth: number,
+  playerCoordinate: Coordinate,
+  playerRotation: number,
+  playerVelocity: Velocity
+): GameElement {
+  // Bullet should be in front of the player.
+  // TOOD: Get width of player.
+  const initialLaserCoordinate = {
+    x: playerCoordinate.x + (Math.cos(playerRotation) * playerWidth) / 2 + 5,
+    y: playerCoordinate.y + (Math.sin(playerRotation) * playerWidth) / 2 + 5
+  };
+
+  const initialLaserVelocity = {
+    x: playerVelocity.x + Math.cos(playerRotation) * 50,
+    y: playerVelocity.y + Math.sin(playerRotation) * 50
+  };
+
+  const laserPosition = calculatePositionRelativeToViewport(initialLaserCoordinate, viewportCoordinate);
+
+  const laserPixi = new PIXI.Sprite(PIXI.Texture.from('laserBullet1'));
+  laserPixi.scale.set(0.5, 0.5);
+  laserPixi.anchor.set(0.5, 0.5);
+
+  laserPixi.position.set(laserPosition.x, laserPosition.y);
+  laserPixi.rotation = playerRotation;
+
+  const laserMatter = Matter.Bodies.rectangle(
+    // Game and matter coordinates have a one-to-one mapping.
+    initialLaserCoordinate.x,
+    initialLaserCoordinate.y,
+    // We use dimensions of our sprite.
+    laserPixi.width,
+    laserPixi.height,
+    {
+      // Approximate mass of Falcon 9.
+      mass: 0.1,
+      angle: playerRotation
+    }
+  );
+
+  Matter.Body.setVelocity(laserMatter, initialLaserVelocity);
+
+  return {
+    coordinate: initialLaserCoordinate,
+    rotation: playerRotation,
+    matterBody: laserMatter,
+    pixiSprite: laserPixi
+  };
 }

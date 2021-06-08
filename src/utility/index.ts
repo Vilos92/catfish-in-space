@@ -1,3 +1,10 @@
+import Matter from 'matter-js';
+import * as PIXI from 'pixi.js';
+import {pushGameElementAction} from 'src/store/gameElement/action';
+
+import {Dispatch} from '../store/gameReducer';
+import {GameElement} from '../type';
+
 /**
  * Constants.
  */
@@ -29,4 +36,17 @@ export function computeAngleBetween(angleA: number, angleB: number): number {
   else if (angleDiff < -Math.PI) return 2 * Math.PI + angleDiff;
 
   return angleDiff;
+}
+
+export function addGameElement(
+  dispatch: Dispatch,
+  world: Matter.World,
+  stage: PIXI.Container,
+  gameElement: GameElement
+): void {
+  if (gameElement.matterBody) Matter.Composite.add(world, gameElement.matterBody);
+
+  stage.addChild(gameElement.pixiSprite);
+
+  dispatch(pushGameElementAction(gameElement));
 }
