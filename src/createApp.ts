@@ -1,6 +1,7 @@
-import Matter from 'matter-js';
+import Matter, {Events} from 'matter-js';
 import * as PIXI from 'pixi.js';
 
+import {getGameElementByMatterId} from './store/gameElement/selector';
 import {Dispatch, GetState} from './store/gameReducer';
 import {keyDownAction, keyUpAction} from './store/keyboard/action';
 import {mouseButtonDownAction, mouseButtonUpAction} from './store/mouse/action';
@@ -45,6 +46,26 @@ export function setupKeybinds(dispatch: Dispatch, view: HTMLCanvasElement): void
   view.addEventListener('mouseup', handleMouseup, false);
   // This disables the right-click context menu on the game canvas.
   view.addEventListener('contextmenu', event => event.preventDefault(), false);
+}
+
+/**
+ * Matter.
+ */
+
+export function setupCollisions(getState: GetState, engine: Matter.Engine): void {
+  const state = getState();
+  const gameElementByMatterId = getGameElementByMatterId(state);
+
+  const onCollisionActive: CallbackWithArg<Matter.IEventCollision<Matter.Engine>> = (
+    collisions: Matter.IEventCollision<Matter.Engine>
+  ) => {
+    collisions.pairs.forEach(collisionPair => {
+      console.log('collision', collisionPair, gameElementByMatterId);
+      console.log(gameElementByMatterId.get(collisionPair.bodyA.id));
+    });
+  };
+
+  Events.on(engine, 'collisionActive', onCollisionActive);
 }
 
 /**

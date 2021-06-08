@@ -5,10 +5,12 @@ import {GameElementAction, GameElementActionTypesEnum} from './action';
 
 export interface GameElementState {
   gameElements: ReadonlyArray<GameElement>;
+  gameElementByMatterId: Map<number, GameElement>;
 }
 
 const initialState: GameElementState = {
-  gameElements: []
+  gameElements: [],
+  gameElementByMatterId: new Map<number, GameElement>()
 };
 
 export const gameElementReducer: Reducer<GameElementState, GameElementAction> = (
@@ -18,13 +20,24 @@ export const gameElementReducer: Reducer<GameElementState, GameElementAction> = 
   switch (action.type) {
     case GameElementActionTypesEnum.PUSH_GAME_ELEMENT_ACTION: {
       const {gameElements} = state;
+      const {gameElement} = action;
 
-      const updatedGameElements: ReadonlyArray<GameElement> = [...gameElements, action.gameElement];
+      const updatedGameElements: ReadonlyArray<GameElement> = [...gameElements, gameElement];
 
-      return {...state, gameElements: updatedGameElements};
+      // We need to track Game Elements by Matter id, to handle collision detection.
+      const updatedGameElementByMatterId = gameElement.matterBody
+        ? {...state.gameElementByMatterId, [gameElement.matterBody.id]: gameElement}
+        : state.gameElementByMatterId;
+
+      return {...state, gameElements: updatedGameElements, gameElementByMatterId: updatedGameElementByMatterId};
     }
     case GameElementActionTypesEnum.UPDATE_GAME_ELEMENTS_ACTION: {
-      return {...state, gameElements: action.gameElements};
+      const {gameElements} = action;
+
+      // We need to track Game Elements by Matter id, to handle collision detection.
+      // TODO: Add collision detection map when updating here.
+
+      return {...state, gameElements};
     }
     default:
       return state;

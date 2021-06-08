@@ -2,7 +2,7 @@
 import Matter from 'matter-js';
 import * as PIXI from 'pixi.js';
 
-import {createApp, onLoad, onResize, setupKeybinds} from './createApp';
+import {createApp, onLoad, onResize, setupCollisions, setupKeybinds} from './createApp';
 import {setupWindowHooks} from './createApp';
 import {updateStarFieldAAction, updateStarFieldBAction} from './store/backgroundStage/action';
 import {getStarFieldA, getStarFieldB} from './store/backgroundStage/selector';
@@ -64,6 +64,9 @@ export function startGame(): void {
   const engine = Matter.Engine.create();
   // Disable gravity.
   engine.world.gravity.y = 0;
+
+  // Attach hooks to Matter.
+  setupCollisions(getState, engine);
 
   const runner = Matter.Runner.create();
 
