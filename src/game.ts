@@ -11,7 +11,11 @@ import {getGameElements} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
 import {getKeyboard} from './store/keyboard/selector';
 import {getMouse} from './store/mouse/selector';
-import {updatePlayerGameElementAction, updatePlayerIsViewportLockedAction} from './store/player/action';
+import {
+  updatePlayerGameElementAction,
+  updatePlayerIsViewportLockedAction,
+  updatePlayerPrimaryFireTimestampAction
+} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
@@ -178,8 +182,13 @@ function playerLoop(
   dispatch(updatePlayerGameElementAction(updatedPlayerGameElement));
 
   // Lasers go pew.
-  if (player.gameElement.matterBody && mouse.buttonStateMap[MouseButtonCodesEnum.MOUSE_BUTTON_PRIMARY].isActive) {
-    console.log('lasers go pew');
+  const now = Date.now();
+  const fireBuffer = 250;
+  if (
+    now > player.primaryFireTimestamp + fireBuffer &&
+    player.gameElement.matterBody &&
+    mouse.buttonStateMap[MouseButtonCodesEnum.MOUSE_BUTTON_PRIMARY].isActive
+  ) {
     const laserBullet = createLaserBulletGameElement(
       viewport.coordinate,
       player.gameElement.pixiSprite.getBounds().width,
@@ -188,6 +197,7 @@ function playerLoop(
       player.gameElement.matterBody.velocity
     );
     addGameElement(dispatch, world, stage, laserBullet);
+    dispatch(updatePlayerPrimaryFireTimestampAction(now));
   }
 }
 

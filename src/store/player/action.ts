@@ -4,7 +4,8 @@ import {PidState} from '../../utility/pid';
 export enum PlayerActionTypesEnum {
   UPDATE_PLAYER_GAME_ELEMENT_ACTION = 'UPDATE_PLAYER_GAME_ELEMENT_ACTION',
   UPDATE_PLAYER_PID_STATE_ACTION = 'UPDATE_PLAYER_PID_STATE_ACTION',
-  UPDATE_PLAYER_IS_VIEWPORT_LOCKED_ACTION = 'UPDATE_PLAYER_IS_VIEWPORT_LOCKED_ACTION'
+  UPDATE_PLAYER_IS_VIEWPORT_LOCKED_ACTION = 'UPDATE_PLAYER_IS_VIEWPORT_LOCKED_ACTION',
+  UPDATE_PLAYER_PRIMARY_FIRE_TIMESTAMP_ACTION = 'UPDATE_PLAYER_PRIMARY_FIRE_TIMESTAMP_ACTION'
 }
 
 export interface UpdatePlayerGameElementAction {
@@ -22,10 +23,16 @@ export interface UpdatePlayerIsViewportLockedAction {
   isViewportLocked: boolean;
 }
 
+export interface UpdatePlayerPrimaryFireTimestamp {
+  type: PlayerActionTypesEnum.UPDATE_PLAYER_PRIMARY_FIRE_TIMESTAMP_ACTION;
+  primaryFireTimestamp: number;
+}
+
 export type PlayerAction =
   | UpdatePlayerGameElementAction
   | UpdatePlayerPidStateAction
-  | UpdatePlayerIsViewportLockedAction;
+  | UpdatePlayerIsViewportLockedAction
+  | UpdatePlayerPrimaryFireTimestamp;
 
 export function updatePlayerGameElementAction(gameElement: GameElement): UpdatePlayerGameElementAction {
   return {
@@ -45,5 +52,12 @@ export function updatePlayerIsViewportLockedAction(isViewportLocked: boolean): U
   return {
     type: PlayerActionTypesEnum.UPDATE_PLAYER_IS_VIEWPORT_LOCKED_ACTION,
     isViewportLocked
+  };
+}
+
+export function updatePlayerPrimaryFireTimestampAction(primaryFireTimestamp: number): UpdatePlayerPrimaryFireTimestamp {
+  return {
+    type: PlayerActionTypesEnum.UPDATE_PLAYER_PRIMARY_FIRE_TIMESTAMP_ACTION,
+    primaryFireTimestamp
   };
 }

@@ -8,11 +8,13 @@ export interface PlayerState {
   gameElement?: GameElement;
   pidState: PidState;
   isViewportLocked: boolean;
+  primaryFireTimestamp: number;
 }
 
 export const initialState: PlayerState = {
   pidState: {integral: 0, error: 0, output: 0},
-  isViewportLocked: true
+  isViewportLocked: true,
+  primaryFireTimestamp: 0
 };
 
 export const playerReducer: Reducer<PlayerState, PlayerAction> = (
@@ -28,6 +30,9 @@ export const playerReducer: Reducer<PlayerState, PlayerAction> = (
     }
     case PlayerActionTypesEnum.UPDATE_PLAYER_IS_VIEWPORT_LOCKED_ACTION: {
       return {...state, isViewportLocked: action.isViewportLocked};
+    }
+    case PlayerActionTypesEnum.UPDATE_PLAYER_PRIMARY_FIRE_TIMESTAMP_ACTION: {
+      return {...state, primaryFireTimestamp: action.primaryFireTimestamp};
     }
     default:
       return state;
