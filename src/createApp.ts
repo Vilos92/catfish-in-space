@@ -4,6 +4,7 @@ import * as PIXI from 'pixi.js';
 import {pushGameElementAction} from './store/gameElement/action';
 import {Dispatch, GetState} from './store/gameReducer';
 import {keyDownAction, keyUpAction} from './store/keyboard/action';
+import {mouseButtonDownAction} from './store/mouse/action';
 import {updatePlayerGameElementAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
@@ -16,7 +17,7 @@ import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from '
  * Browser.
  */
 
-export function setupKeybinds(dispatch: Dispatch): void {
+export function setupKeybinds(dispatch: Dispatch, view: HTMLCanvasElement): void {
   const handleKeydown: CallbackWithArg<KeyboardEvent> = (event: KeyboardEvent): void => {
     const keyCode = event.code;
     dispatch(keyDownAction(keyCode as KeyCodesEnum));
@@ -27,8 +28,17 @@ export function setupKeybinds(dispatch: Dispatch): void {
     dispatch(keyUpAction(keyCode as KeyCodesEnum));
   };
 
+  const handleMousedown: CallbackWithArg<MouseEvent> = (event: MouseEvent): void => {
+    const buttonCode = event.button;
+    dispatch(mouseButtonDownAction(buttonCode));
+  };
+
   window.addEventListener('keydown', handleKeydown, false);
   window.addEventListener('keyup', handleKeyup, false);
+
+  view.addEventListener('mousedown', handleMousedown, false);
+  // This disables the right-click context menu on the game canvas.
+  view.addEventListener('contextmenu', event => event.preventDefault(), false);
 }
 
 /**

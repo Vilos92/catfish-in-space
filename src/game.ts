@@ -88,7 +88,7 @@ export function startGame(): void {
   const onGameLoop = () => gameLoop(getState, store.dispatch, engine.world, renderer, foregroundStage, backgroundStage);
 
   // Setup key bindings.
-  setupKeybinds(store.dispatch);
+  setupKeybinds(store.dispatch, view);
 
   // Start the matter runner.
   Matter.Runner.run(runner, engine);

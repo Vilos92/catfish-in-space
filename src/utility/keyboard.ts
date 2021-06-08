@@ -30,6 +30,8 @@ export function calculateDirectionFromOpposingKeys(
 /**
  * Creates a function which tracks the previous keyIsActive state, to determine
  * whether a key click has been completed.
+ * TODO: Use redux to implement this. May need action to run at end of game loop,
+ * which disables all clicks.
  */
 export function createComputeIsKeyClicked(): (newKeyIsActive: boolean) => boolean {
   let keyIsActive = false;

@@ -20,13 +20,13 @@ export type KeyboardAction = KeyDownAction | KeyUpAction;
 export function keyDownAction(keyCode: KeyCodesEnum): KeyDownAction {
   return {
     type: KeyboardActionTypesEnum.KEY_DOWN_ACTION,
-    keyCode: keyCode
+    keyCode
   };
 }
 
 export function keyUpAction(keyCode: KeyCodesEnum): KeyUpAction {
   return {
     type: KeyboardActionTypesEnum.KEY_UP_ACTION,
-    keyCode: keyCode
+    keyCode
   };
 }
