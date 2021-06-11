@@ -1,43 +1,68 @@
+import {updateLastCollisionTimestampAction} from 'src/store/collision/action';
+import {getLastCollisionTimestamp} from 'src/store/collision/selector';
 import {updateGameElementAction} from 'src/store/gameElement/action';
-import {Dispatch} from 'src/store/gameReducer';
+import {Dispatch, GetState} from 'src/store/gameReducer';
 
 import {CollisionTypesEnum, PhysicsElement} from '../type';
 
+/**
+ * Constants.
+ */
+
+// Only allow four collisions a second between two bodies.
+const COLLISION_BUFFER_PERIOD = 250; // 0.25 seconds.
+
+/**
+ * Collision handling.
+ */
+
 export function handlePhysicsCollision(
+  getState: GetState,
   dispatch: Dispatch,
   physicsElementA: PhysicsElement,
   physicsElementB: PhysicsElement
 ): void {
-  applyPhysicsCollision(dispatch, physicsElementA.collisionType, physicsElementB);
-  applyPhysicsCollision(dispatch, physicsElementB.collisionType, physicsElementA);
+  const state = getState();
+
+  const now = Date.now();
+
+  const lastCollisionTimestampAToB = getLastCollisionTimestamp(state, physicsElementB.id, physicsElementA.id);
+  const lastCollisionTimestampBToA = getLastCollisionTimestamp(state, physicsElementA.id, physicsElementB.id);
+
+  if (lastCollisionTimestampAToB === undefined || now > lastCollisionTimestampAToB + COLLISION_BUFFER_PERIOD)
+    applyPhysicsCollision(dispatch, physicsElementA, physicsElementB);
+  if (lastCollisionTimestampBToA === undefined || now > lastCollisionTimestampBToA + COLLISION_BUFFER_PERIOD)
+    applyPhysicsCollision(dispatch, physicsElementB, physicsElementA);
 }
 
 function applyPhysicsCollision(
   dispatch: Dispatch,
-  collisionType: CollisionTypesEnum,
-  physicsElement: PhysicsElement
+  physicsElementImpacting: PhysicsElement,
+  physicsElementImpacted: PhysicsElement
 ): void {
   // Nothing occurs for an indestructible Element.
-  if (!physicsElement.health) return;
+  if (!physicsElementImpacted.health) return;
 
-  switch (collisionType) {
+  switch (physicsElementImpacting.collisionType) {
     case CollisionTypesEnum.PLAYER: {
-      console.log(physicsElement.collisionType, physicsElement.health, 'impacted by PLAYER');
-      const newPhysicsElement = {...physicsElement, health: physicsElement.health - 50};
+      const newPhysicsElement = {...physicsElementImpacted, health: physicsElementImpacted.health - 50};
       dispatch(updateGameElementAction(newPhysicsElement));
-      return;
+      break;
     }
     case CollisionTypesEnum.PROJECTILE: {
-      console.log(physicsElement.collisionType, physicsElement.health, 'impacted by PROJECTILE');
-      const newPhysicsElement = {...physicsElement, health: physicsElement.health - 10};
+      const newPhysicsElement = {...physicsElementImpacted, health: physicsElementImpacted.health - 10};
       dispatch(updateGameElementAction(newPhysicsElement));
-      return;
+      break;
     }
     case CollisionTypesEnum.BODY:
     default: {
-      console.log(physicsElement.collisionType, physicsElement.health, 'impacted by BODY');
-      const newPhysicsElement = {...physicsElement, health: physicsElement.health - 20};
+      const newPhysicsElement = {...physicsElementImpacted, health: physicsElementImpacted.health - 20};
       dispatch(updateGameElementAction(newPhysicsElement));
     }
   }
+
+  const lastCollisionTimestamp = Date.now();
+  dispatch(
+    updateLastCollisionTimestampAction(lastCollisionTimestamp, physicsElementImpacted.id, physicsElementImpacting.id)
+  );
 }

@@ -6,6 +6,7 @@ import {createApp, onLoad, onResize, setupCollisions, setupKeybinds} from './cre
 import {setupWindowHooks} from './createApp';
 import {updateStarFieldAAction, updateStarFieldBAction} from './store/backgroundStage/action';
 import {getStarFieldA, getStarFieldB} from './store/backgroundStage/selector';
+import {removeGameElementImpactingIdAction} from './store/collision/action';
 import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
@@ -221,13 +222,13 @@ function healthLoop(getState: GetState, dispatch: Dispatch, world: Matter.World)
   const gameElements = getGameElements(state);
 
   gameElements.forEach(gameElement => {
-    if (gameElement.health === undefined) return;
+    if (gameElement.health === undefined || gameElement.health > 0) return;
 
-    if (gameElement.health <= 0) {
-      gameElement.pixiSprite.destroy();
+    gameElement.pixiSprite.destroy();
 
-      if (isPhysicsElement(gameElement)) Matter.Composite.remove(world, gameElement.matterBody);
-    }
+    if (isPhysicsElement(gameElement)) Matter.Composite.remove(world, gameElement.matterBody);
+
+    dispatch(removeGameElementImpactingIdAction(gameElement.id));
   });
 
   const updatedGameElements = gameElements.filter(

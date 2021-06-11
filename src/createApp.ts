@@ -74,7 +74,7 @@ export function setupCollisions(getState: GetState, dispatch: Dispatch, engine: 
 
       if (!physicsElementA || !physicsElementB) return;
 
-      handlePhysicsCollision(dispatch, physicsElementA, physicsElementB);
+      handlePhysicsCollision(getState, dispatch, physicsElementA, physicsElementB);
     });
   };
 
