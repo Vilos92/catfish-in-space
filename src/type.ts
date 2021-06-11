@@ -68,15 +68,34 @@ export interface Rectangle {
   bottomRight: Coordinate;
 }
 
-export interface DisplayElement {
+interface Element {
   // This is the coordinate in our game, not the canvas.
   coordinate: Coordinate;
   // This is in radians. Default orientation (0) is facing right.
   rotation: number;
+}
+
+/**
+ * Element which is extended to have a display component.
+ */
+export interface DisplayElement extends Element {
   pixiSprite: PIXI.DisplayObject;
 }
 
+/**
+ * Types which define how one element impacts other elements on collision.
+ */
+export enum CollisionTypesEnum {
+  BODY = 'BODY',
+  PLAYER = 'PLAYER',
+  PROJECTILE = 'PROJECTILE'
+}
+
+/**
+ * Element which has a physics component in addition to the display component.
+ */
 export interface PhysicsElement extends DisplayElement {
+  collisionType: CollisionTypesEnum;
   matterBody: Matter.Body;
 }
 

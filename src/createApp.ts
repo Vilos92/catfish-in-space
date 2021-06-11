@@ -1,7 +1,7 @@
 import Matter, {Events} from 'matter-js';
 import * as PIXI from 'pixi.js';
 
-import {getGameElementByMatterId} from './store/gameElement/selector';
+import {getPhysicsElementByMatterId} from './store/gameElement/selector';
 import {Dispatch, GetState} from './store/gameReducer';
 import {keyDownAction, keyUpAction} from './store/keyboard/action';
 import {mouseButtonDownAction, mouseButtonUpAction} from './store/mouse/action';
@@ -10,8 +10,17 @@ import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {ViewportState} from './store/viewport/reducer';
 import {getViewport} from './store/viewport/selector';
-import {Callback, CallbackWithArg, Coordinate, KeyCodesEnum, PhysicsElement, Renderer} from './type';
+import {
+  Callback,
+  CallbackWithArg,
+  CollisionTypesEnum,
+  Coordinate,
+  KeyCodesEnum,
+  PhysicsElement,
+  Renderer
+} from './type';
 import {addGameElement} from './utility';
+import {handlePhysicsCollision} from './utility/collision';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './utility/viewport';
 
 /**
@@ -57,11 +66,15 @@ export function setupCollisions(getState: GetState, engine: Matter.Engine): void
     collisions: Matter.IEventCollision<Matter.Engine>
   ) => {
     const state = getState();
-    const gameElementByMatterId = getGameElementByMatterId(state);
+    const physicsElementByMatterId = getPhysicsElementByMatterId(state);
 
     collisions.pairs.forEach(collisionPair => {
-      console.log('collision', collisionPair, gameElementByMatterId);
-      console.log(gameElementByMatterId.get(collisionPair.bodyA.id));
+      const physicsElementA = physicsElementByMatterId.get(collisionPair.bodyA.id);
+      const physicsElementB = physicsElementByMatterId.get(collisionPair.bodyB.id);
+
+      if (!physicsElementA || !physicsElementB) return;
+
+      handlePhysicsCollision(physicsElementA, physicsElementB);
     });
   };
 
@@ -204,6 +217,7 @@ function createPlayerGameElement(viewportCoordinate: Coordinate): PhysicsElement
   );
 
   return {
+    collisionType: CollisionTypesEnum.PLAYER,
     coordinate: initialPlayerCoordinate,
     rotation: 0,
     matterBody: spaceshipMatter,
@@ -235,6 +249,7 @@ function createRectangleGameElement(viewport: ViewportState, coordinate: Coordin
   });
 
   return {
+    collisionType: CollisionTypesEnum.BODY,
     coordinate: coordinate,
     rotation,
     matterBody: matter,

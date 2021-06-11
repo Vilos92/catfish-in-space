@@ -5,12 +5,12 @@ import {GameElementAction, GameElementActionTypesEnum} from './action';
 
 export interface GameElementState {
   gameElements: ReadonlyArray<GameElement>;
-  gameElementByMatterId: Map<number, GameElement>;
+  physicsElementByMatterId: Map<number, PhysicsElement>;
 }
 
 const initialState: GameElementState = {
   gameElements: [],
-  gameElementByMatterId: new Map<number, GameElement>()
+  physicsElementByMatterId: new Map<number, PhysicsElement>()
 };
 
 export const gameElementReducer: Reducer<GameElementState, GameElementAction> = (
@@ -25,11 +25,11 @@ export const gameElementReducer: Reducer<GameElementState, GameElementAction> = 
       const updatedGameElements: ReadonlyArray<GameElement> = [...gameElements, gameElement];
 
       // We need to track Game Elements by Matter id, to handle collision detection.
-      const updatedGameElementByMatterId = isPhysicsElement(gameElement)
-        ? {...state.gameElementByMatterId, [gameElement.matterBody.id]: gameElement}
-        : state.gameElementByMatterId;
+      const updatedPhysicsElementByMatterId = isPhysicsElement(gameElement)
+        ? {...state.physicsElementByMatterId, [gameElement.matterBody.id]: gameElement}
+        : state.physicsElementByMatterId;
 
-      return {...state, gameElements: updatedGameElements, gameElementByMatterId: updatedGameElementByMatterId};
+      return {...state, gameElements: updatedGameElements, physicsElementByMatterId: updatedPhysicsElementByMatterId};
     }
     case GameElementActionTypesEnum.UPDATE_GAME_ELEMENTS_ACTION: {
       const {gameElements} = action;
@@ -38,9 +38,9 @@ export const gameElementReducer: Reducer<GameElementState, GameElementAction> = 
         .filter(isPhysicsElement)
         .map((physicsElement: PhysicsElement) => [physicsElement.matterBody.id, physicsElement]);
 
-      const updatedGameElementByMatterId = new Map(matterIdGameElementPairs);
+      const updatedPhysicsElementByMatterId = new Map(matterIdGameElementPairs);
 
-      return {...state, gameElements, gameElementByMatterId: updatedGameElementByMatterId};
+      return {...state, gameElements, physicsElementByMatterId: updatedPhysicsElementByMatterId};
     }
     default:
       return state;

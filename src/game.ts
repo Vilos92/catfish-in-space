@@ -20,6 +20,7 @@ import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
 import {
+  CollisionTypesEnum,
   Coordinate,
   GameElement,
   isPhysicsElement,
@@ -376,6 +377,7 @@ function createLaserBulletGameElement(
   Matter.Body.setVelocity(laserMatter, initialLaserVelocity);
 
   return {
+    collisionType: CollisionTypesEnum.PROJECTILE,
     coordinate: initialLaserCoordinate,
     rotation: playerRotation,
     matterBody: laserMatter,
