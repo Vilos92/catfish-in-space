@@ -17,6 +17,10 @@ const hardCollisionSound = new Howl({
   src: ['./assets/audio/hard_collision.wav']
 });
 
+const laserBulletImpactSound = new Howl({
+  src: ['./assets/audio/laser_bullet_impact.ogg']
+});
+
 /**
  * Collision handling.
  */
@@ -45,13 +49,7 @@ export function handlePhysicsCollision(
   if (collisionAToBRenewed) applyPhysicsCollision(dispatch, physicsElementA, physicsElementB);
   if (collisionBToARenewed) applyPhysicsCollision(dispatch, physicsElementB, physicsElementA);
 
-  if (
-    physicsElementA.collisionType === CollisionTypesEnum.PROJECTILE ||
-    physicsElementB.collisionType === CollisionTypesEnum.PROJECTILE
-  )
-    return;
-
-  hardCollisionSound.play();
+  handleCollisionSound(physicsElementA.collisionType, physicsElementB.collisionType);
 }
 
 function applyPhysicsCollision(
@@ -82,4 +80,13 @@ function applyPhysicsCollision(
 
   const collisionTimestamp = Date.now();
   dispatch(updateCollisionTimestampAction(collisionTimestamp, physicsElementImpacted.id, physicsElementImpacting.id));
+}
+
+function handleCollisionSound(collisionTypeA: CollisionTypesEnum, collisionTypeB: CollisionTypesEnum) {
+  if (collisionTypeA === CollisionTypesEnum.PROJECTILE || collisionTypeB === CollisionTypesEnum.PROJECTILE) {
+    laserBulletImpactSound.play();
+    return;
+  }
+
+  hardCollisionSound.play();
 }
