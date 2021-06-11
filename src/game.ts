@@ -135,8 +135,11 @@ export function gameLoop(
   // Handle player loop first, to account for keyboard inputs to apply changes to the matter body.
   playerLoop(getState, dispatch, world, renderer, stage);
 
-  // Handle game element loop next, to account for changes in matter position and rotation.
-  gameElementLoop(getState, dispatch);
+  // Handle health next, to destroy game elements which have 0 or lower health.
+  healthLoop(getState, dispatch, world);
+
+  // Handle position loop, to account for changes in matter position and rotation.
+  positionLoop(getState, dispatch);
 
   // Handle sprite loop afterwards, to align canvas with the game world's coordinates (relative to the viewport).
   spriteLoop(getState);
@@ -213,12 +216,36 @@ function playerLoop(
   }
 }
 
-// Update game element coordinates to be aligned with their matter positions.
-function gameElementLoop(getState: GetState, dispatch: Dispatch) {
+// Destroy Game Elements which have 0 or lower health, and remove from state.
+function healthLoop(getState: GetState, dispatch: Dispatch, world: Matter.World) {
   const state = getState();
 
   const gameElements = getGameElements(state);
 
+  gameElements.forEach(gameElement => {
+    if (gameElement.health === undefined) return;
+
+    if (gameElement.health <= 0) {
+      gameElement.pixiSprite.destroy();
+
+      if (isPhysicsElement(gameElement)) Matter.Composite.remove(world, gameElement.matterBody);
+    }
+  });
+
+  const updatedGameElements = gameElements.filter(
+    gameElement => gameElement.health === undefined || gameElement.health > 0
+  );
+
+  dispatch(updateGameElementsAction(updatedGameElements));
+}
+
+// Update game element coordinates to be aligned with their matter positions.
+function positionLoop(getState: GetState, dispatch: Dispatch) {
+  const state = getState();
+
+  const gameElements = getGameElements(state);
+
+  // Update remaining game elements based on their matter positions.
   const updatedGameElements = gameElements.map(gameElement => {
     if (!isPhysicsElement(gameElement)) return gameElement;
 
