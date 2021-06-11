@@ -27,19 +27,21 @@ export function handlePhysicsCollision(
 
   const now = Date.now();
 
-  const collisionTimestampAToB = getCollisionTimestamp(state, physicsElementA.id, physicsElementB.id);
-  const collisionTimestampBToA = getCollisionTimestamp(state, physicsElementB.id, physicsElementA.id);
+  // We only need to track one timestamp for any pair of elements, but we must use the same
+  // order each time for inserting and deletion.
+  const idTuple = [physicsElementA.id, physicsElementB.id].sort();
 
-  const collisionAToBRenewed =
-    collisionTimestampAToB === undefined || now > collisionTimestampAToB + COLLISION_BUFFER_PERIOD;
+  const collisionTimestamp = getCollisionTimestamp(state, idTuple[0], idTuple[1]);
 
-  const collisionBToARenewed =
-    collisionTimestampBToA === undefined || now > collisionTimestampBToA + COLLISION_BUFFER_PERIOD;
+  const collisionTimestampRenewed =
+    collisionTimestamp === undefined || now > collisionTimestamp + COLLISION_BUFFER_PERIOD;
 
-  if (!collisionAToBRenewed || !collisionBToARenewed) return;
+  if (!collisionTimestampRenewed) return;
 
-  if (collisionAToBRenewed) applyPhysicsCollision(dispatch, physicsElementA, physicsElementB);
-  if (collisionBToARenewed) applyPhysicsCollision(dispatch, physicsElementB, physicsElementA);
+  dispatch(updateCollisionTimestampAction(now, idTuple[0], idTuple[1]));
+
+  applyPhysicsCollision(dispatch, physicsElementA, physicsElementB);
+  applyPhysicsCollision(dispatch, physicsElementB, physicsElementA);
 
   handleCollisionSound(physicsElementA.collisionType, physicsElementB.collisionType);
 }
@@ -69,9 +71,6 @@ function applyPhysicsCollision(
       dispatch(updateGameElementAction(newPhysicsElement));
     }
   }
-
-  const collisionTimestamp = Date.now();
-  dispatch(updateCollisionTimestampAction(collisionTimestamp, physicsElementImpacted.id, physicsElementImpacting.id));
 }
 
 function handleCollisionSound(collisionTypeA: CollisionTypesEnum, collisionTypeB: CollisionTypesEnum) {
