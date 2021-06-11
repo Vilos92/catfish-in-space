@@ -1,12 +1,12 @@
 import {Reducer} from 'redux';
 
-import {GameElement} from '../../type';
+import {DisplayElement} from '../../type';
 import {BackgroundStageAction, BackgroundStageActionTypesEnum} from './action';
 
 /**
  * A row-col (y-x) map of stars.
  */
-export type StarField = Map<number, Map<number, GameElement>>;
+export type StarField = Map<number, Map<number, DisplayElement>>;
 
 export interface BackgroundStageState {
   starFieldA: StarField;
@@ -14,8 +14,8 @@ export interface BackgroundStageState {
 }
 
 export const initialState: BackgroundStageState = {
-  starFieldA: new Map<number, Map<number, GameElement>>(),
-  starFieldB: new Map<number, Map<number, GameElement>>()
+  starFieldA: new Map<number, Map<number, DisplayElement>>(),
+  starFieldB: new Map<number, Map<number, DisplayElement>>()
 };
 
 export const backgroundStageReducer: Reducer<BackgroundStageState, BackgroundStageAction> = (

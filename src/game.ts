@@ -29,7 +29,7 @@ import {
   Renderer,
   Velocity
 } from './type';
-import {addGameElement} from './utility';
+import {addGameElement, createUuid} from './utility';
 import {createComputeIsKeyClicked} from './utility/keyboard';
 import {
   addForceToPlayerMatterBodyFromKeyboard,
@@ -402,6 +402,7 @@ function createLaserBulletGameElement(
   Matter.Body.setVelocity(laserMatter, initialLaserVelocity);
 
   return {
+    id: createUuid(),
     coordinate: initialLaserCoordinate,
     rotation: playerRotation,
     matterBody: laserMatter,

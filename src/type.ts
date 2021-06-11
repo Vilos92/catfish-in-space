@@ -73,9 +73,6 @@ interface Element {
   coordinate: Coordinate;
   // This is in radians. Default orientation (0) is facing right.
   rotation: number;
-  // This represents how much damage the element can receive before
-  // being destroyed. An undefined value means the element is indestructible.
-  health?: number;
 }
 
 /**
@@ -83,6 +80,14 @@ interface Element {
  */
 export interface DisplayElement extends Element {
   pixiSprite: PIXI.DisplayObject;
+}
+
+export interface LiveElement extends DisplayElement {
+  // A unique id which can be used to update elements directly.
+  id: string;
+  // This represents how much damage the element can receive before
+  // being destroyed. An undefined value means the element is indestructible.
+  health?: number;
 }
 
 /**
@@ -97,12 +102,12 @@ export enum CollisionTypesEnum {
 /**
  * Element which has a physics component in addition to the display component.
  */
-export interface PhysicsElement extends DisplayElement {
+export interface PhysicsElement extends LiveElement {
   collisionType: CollisionTypesEnum;
   matterBody: Matter.Body;
 }
 
-export type GameElement = DisplayElement | PhysicsElement;
+export type GameElement = LiveElement | PhysicsElement;
 
 export function isPhysicsElement(gameElement: GameElement): gameElement is PhysicsElement {
   return 'matterBody' in gameElement;

@@ -1,6 +1,7 @@
 import Matter from 'matter-js';
 import * as PIXI from 'pixi.js';
 import {pushGameElementAction} from 'src/store/gameElement/action';
+import {v4 as uuidv4} from 'uuid';
 
 import {Dispatch} from '../store/gameReducer';
 import {GameElement, isPhysicsElement} from '../type';
@@ -8,6 +9,10 @@ import {GameElement, isPhysicsElement} from '../type';
 /**
  * Helpers.
  */
+
+export function createUuid(): string {
+  return uuidv4();
+}
 
 /**
  * For an angle which can extend infinitely positive or negative, compute

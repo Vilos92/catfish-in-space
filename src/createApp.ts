@@ -19,7 +19,7 @@ import {
   PhysicsElement,
   Renderer
 } from './type';
-import {addGameElement} from './utility';
+import {addGameElement, createUuid} from './utility';
 import {handlePhysicsCollision} from './utility/collision';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './utility/viewport';
 
@@ -211,6 +211,7 @@ function createPlayerGameElement(viewportCoordinate: Coordinate): PhysicsElement
   );
 
   return {
+    id: createUuid(),
     coordinate: initialPlayerCoordinate,
     rotation: 0,
     matterBody: spaceshipMatter,
@@ -244,6 +245,7 @@ function createRectangleGameElement(viewport: ViewportState, coordinate: Coordin
   });
 
   return {
+    id: createUuid(),
     coordinate: coordinate,
     rotation,
     matterBody: matter,

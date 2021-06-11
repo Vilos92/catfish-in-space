@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 
 import {StarField} from '../store/backgroundStage/reducer';
-import {Coordinate, Dimension, GameElement, Rectangle} from '../type';
+import {Coordinate, Dimension, DisplayElement, GameElement, Rectangle} from '../type';
 import {calculateParallaxViewportCoordinate, calculatePositionRelativeToViewport} from './viewport';
 
 /**
@@ -105,7 +105,7 @@ function repositionStarField(viewportCoordinate: Coordinate, starField: StarFiel
   const rows = starField.keys();
   for (const row of rows) {
     if (!starField.has(row)) {
-      starField.set(row, new Map<number, GameElement>());
+      starField.set(row, new Map<number, DisplayElement>());
     }
     const cols = starField.get(row)?.keys();
     if (!cols) continue;
@@ -215,7 +215,7 @@ function addStarToField(
   parallaxScale: number
 ): void {
   // Create a row in the Star Field if we do not already have one.
-  if (!starField.has(y)) starField.set(y, new Map<number, GameElement>());
+  if (!starField.has(y)) starField.set(y, new Map<number, DisplayElement>());
 
   // If we already have a star at this location, skip.
   if (starField.get(y)?.has(x)) return;

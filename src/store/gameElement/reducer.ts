@@ -5,6 +5,8 @@ import {GameElementAction, GameElementActionTypesEnum} from './action';
 
 export interface GameElementState {
   gameElements: ReadonlyArray<GameElement>;
+  // The matter onCollision handler only provides matter body ids, so we
+  // must be able to quickly retrieve the corresponding physics element.
   physicsElementByMatterId: Map<number, PhysicsElement>;
 }
 
@@ -46,9 +48,7 @@ export const gameElementReducer: Reducer<GameElementState, GameElementAction> = 
       const {gameElement: updatedGameElement} = action;
 
       const updatedGameElements = state.gameElements.map(ge => {
-        if (!isPhysicsElement(updatedGameElement) || !isPhysicsElement(ge)) return ge;
-
-        return ge.matterBody.id === updatedGameElement.matterBody.id ? updatedGameElement : ge;
+        return ge.id === updatedGameElement.id ? updatedGameElement : ge;
       });
 
       const updatedPhysicsElementByMatterId = isPhysicsElement(updatedGameElement)
