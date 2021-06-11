@@ -6,7 +6,7 @@ import {createApp, onLoad, onResize, setupCollisions, setupKeybinds} from './cre
 import {setupWindowHooks} from './createApp';
 import {updateStarFieldAAction, updateStarFieldBAction} from './store/backgroundStage/action';
 import {getStarFieldA, getStarFieldB} from './store/backgroundStage/selector';
-import {removeGameElementImpactingIdAction} from './store/collision/action';
+import {removeGameElementByIdAction} from './store/collision/action';
 import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
@@ -206,7 +206,7 @@ function healthLoop(getState: GetState, dispatch: Dispatch, world: Matter.World)
 
     if (isPhysicsElement(gameElement)) Matter.Composite.remove(world, gameElement.matterBody);
 
-    dispatch(removeGameElementImpactingIdAction(gameElement.id));
+    dispatch(removeGameElementByIdAction(gameElement.id));
   });
 
   const updatedGameElements = gameElements.filter(

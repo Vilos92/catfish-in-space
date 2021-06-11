@@ -1,11 +1,11 @@
 export enum CollisionActionTypesEnum {
-  UPDATE_LAST_COLLISION_TIMESTAMP = 'UPDATE_LAST_COLLISION_TIMESTAMP',
+  UPDATE_COLLISION_TIMESTAMP = 'UPDATE_COLLISION_TIMESTAMP',
   REMOVE_GAME_ELEMENT_IMPACTING_ID = 'REMOVE_GAME_ELEMENT_IMPACTING_ID'
 }
 
-export interface UpdateLastCollisionTimestampAction {
-  type: CollisionActionTypesEnum.UPDATE_LAST_COLLISION_TIMESTAMP;
-  lastCollisionTimestamp: number;
+export interface UpdateCollisionTimestampAction {
+  type: CollisionActionTypesEnum.UPDATE_COLLISION_TIMESTAMP;
+  collisionTimestamp: number;
   gameElementImpactingId: string;
   gameElementImpactedId: string;
 }
@@ -15,22 +15,22 @@ export interface RemoveGameElementImpactingIdAction {
   gameElementId: string;
 }
 
-export type CollisionAction = UpdateLastCollisionTimestampAction | RemoveGameElementImpactingIdAction;
+export type CollisionAction = UpdateCollisionTimestampAction | RemoveGameElementImpactingIdAction;
 
-export function updateLastCollisionTimestampAction(
-  lastCollisionTimestamp: number,
+export function updateCollisionTimestampAction(
+  collisionTimestamp: number,
   gameElementImpactingId: string,
   gameElementImpactedId: string
-): UpdateLastCollisionTimestampAction {
+): UpdateCollisionTimestampAction {
   return {
-    type: CollisionActionTypesEnum.UPDATE_LAST_COLLISION_TIMESTAMP,
-    lastCollisionTimestamp,
+    type: CollisionActionTypesEnum.UPDATE_COLLISION_TIMESTAMP,
+    collisionTimestamp,
     gameElementImpactingId,
     gameElementImpactedId
   };
 }
 
-export function removeGameElementImpactingIdAction(gameElementId: string): RemoveGameElementImpactingIdAction {
+export function removeGameElementByIdAction(gameElementId: string): RemoveGameElementImpactingIdAction {
   return {
     type: CollisionActionTypesEnum.REMOVE_GAME_ELEMENT_IMPACTING_ID,
     gameElementId

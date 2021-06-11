@@ -2,14 +2,14 @@ import {Reducer} from 'redux';
 
 import {CollisionAction, CollisionActionTypesEnum} from './action';
 
-type LastCollisionTimestampMap = Map<string, number>;
+type CollisionTimestampMap = Map<string, number>;
 
 export interface CollisionState {
-  lastCollisionTimestampMapById: Map<string, LastCollisionTimestampMap>;
+  collisionTimestampMapById: Map<string, CollisionTimestampMap>;
 }
 
 const initialState: CollisionState = {
-  lastCollisionTimestampMapById: new Map<string, LastCollisionTimestampMap>()
+  collisionTimestampMapById: new Map<string, CollisionTimestampMap>()
 };
 
 export const collisionReducer: Reducer<CollisionState, CollisionAction> = (
@@ -17,33 +17,31 @@ export const collisionReducer: Reducer<CollisionState, CollisionAction> = (
   action: CollisionAction
 ) => {
   switch (action.type) {
-    case CollisionActionTypesEnum.UPDATE_LAST_COLLISION_TIMESTAMP: {
-      const updatedLastCollisionTimestampMapById = new Map(state.lastCollisionTimestampMapById);
-      const {lastCollisionTimestamp, gameElementImpactingId, gameElementImpactedId} = action;
+    case CollisionActionTypesEnum.UPDATE_COLLISION_TIMESTAMP: {
+      const updatedCollisionTimestampMapById = new Map(state.collisionTimestampMapById);
+      const {collisionTimestamp, gameElementImpactingId, gameElementImpactedId} = action;
 
       // Initialize map for the impacting element.
-      if (!updatedLastCollisionTimestampMapById.has(gameElementImpactingId))
-        updatedLastCollisionTimestampMapById.set(gameElementImpactingId, new Map<string, number>());
+      if (!updatedCollisionTimestampMapById.has(gameElementImpactingId))
+        updatedCollisionTimestampMapById.set(gameElementImpactingId, new Map<string, number>());
 
-      updatedLastCollisionTimestampMapById
-        .get(gameElementImpactingId)
-        ?.set(gameElementImpactedId, lastCollisionTimestamp);
+      updatedCollisionTimestampMapById.get(gameElementImpactingId)?.set(gameElementImpactedId, collisionTimestamp);
 
-      return {...state, lastCollisionTimestampMapById: updatedLastCollisionTimestampMapById};
+      return {...state, collisionTimestampMapById: updatedCollisionTimestampMapById};
     }
     case CollisionActionTypesEnum.REMOVE_GAME_ELEMENT_IMPACTING_ID: {
-      const updatedLastCollisionTimestampMapById = new Map(state.lastCollisionTimestampMapById);
+      const updatedCollisionTimestampMapById = new Map(state.collisionTimestampMapById);
       const {gameElementId} = action;
 
-      const gameElementImpactingIds = updatedLastCollisionTimestampMapById.keys();
+      const gameElementImpactingIds = updatedCollisionTimestampMapById.keys();
       for (const gameElementImpactingId of gameElementImpactingIds) {
-        const gameElementImpactedIds = updatedLastCollisionTimestampMapById.get(gameElementImpactingId);
+        const gameElementImpactedIds = updatedCollisionTimestampMapById.get(gameElementImpactingId);
         gameElementImpactedIds?.delete(gameElementId);
       }
 
-      updatedLastCollisionTimestampMapById.delete(gameElementId);
+      updatedCollisionTimestampMapById.delete(gameElementId);
 
-      return {...state, lastCollisionTimestampMapById: updatedLastCollisionTimestampMapById};
+      return {...state, collisionTimestampMapById: updatedCollisionTimestampMapById};
     }
     default:
       return state;

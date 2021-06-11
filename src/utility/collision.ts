@@ -1,5 +1,5 @@
-import {updateLastCollisionTimestampAction} from 'src/store/collision/action';
-import {getLastCollisionTimestamp} from 'src/store/collision/selector';
+import {updateCollisionTimestampAction} from 'src/store/collision/action';
+import {getCollisionTimestamp} from 'src/store/collision/selector';
 import {updateGameElementAction} from 'src/store/gameElement/action';
 import {Dispatch, GetState} from 'src/store/gameReducer';
 
@@ -26,12 +26,12 @@ export function handlePhysicsCollision(
 
   const now = Date.now();
 
-  const lastCollisionTimestampAToB = getLastCollisionTimestamp(state, physicsElementB.id, physicsElementA.id);
-  const lastCollisionTimestampBToA = getLastCollisionTimestamp(state, physicsElementA.id, physicsElementB.id);
+  const collisionTimestampAToB = getCollisionTimestamp(state, physicsElementB.id, physicsElementA.id);
+  const collisionTimestampBToA = getCollisionTimestamp(state, physicsElementA.id, physicsElementB.id);
 
-  if (lastCollisionTimestampAToB === undefined || now > lastCollisionTimestampAToB + COLLISION_BUFFER_PERIOD)
+  if (collisionTimestampAToB === undefined || now > collisionTimestampAToB + COLLISION_BUFFER_PERIOD)
     applyPhysicsCollision(dispatch, physicsElementA, physicsElementB);
-  if (lastCollisionTimestampBToA === undefined || now > lastCollisionTimestampBToA + COLLISION_BUFFER_PERIOD)
+  if (collisionTimestampBToA === undefined || now > collisionTimestampBToA + COLLISION_BUFFER_PERIOD)
     applyPhysicsCollision(dispatch, physicsElementB, physicsElementA);
 }
 
@@ -61,8 +61,6 @@ function applyPhysicsCollision(
     }
   }
 
-  const lastCollisionTimestamp = Date.now();
-  dispatch(
-    updateLastCollisionTimestampAction(lastCollisionTimestamp, physicsElementImpacted.id, physicsElementImpacting.id)
-  );
+  const collisionTimestamp = Date.now();
+  dispatch(updateCollisionTimestampAction(collisionTimestamp, physicsElementImpacted.id, physicsElementImpacting.id));
 }
