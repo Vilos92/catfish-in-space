@@ -19,7 +19,15 @@ import {
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
-import {Coordinate, GameElement, MouseButtonCodesEnum, Renderer, Velocity} from './type';
+import {
+  Coordinate,
+  GameElement,
+  isPhysicsElement,
+  MouseButtonCodesEnum,
+  PhysicsElement,
+  Renderer,
+  Velocity
+} from './type';
 import {addGameElement, VERSION} from './utility';
 import {createComputeIsKeyClicked} from './utility/keyboard';
 import {
@@ -158,9 +166,9 @@ function playerLoop(
 
   if (!player.gameElement) return;
 
-  const {matterBody: playerMatterBody} = player.gameElement;
+  if (!isPhysicsElement(player.gameElement)) return;
 
-  if (!playerMatterBody) return;
+  const {matterBody: playerMatterBody} = player.gameElement;
 
   // Apply forces from keyboard presses, before updating state with values from matter.
   addForceToPlayerMatterBodyFromKeyboard(keyboard, playerMatterBody);
@@ -181,7 +189,7 @@ function playerLoop(
   const coordinate: Coordinate = playerMatterBody.position;
   const rotation = playerMatterBody.angle % (2 * Math.PI);
 
-  const updatedPlayerGameElement: GameElement = {...player.gameElement, coordinate, rotation};
+  const updatedPlayerGameElement: PhysicsElement = {...player.gameElement, coordinate, rotation};
   dispatch(updatePlayerGameElementAction(updatedPlayerGameElement));
 
   // Lasers go pew.
@@ -211,9 +219,9 @@ function gameElementLoop(getState: GetState, dispatch: Dispatch) {
   const gameElements = getGameElements(state);
 
   const updatedGameElements = gameElements.map(gameElement => {
-    const {matterBody} = gameElement;
+    if (!isPhysicsElement(gameElement)) return gameElement;
 
-    if (!matterBody) return gameElement;
+    const {matterBody} = gameElement;
 
     const coordinate: Coordinate = matterBody.position;
     const rotation = matterBody.angle % (2 * Math.PI);

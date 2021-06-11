@@ -3,7 +3,7 @@ import * as PIXI from 'pixi.js';
 import {pushGameElementAction} from 'src/store/gameElement/action';
 
 import {Dispatch} from '../store/gameReducer';
-import {GameElement} from '../type';
+import {GameElement, isPhysicsElement} from '../type';
 
 /**
  * Constants.
@@ -44,7 +44,7 @@ export function addGameElement(
   stage: PIXI.Container,
   gameElement: GameElement
 ): void {
-  if (gameElement.matterBody) Matter.Composite.add(world, gameElement.matterBody);
+  if (isPhysicsElement(gameElement)) Matter.Composite.add(world, gameElement.matterBody);
 
   stage.addChild(gameElement.pixiSprite);
 

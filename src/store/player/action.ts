@@ -1,4 +1,4 @@
-import {GameElement} from '../../type';
+import {PhysicsElement} from '../../type';
 import {PidState} from '../../utility/pid';
 
 export enum PlayerActionTypesEnum {
@@ -10,7 +10,7 @@ export enum PlayerActionTypesEnum {
 
 export interface UpdatePlayerGameElementAction {
   type: PlayerActionTypesEnum.UPDATE_PLAYER_GAME_ELEMENT_ACTION;
-  gameElement: GameElement;
+  physicsElement: PhysicsElement;
 }
 
 export interface UpdatePlayerPidStateAction {
@@ -34,10 +34,10 @@ export type PlayerAction =
   | UpdatePlayerIsViewportLockedAction
   | UpdatePlayerPrimaryFireTimestamp;
 
-export function updatePlayerGameElementAction(gameElement: GameElement): UpdatePlayerGameElementAction {
+export function updatePlayerGameElementAction(physicsElement: PhysicsElement): UpdatePlayerGameElementAction {
   return {
     type: PlayerActionTypesEnum.UPDATE_PLAYER_GAME_ELEMENT_ACTION,
-    gameElement
+    physicsElement
   };
 }
 

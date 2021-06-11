@@ -10,7 +10,7 @@ import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {ViewportState} from './store/viewport/reducer';
 import {getViewport} from './store/viewport/selector';
-import {Callback, CallbackWithArg, Coordinate, GameElement, KeyCodesEnum, Renderer} from './type';
+import {Callback, CallbackWithArg, Coordinate, KeyCodesEnum, PhysicsElement, Renderer} from './type';
 import {addGameElement} from './utility';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './utility/viewport';
 
@@ -53,12 +53,12 @@ export function setupKeybinds(dispatch: Dispatch, view: HTMLCanvasElement): void
  */
 
 export function setupCollisions(getState: GetState, engine: Matter.Engine): void {
-  const state = getState();
-  const gameElementByMatterId = getGameElementByMatterId(state);
-
   const onCollisionActive: CallbackWithArg<Matter.IEventCollision<Matter.Engine>> = (
     collisions: Matter.IEventCollision<Matter.Engine>
   ) => {
+    const state = getState();
+    const gameElementByMatterId = getGameElementByMatterId(state);
+
     collisions.pairs.forEach(collisionPair => {
       console.log('collision', collisionPair, gameElementByMatterId);
       console.log(gameElementByMatterId.get(collisionPair.bodyA.id));
@@ -178,7 +178,7 @@ function setupWorld(
   addGameElement(dispatch, world, foregroundStage, testRectangle2);
 }
 
-function createPlayerGameElement(viewportCoordinate: Coordinate): GameElement {
+function createPlayerGameElement(viewportCoordinate: Coordinate): PhysicsElement {
   // Player will start at the very center.
   const initialPlayerCoordinate = {x: 0, y: 0};
 
@@ -211,7 +211,7 @@ function createPlayerGameElement(viewportCoordinate: Coordinate): GameElement {
   };
 }
 
-function createRectangleGameElement(viewport: ViewportState, coordinate: Coordinate): GameElement {
+function createRectangleGameElement(viewport: ViewportState, coordinate: Coordinate): PhysicsElement {
   const width = 300;
   const height = 200;
   const rotation = Math.random() * (2 * Math.PI);

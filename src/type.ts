@@ -68,13 +68,22 @@ export interface Rectangle {
   bottomRight: Coordinate;
 }
 
-export interface GameElement {
+export interface DisplayElement {
   // This is the coordinate in our game, not the canvas.
   coordinate: Coordinate;
   // This is in radians. Default orientation (0) is facing right.
   rotation: number;
   pixiSprite: PIXI.DisplayObject;
-  matterBody?: Matter.Body;
+}
+
+export interface PhysicsElement extends DisplayElement {
+  matterBody: Matter.Body;
+}
+
+export type GameElement = DisplayElement | PhysicsElement;
+
+export function isPhysicsElement(gameElement: GameElement): gameElement is PhysicsElement {
+  return 'matterBody' in gameElement;
 }
 
 /**

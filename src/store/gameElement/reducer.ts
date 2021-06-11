@@ -1,6 +1,6 @@
 import {Reducer} from 'redux';
 
-import {GameElement} from '../../type';
+import {GameElement, isPhysicsElement, PhysicsElement} from '../../type';
 import {GameElementAction, GameElementActionTypesEnum} from './action';
 
 export interface GameElementState {
@@ -25,7 +25,7 @@ export const gameElementReducer: Reducer<GameElementState, GameElementAction> = 
       const updatedGameElements: ReadonlyArray<GameElement> = [...gameElements, gameElement];
 
       // We need to track Game Elements by Matter id, to handle collision detection.
-      const updatedGameElementByMatterId = gameElement.matterBody
+      const updatedGameElementByMatterId = isPhysicsElement(gameElement)
         ? {...state.gameElementByMatterId, [gameElement.matterBody.id]: gameElement}
         : state.gameElementByMatterId;
 
@@ -34,10 +34,13 @@ export const gameElementReducer: Reducer<GameElementState, GameElementAction> = 
     case GameElementActionTypesEnum.UPDATE_GAME_ELEMENTS_ACTION: {
       const {gameElements} = action;
 
-      // We need to track Game Elements by Matter id, to handle collision detection.
-      // TODO: Add collision detection map when updating here.
+      const matterIdGameElementPairs: ReadonlyArray<[number, PhysicsElement]> = gameElements
+        .filter(isPhysicsElement)
+        .map((physicsElement: PhysicsElement) => [physicsElement.matterBody.id, physicsElement]);
 
-      return {...state, gameElements};
+      const updatedGameElementByMatterId = new Map(matterIdGameElementPairs);
+
+      return {...state, gameElements, gameElementByMatterId: updatedGameElementByMatterId};
     }
     default:
       return state;

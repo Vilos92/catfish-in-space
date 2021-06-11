@@ -1,11 +1,11 @@
 import {Reducer} from 'redux';
 
-import {GameElement} from '../../type';
+import {PhysicsElement} from '../../type';
 import {PidState} from '../../utility/pid';
 import {PlayerAction, PlayerActionTypesEnum} from './action';
 
 export interface PlayerState {
-  gameElement?: GameElement;
+  gameElement?: PhysicsElement;
   pidState: PidState;
   isViewportLocked: boolean;
   primaryFireTimestamp: number;
@@ -23,7 +23,7 @@ export const playerReducer: Reducer<PlayerState, PlayerAction> = (
 ) => {
   switch (action.type) {
     case PlayerActionTypesEnum.UPDATE_PLAYER_GAME_ELEMENT_ACTION: {
-      return {...state, gameElement: action.gameElement};
+      return {...state, gameElement: action.physicsElement};
     }
     case PlayerActionTypesEnum.UPDATE_PLAYER_PID_STATE_ACTION: {
       return {...state, pidState: action.pidState};
