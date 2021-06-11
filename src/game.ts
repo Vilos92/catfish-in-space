@@ -35,15 +35,6 @@ import {
  */
 
 export function startGame(): void {
-  // Hello howler!
-  /*
-  const soundTest = new Howl({
-    src: ['./assets/audio/tests_audio_sound1.mp3'],
-    autoplay: true
-  });
-  console.log('sound test', soundTest);
-  */
-
   const getState = store.getState;
   // Initialize the game state.
   const initialPlayerCoordinate = {x: 0, y: 0};

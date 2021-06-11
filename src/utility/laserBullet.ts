@@ -1,3 +1,4 @@
+import {Howl} from 'howler';
 import Matter from 'matter-js';
 import * as PIXI from 'pixi.js';
 
@@ -12,6 +13,10 @@ import {addGameElement} from '.';
  */
 
 const FIRE_BUFFER_PERIOD = 250; // 0.25 seconds.
+
+const laserBulletSound = new Howl({
+  src: ['./assets/audio/laser_bullet.wav']
+});
 
 /**
  * Laser bullet helpers.
@@ -39,4 +44,6 @@ export function firePlayerLaserBullet(
   );
   addGameElement(dispatch, world, stage, laserBullet);
   dispatch(updatePlayerPrimaryFireTimestampAction(now));
+
+  laserBulletSound.play();
 }

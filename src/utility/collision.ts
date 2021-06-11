@@ -1,3 +1,4 @@
+import {Howl} from 'howler';
 import {updateCollisionTimestampAction} from 'src/store/collision/action';
 import {getCollisionTimestamp} from 'src/store/collision/selector';
 import {updateGameElementAction} from 'src/store/gameElement/action';
@@ -11,6 +12,10 @@ import {CollisionTypesEnum, PhysicsElement} from '../type';
 
 // Only allow four collisions a second between two bodies.
 const COLLISION_BUFFER_PERIOD = 250; // 0.25 seconds.
+
+const hardCollisionSound = new Howl({
+  src: ['./assets/audio/hard_collision.wav']
+});
 
 /**
  * Collision handling.
@@ -26,13 +31,27 @@ export function handlePhysicsCollision(
 
   const now = Date.now();
 
-  const collisionTimestampAToB = getCollisionTimestamp(state, physicsElementB.id, physicsElementA.id);
-  const collisionTimestampBToA = getCollisionTimestamp(state, physicsElementA.id, physicsElementB.id);
+  const collisionTimestampAToB = getCollisionTimestamp(state, physicsElementA.id, physicsElementB.id);
+  const collisionTimestampBToA = getCollisionTimestamp(state, physicsElementB.id, physicsElementA.id);
 
-  if (collisionTimestampAToB === undefined || now > collisionTimestampAToB + COLLISION_BUFFER_PERIOD)
-    applyPhysicsCollision(dispatch, physicsElementA, physicsElementB);
-  if (collisionTimestampBToA === undefined || now > collisionTimestampBToA + COLLISION_BUFFER_PERIOD)
-    applyPhysicsCollision(dispatch, physicsElementB, physicsElementA);
+  const collisionAToBRenewed =
+    collisionTimestampAToB === undefined || now > collisionTimestampAToB + COLLISION_BUFFER_PERIOD;
+
+  const collisionBToARenewed =
+    collisionTimestampBToA === undefined || now > collisionTimestampBToA + COLLISION_BUFFER_PERIOD;
+
+  if (!collisionAToBRenewed || !collisionBToARenewed) return;
+
+  if (collisionAToBRenewed) applyPhysicsCollision(dispatch, physicsElementA, physicsElementB);
+  if (collisionBToARenewed) applyPhysicsCollision(dispatch, physicsElementB, physicsElementA);
+
+  if (
+    physicsElementA.collisionType === CollisionTypesEnum.PROJECTILE ||
+    physicsElementB.collisionType === CollisionTypesEnum.PROJECTILE
+  )
+    return;
+
+  hardCollisionSound.play();
 }
 
 function applyPhysicsCollision(
