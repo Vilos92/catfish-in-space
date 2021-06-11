@@ -1,7 +1,8 @@
 import * as PIXI from 'pixi.js';
 
+import {createStarGraphic} from '../element/star';
 import {StarField} from '../store/backgroundStage/reducer';
-import {Coordinate, Dimension, DisplayElement, GameElement, Rectangle} from '../type';
+import {Coordinate, Dimension, DisplayElement, Rectangle} from '../type';
 import {calculateParallaxViewportCoordinate, calculatePositionRelativeToViewport} from './viewport';
 
 /**
@@ -232,26 +233,6 @@ function addStarToField(
   });
 
   backgroundStage.addChild(star);
-}
-
-function createStarGraphic(
-  viewportCoordinate: Coordinate,
-  coordinate: Coordinate,
-  parallaxScale: number
-): PIXI.Graphics {
-  const position = calculatePositionRelativeToViewport(coordinate, viewportCoordinate);
-
-  const starSize = Math.floor((Math.random() * 80.0) / parallaxScale);
-  const alpha = (Math.random() * 20.0) / parallaxScale;
-
-  const starGraphics = new PIXI.Graphics();
-  starGraphics.beginFill(0xffffff, alpha);
-  starGraphics.lineStyle(0, 0, 1.0);
-  starGraphics.drawCircle(0, 0, starSize);
-  starGraphics.endFill();
-  starGraphics.position.set(position.x, position.y);
-
-  return starGraphics;
 }
 
 function calculateStarFieldBoundary(viewportCoordinate: Coordinate, viewportDimension: Dimension): Rectangle {

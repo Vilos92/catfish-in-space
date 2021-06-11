@@ -1,6 +1,8 @@
 import Matter, {Events} from 'matter-js';
 import * as PIXI from 'pixi.js';
 
+import {createPlayerGameElement} from './element/player';
+import {createRectangleGameElement} from './element/rectangle';
 import {getPhysicsElementByMatterId} from './store/gameElement/selector';
 import {Dispatch, GetState} from './store/gameReducer';
 import {keyDownAction, keyUpAction} from './store/keyboard/action';
@@ -8,18 +10,9 @@ import {mouseButtonDownAction, mouseButtonUpAction} from './store/mouse/action';
 import {updatePlayerGameElementAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
-import {ViewportState} from './store/viewport/reducer';
 import {getViewport} from './store/viewport/selector';
-import {
-  Callback,
-  CallbackWithArg,
-  CollisionTypesEnum,
-  Coordinate,
-  KeyCodesEnum,
-  PhysicsElement,
-  Renderer
-} from './type';
-import {addGameElement, createUuid} from './utility';
+import {Callback, CallbackWithArg, KeyCodesEnum, Renderer} from './type';
+import {addGameElement} from './utility';
 import {handlePhysicsCollision} from './utility/collision';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './utility/viewport';
 
@@ -179,78 +172,8 @@ function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World,
   dispatch(updatePlayerGameElementAction(player));
   addGameElement(dispatch, world, foregroundStage, player);
 
-  const testRectangle1 = createRectangleGameElement(viewport, {x: 600, y: -100});
-  const testRectangle2 = createRectangleGameElement(viewport, {x: -600, y: 100});
+  const testRectangle1 = createRectangleGameElement(viewport.coordinate, {x: 600, y: -100});
+  const testRectangle2 = createRectangleGameElement(viewport.coordinate, {x: -600, y: 100});
   addGameElement(dispatch, world, foregroundStage, testRectangle1);
   addGameElement(dispatch, world, foregroundStage, testRectangle2);
-}
-
-function createPlayerGameElement(viewportCoordinate: Coordinate): PhysicsElement {
-  // Player will start at the very center.
-  const initialPlayerCoordinate = {x: 0, y: 0};
-
-  const spaceshipPosition = calculatePositionRelativeToViewport(initialPlayerCoordinate, viewportCoordinate);
-
-  const spaceshipPixi = new PIXI.Sprite(PIXI.Texture.from('spaceship'));
-  spaceshipPixi.scale.set(0.5, 0.5);
-  spaceshipPixi.anchor.set(0.5, 0.5);
-
-  spaceshipPixi.position.set(spaceshipPosition.x, spaceshipPosition.y);
-
-  const spaceshipMatter = Matter.Bodies.rectangle(
-    // Game and matter coordinates have a one-to-one mapping.
-    initialPlayerCoordinate.x,
-    initialPlayerCoordinate.y,
-    // We use dimensions of our sprite.
-    spaceshipPixi.width,
-    spaceshipPixi.height,
-    {
-      // Approximate mass of Falcon 9.
-      mass: 550000
-    }
-  );
-
-  return {
-    id: createUuid(),
-    coordinate: initialPlayerCoordinate,
-    rotation: 0,
-    matterBody: spaceshipMatter,
-    pixiSprite: spaceshipPixi,
-    collisionType: CollisionTypesEnum.PLAYER,
-    health: 100
-  };
-}
-
-function createRectangleGameElement(viewport: ViewportState, coordinate: Coordinate): PhysicsElement {
-  const width = 300;
-  const height = 200;
-  const rotation = Math.random() * (2 * Math.PI);
-
-  const position = calculatePositionRelativeToViewport(coordinate, viewport.coordinate);
-
-  const graphics = new PIXI.Graphics();
-
-  graphics.beginFill(0xa9a9a9);
-  graphics.lineStyle(5, 0xa9a9a9);
-  // MatterJS centers automatically, whereas with PixiJS we must set anchor or shift by half of width and height.
-  graphics.drawRect(position.x, position.y, width, height);
-  graphics.endFill();
-  graphics.pivot.set(position.x + width / 2, position.y + height / 2);
-
-  graphics.rotation = rotation;
-
-  const matter = Matter.Bodies.rectangle(coordinate.x, coordinate.y, graphics.width, graphics.height, {
-    mass: 550000,
-    angle: rotation
-  });
-
-  return {
-    id: createUuid(),
-    coordinate: coordinate,
-    rotation,
-    matterBody: matter,
-    collisionType: CollisionTypesEnum.BODY,
-    pixiSprite: graphics,
-    health: 200
-  };
 }
