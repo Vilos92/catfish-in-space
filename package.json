@@ -22,7 +22,7 @@
     "dependencies": {
         "core-js": "^3.13.1",
         "howler": "^2.2.1",
-        "immer": "^9.0.2",
+        "immer": "^9.0.3",
         "matter-js": "^0.17.1",
         "pixi.js": "^6.0.4",
         "redux": "^4.1.0",
