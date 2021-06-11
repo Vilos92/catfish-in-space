@@ -6,12 +6,6 @@ import {Dispatch} from '../store/gameReducer';
 import {GameElement, isPhysicsElement} from '../type';
 
 /**
- * Constants.
- */
-
-export declare const VERSION: string;
-
-/**
  * Helpers.
  */
 

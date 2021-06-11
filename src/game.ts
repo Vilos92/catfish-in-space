@@ -29,7 +29,7 @@ import {
   Renderer,
   Velocity
 } from './type';
-import {addGameElement, VERSION} from './utility';
+import {addGameElement} from './utility';
 import {createComputeIsKeyClicked} from './utility/keyboard';
 import {
   addForceToPlayerMatterBodyFromKeyboard,
@@ -113,8 +113,6 @@ export function startGame(): void {
   // Attach and start game loop.
   ticker.add(onGameLoop);
   ticker.start();
-
-  console.log(`Welcome to Catfish in Space v${VERSION}`);
 }
 
 /**
