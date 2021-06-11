@@ -1,10 +1,10 @@
-import {Howl} from 'howler';
 import {updateCollisionTimestampAction} from 'src/store/collision/action';
 import {getCollisionTimestamp} from 'src/store/collision/selector';
 import {updateGameElementAction} from 'src/store/gameElement/action';
 import {Dispatch, GetState} from 'src/store/gameReducer';
 
 import {CollisionTypesEnum, PhysicsElement} from '../type';
+import {playSound, SoundTypesEnum} from './audio';
 
 /**
  * Constants.
@@ -12,14 +12,6 @@ import {CollisionTypesEnum, PhysicsElement} from '../type';
 
 // Only allow four collisions a second between two bodies.
 const COLLISION_BUFFER_PERIOD = 250; // 0.25 seconds.
-
-const hardCollisionSound = new Howl({
-  src: ['./assets/audio/hard_collision.wav']
-});
-
-const laserBulletImpactSound = new Howl({
-  src: ['./assets/audio/laser_bullet_impact.ogg']
-});
 
 /**
  * Collision handling.
@@ -84,9 +76,9 @@ function applyPhysicsCollision(
 
 function handleCollisionSound(collisionTypeA: CollisionTypesEnum, collisionTypeB: CollisionTypesEnum) {
   if (collisionTypeA === CollisionTypesEnum.PROJECTILE || collisionTypeB === CollisionTypesEnum.PROJECTILE) {
-    laserBulletImpactSound.play();
+    playSound(SoundTypesEnum.LASER_BULLET_IMPACT);
     return;
   }
 
-  hardCollisionSound.play();
+  playSound(SoundTypesEnum.HARD_COLLISION);
 }

@@ -174,7 +174,7 @@ function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World,
 
   const testRectangle1 = createRectangleGameElement(viewport.coordinate, {x: 600, y: -100});
   const testRectangle2 = createRectangleGameElement(viewport.coordinate, {x: -600, y: 100});
-  const testRectangle3 = createRectangleGameElement(viewport.coordinate, {x: -900, y: 100});
+  const testRectangle3 = createRectangleGameElement(viewport.coordinate, {x: -1000, y: 100});
   addGameElement(dispatch, world, foregroundStage, testRectangle1);
   addGameElement(dispatch, world, foregroundStage, testRectangle2);
   addGameElement(dispatch, world, foregroundStage, testRectangle3);
