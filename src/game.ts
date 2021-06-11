@@ -75,7 +75,7 @@ export function startGame(): void {
   engine.world.gravity.y = 0;
 
   // Attach hooks to Matter.
-  setupCollisions(getState, engine);
+  setupCollisions(getState, store.dispatch, engine);
 
   const runner = Matter.Runner.create();
 
@@ -377,10 +377,11 @@ function createLaserBulletGameElement(
   Matter.Body.setVelocity(laserMatter, initialLaserVelocity);
 
   return {
-    collisionType: CollisionTypesEnum.PROJECTILE,
     coordinate: initialLaserCoordinate,
     rotation: playerRotation,
     matterBody: laserMatter,
+    collisionType: CollisionTypesEnum.PROJECTILE,
+    health: 1,
     pixiSprite: laserPixi
   };
 }

@@ -42,6 +42,21 @@ export const gameElementReducer: Reducer<GameElementState, GameElementAction> = 
 
       return {...state, gameElements, physicsElementByMatterId: updatedPhysicsElementByMatterId};
     }
+    case GameElementActionTypesEnum.UPDATE_GAME_ELEMENT_ACTION: {
+      const {gameElement: updatedGameElement} = action;
+
+      const updatedGameElements = state.gameElements.map(ge => {
+        if (!isPhysicsElement(updatedGameElement) || !isPhysicsElement(ge)) return ge;
+
+        return ge.matterBody.id === updatedGameElement.matterBody.id ? updatedGameElement : ge;
+      });
+
+      const updatedPhysicsElementByMatterId = isPhysicsElement(updatedGameElement)
+        ? {...state.physicsElementByMatterId, [updatedGameElement.matterBody.id]: updatedGameElement}
+        : state.physicsElementByMatterId;
+
+      return {...state, gameElements: updatedGameElements, physicsElementByMatterId: updatedPhysicsElementByMatterId};
+    }
     default:
       return state;
   }

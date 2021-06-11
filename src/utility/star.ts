@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 
 import {StarField} from '../store/backgroundStage/reducer';
-import {Coordinate, Dimension, GameElement, CollisionTypesEnum, Rectangle} from '../type';
+import {Coordinate, Dimension, GameElement, Rectangle} from '../type';
 import {calculateParallaxViewportCoordinate, calculatePositionRelativeToViewport} from './viewport';
 
 /**

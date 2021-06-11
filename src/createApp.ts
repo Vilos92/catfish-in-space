@@ -61,7 +61,7 @@ export function setupKeybinds(dispatch: Dispatch, view: HTMLCanvasElement): void
  * Matter.
  */
 
-export function setupCollisions(getState: GetState, engine: Matter.Engine): void {
+export function setupCollisions(getState: GetState, dispatch: Dispatch, engine: Matter.Engine): void {
   const onCollisionActive: CallbackWithArg<Matter.IEventCollision<Matter.Engine>> = (
     collisions: Matter.IEventCollision<Matter.Engine>
   ) => {
@@ -74,7 +74,7 @@ export function setupCollisions(getState: GetState, engine: Matter.Engine): void
 
       if (!physicsElementA || !physicsElementB) return;
 
-      handlePhysicsCollision(physicsElementA, physicsElementB);
+      handlePhysicsCollision(dispatch, physicsElementA, physicsElementB);
     });
   };
 
@@ -139,7 +139,7 @@ export async function onLoad(
 
   document.body.appendChild(view);
 
-  setupWorld(getState, dispatch, world, backgroundStage, foregroundStage);
+  setupWorld(getState, dispatch, world, foregroundStage);
 }
 
 /**
@@ -171,13 +171,7 @@ async function loadGameAssets(): Promise<void> {
 /**
  * Setup the stage of the game, by adding initial elements.
  */
-function setupWorld(
-  getState: GetState,
-  dispatch: Dispatch,
-  world: Matter.World,
-  backgroundStage: PIXI.Container,
-  foregroundStage: PIXI.Container
-) {
+function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World, foregroundStage: PIXI.Container) {
   const state = getState();
   const viewport = getViewport(state);
 
@@ -217,11 +211,12 @@ function createPlayerGameElement(viewportCoordinate: Coordinate): PhysicsElement
   );
 
   return {
-    collisionType: CollisionTypesEnum.PLAYER,
     coordinate: initialPlayerCoordinate,
     rotation: 0,
     matterBody: spaceshipMatter,
-    pixiSprite: spaceshipPixi
+    pixiSprite: spaceshipPixi,
+    collisionType: CollisionTypesEnum.PLAYER,
+    health: 100
   };
 }
 
@@ -249,10 +244,11 @@ function createRectangleGameElement(viewport: ViewportState, coordinate: Coordin
   });
 
   return {
-    collisionType: CollisionTypesEnum.BODY,
     coordinate: coordinate,
     rotation,
     matterBody: matter,
-    pixiSprite: graphics
+    collisionType: CollisionTypesEnum.BODY,
+    pixiSprite: graphics,
+    health: 200
   };
 }

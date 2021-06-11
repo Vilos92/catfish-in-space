@@ -73,6 +73,9 @@ interface Element {
   coordinate: Coordinate;
   // This is in radians. Default orientation (0) is facing right.
   rotation: number;
+  // This represents how much damage the element can receive before
+  // being destroyed. An undefined value means the element is indestructible.
+  health?: number;
 }
 
 /**
