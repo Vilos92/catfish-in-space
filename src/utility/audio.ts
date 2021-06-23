@@ -29,9 +29,9 @@ const laserBulletImpactSound = new Howl({
 const sounds = {
   [SoundTypesEnum.HARD_COLLISION]: hardCollisionSound,
   [SoundTypesEnum.LASER_BULLET]: laserBulletSound,
-  [SoundTypesEnum.LASER_BULLET_IMPACT]: laserBulletImpactSound,
+  [SoundTypesEnum.LASER_BULLET_IMPACT]: laserBulletImpactSound
 };
 
-export function playSound(soundType: SoundTypesEnum) {
+export function playSound(soundType: SoundTypesEnum): void {
   sounds[soundType].play();
 }
