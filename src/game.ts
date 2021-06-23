@@ -8,7 +8,7 @@ import {updateStarFieldAAction, updateStarFieldBAction} from './store/background
 import {getStarFieldA, getStarFieldB} from './store/backgroundStage/selector';
 import {removeGameElementByIdAction} from './store/collision/action';
 import {updateGameElementsAction} from './store/gameElement/action';
-import {getGameElements} from './store/gameElement/selector';
+import {getGameElements, getPhysicsElementByMatterId} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
 import {getKeyboard} from './store/keyboard/selector';
 import {getMouse} from './store/mouse/selector';
@@ -144,10 +144,20 @@ function playerLoop(
   const mouse = getMouse(state);
   const player = getPlayer(state);
   const viewport = getViewport(state);
+  const physicsElementByMatterId = getPhysicsElementByMatterId(state);
 
   if (!player.gameElement) return;
+  const currentPlayerGameElement = player.gameElement;
 
-  const {matterBody: playerMatterBody} = player.gameElement;
+  // Align our player Physics Element with the Game Elements state.
+  const playerGameElement = physicsElementByMatterId.get(currentPlayerGameElement.matterBody.id);
+
+  if (!playerGameElement || !isPhysicsElement(playerGameElement)) {
+    console.log('Game Over');
+    return;
+  }
+
+  const {matterBody: playerMatterBody} = playerGameElement;
 
   // Apply forces from keyboard presses, before updating state with values from matter.
   addForceToPlayerMatterBodyFromKeyboard(keyboard, playerMatterBody);
@@ -168,7 +178,7 @@ function playerLoop(
   const coordinate: Coordinate = playerMatterBody.position;
   const rotation = playerMatterBody.angle % (2 * Math.PI);
 
-  const updatedPlayerGameElement: PhysicsElement = {...player.gameElement, coordinate, rotation};
+  const updatedPlayerGameElement: PhysicsElement = {...playerGameElement, coordinate, rotation};
   dispatch(updatePlayerGameElementAction(updatedPlayerGameElement));
 
   // Lasers go pew.

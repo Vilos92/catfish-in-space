@@ -28,7 +28,7 @@ export const gameElementReducer: Reducer<GameElementState, GameElementAction> = 
 
       // We need to track Game Elements by Matter id, to handle collision detection.
       const updatedPhysicsElementByMatterId = isPhysicsElement(gameElement)
-        ? {...state.physicsElementByMatterId, [gameElement.matterBody.id]: gameElement}
+        ? computeNewPhysicsElementByMatterId(state.physicsElementByMatterId, gameElement)
         : state.physicsElementByMatterId;
 
       return {...state, gameElements: updatedGameElements, physicsElementByMatterId: updatedPhysicsElementByMatterId};
@@ -52,7 +52,7 @@ export const gameElementReducer: Reducer<GameElementState, GameElementAction> = 
       });
 
       const updatedPhysicsElementByMatterId = isPhysicsElement(updatedGameElement)
-        ? {...state.physicsElementByMatterId, [updatedGameElement.matterBody.id]: updatedGameElement}
+        ? computeNewPhysicsElementByMatterId(state.physicsElementByMatterId, updatedGameElement)
         : state.physicsElementByMatterId;
 
       return {...state, gameElements: updatedGameElements, physicsElementByMatterId: updatedPhysicsElementByMatterId};
@@ -61,3 +61,16 @@ export const gameElementReducer: Reducer<GameElementState, GameElementAction> = 
       return state;
   }
 };
+
+/**
+ * Helpers.
+ */
+
+function computeNewPhysicsElementByMatterId(
+  physicsElementByMatterId: Map<number, PhysicsElement>,
+  physicsElement: PhysicsElement
+) {
+  const newPhysicsElementByMatterId = new Map(physicsElementByMatterId);
+  newPhysicsElementByMatterId.set(physicsElement.matterBody.id, physicsElement);
+  return newPhysicsElementByMatterId;
+}
