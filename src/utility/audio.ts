@@ -1,4 +1,4 @@
-import {Howl} from 'howler';
+import {Howl, HowlOptions} from 'howler';
 
 /**
  * Types.
@@ -31,11 +31,10 @@ export function playSound(soundType: SoundTypesEnum): Howl {
   return sound;
 }
 
-export function playSoundAtRandom(soundType: SoundTypesEnum): Howl {
+export function playSoundAtRandom(soundType: SoundTypesEnum, howlOptions: HowlOptions): Howl {
   const sound = new Howl({
     src: SoundTypeSources[soundType],
-    volume: 0.8,
-    loop: true
+    ...howlOptions
   });
 
   sound.seek(Math.floor(Math.random() * sound.duration()));

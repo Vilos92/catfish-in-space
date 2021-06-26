@@ -135,6 +135,9 @@ export function gameLoop(
   // Draw any UI elements on top.
   uiLoop(getState, dispatch, world, stage);
 
+  // Make updates to sound elements to account for spatial audio.
+  audioLoop(getState);
+
   renderer.render(stage);
 }
 
@@ -169,7 +172,7 @@ function playerLoop(
   const {matterBody: playerMatterBody} = playerGameElement;
 
   // Apply forces from keyboard presses, before updating state with values from matter.
-  addForceToPlayerMatterBodyFromKeyboard(keyboard, playerMatterBody);
+  addForceToPlayerMatterBodyFromKeyboard(dispatch, keyboard, playerMatterBody, player.thrusterSound);
 
   const mouseCoordinate: Coordinate = renderer.plugins.interaction.mouse.global;
 
@@ -334,6 +337,32 @@ function uiLoop(getState: GetState, dispatch: Dispatch, world: Matter.World, sta
 
   stage.addChild(gameOverText.pixiSprite);
   dispatch(updateGameOverElementAction(gameOverText));
+}
+
+function audioLoop(getState: GetState): void {
+  const state = getState();
+  const player = getPlayer(state);
+  const viewport = getViewport(state);
+
+  if (!player.gameElement) return;
+
+  const playerCoordinate = player.gameElement.coordinate;
+
+  const viewportCenterCoordinate: Coordinate = {
+    x: viewport.coordinate.x + viewport.dimension.width / 2,
+    y: viewport.coordinate.y + viewport.dimension.height / 2
+  };
+
+  const playerPositionRelativeToCenter = calculatePositionRelativeToViewport(
+    playerCoordinate,
+    viewportCenterCoordinate
+  );
+
+  player.thrusterSound?.pos(
+    playerPositionRelativeToCenter.x / viewport.dimension.width,
+    playerPositionRelativeToCenter.y / viewport.dimension.height,
+    0
+  );
 }
 
 /**

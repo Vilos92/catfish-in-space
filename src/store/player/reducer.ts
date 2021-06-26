@@ -1,3 +1,4 @@
+import {Howl} from 'howler';
 import {Reducer} from 'redux';
 
 import {PhysicsElement} from '../../type';
@@ -6,6 +7,7 @@ import {PlayerAction, PlayerActionTypesEnum} from './action';
 
 export interface PlayerState {
   gameElement?: PhysicsElement;
+  thrusterSound?: Howl;
   pidState: PidState;
   isViewportLocked: boolean;
   primaryFireTimestamp: number;
@@ -27,6 +29,12 @@ export const playerReducer: Reducer<PlayerState, PlayerAction> = (
     }
     case PlayerActionTypesEnum.CLEAR_PLAYER_GAME_ELEMENT_ACTION: {
       return {...state, gameElement: undefined};
+    }
+    case PlayerActionTypesEnum.UPDATE_PLAYER_THRUSTER_SOUND_ACTION: {
+      return {...state, thrusterSound: action.thrusterSound};
+    }
+    case PlayerActionTypesEnum.CLEAR_PLAYER_THRUSTER_SOUND_ACTION: {
+      return {...state, thrusterSound: undefined};
     }
     case PlayerActionTypesEnum.UPDATE_PLAYER_PID_STATE_ACTION: {
       return {...state, pidState: action.pidState};
