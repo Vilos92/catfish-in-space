@@ -277,15 +277,15 @@ function uiLoop(getState: GetState, dispatch: Dispatch, world: Matter.World, sta
   dispatch(updateGameOverElementAction(gameOverText));
 }
 
+/**
+ * Reposition spatial sound elements relative to the center of the viewport.
+ */
 function audioLoop(getState: GetState): void {
   const state = getState();
   const player = getPlayer(state);
   const viewport = getViewport(state);
 
   if (!player.gameElement) return;
-
-  // If player is dead, should kill the thruster sound.
-  // TODO: Disable force controls when player is dead.
 
   const playerCoordinate = player.gameElement.coordinate;
 

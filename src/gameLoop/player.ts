@@ -39,10 +39,15 @@ export function playerLoop(
   const viewport = getViewport(state);
   const physicsElementByMatterId = getPhysicsElementByMatterId(state);
 
-  if (!player.gameElement) return;
+  if (!player.gameElement) {
+    stopThrusterAudio(dispatch, player.thrusterSound);
+
+    return;
+  }
+
   const currentPlayerGameElement = player.gameElement;
 
-  // Align our player Physics Element with the Game Elements state.
+  // Align our player Game Element with the Game Elements state.
   const playerGameElement = physicsElementByMatterId.get(currentPlayerGameElement.matterBody.id);
 
   if (!playerGameElement || !isPhysicsElement(playerGameElement)) {
@@ -56,14 +61,9 @@ export function playerLoop(
   // Apply forces from keyboard presses, before updating state with values from matter.
   const forceAdded = addForceToPlayerMatterBodyFromKeyboard(keyboard, playerMatterBody);
 
-  handleForceSound(
-    dispatch,
-    viewport.coordinate,
-    viewport.dimension,
-    player.gameElement.coordinate,
-    forceAdded,
-    player.thrusterSound
-  );
+  forceAdded
+    ? handleThrusterAudio(dispatch, viewport.coordinate, viewport.dimension, player.gameElement, player.thrusterSound)
+    : stopThrusterAudio(dispatch, player.thrusterSound);
 
   const mouseCoordinate: Coordinate = renderer.plugins.interaction.mouse.global;
 
@@ -97,19 +97,17 @@ export function playerLoop(
     );
 }
 
-function handleForceSound(
+/**
+ * Handle the playing and stopping of audio for the player's thruster.
+ */
+function handleThrusterAudio(
   dispatch: Dispatch,
   viewportCoordinate: Coordinate,
   viewportDimension: Dimension,
-  playerCoordinate: Coordinate,
-  forceAdded: boolean,
+  playerGameElement: PhysicsElement,
   thrusterSound?: Howl
 ) {
-  if (!forceAdded) {
-    thrusterSound?.stop();
-    dispatch(clearPlayerThrusterSoundAction());
-    return;
-  }
+  const {coordinate: playerCoordinate} = playerGameElement;
 
   if (!thrusterSound) {
     thrusterSound = createSound(SoundTypesEnum.ROCKET_THRUST, {
@@ -123,4 +121,12 @@ function handleForceSound(
   }
 
   soundAtCoordinate(thrusterSound, playerCoordinate, viewportCoordinate, viewportDimension);
+}
+
+/**
+ * Stop the audio for the player's thruster.
+ */
+function stopThrusterAudio(dispatch: Dispatch, thrusterSound?: Howl): void {
+  thrusterSound?.stop();
+  dispatch(clearPlayerThrusterSoundAction());
 }
