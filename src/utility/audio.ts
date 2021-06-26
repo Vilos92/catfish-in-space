@@ -6,32 +6,39 @@ import {Howl} from 'howler';
 
 export enum SoundTypesEnum {
   HARD_COLLISION = 'HARD_COLLISION',
+  ROCKET_THRUST = 'ROCKET_THRUST',
   LASER_BULLET = 'LASER_BULLET',
   LASER_BULLET_IMPACT = 'LASER_BULLET_IMPACT'
 }
+
+const SoundTypeSources = {
+  [SoundTypesEnum.HARD_COLLISION]: './assets/audio/hard_collision.wav',
+  [SoundTypesEnum.ROCKET_THRUST]: './assets/audio/rocket-thrust.wav',
+  [SoundTypesEnum.LASER_BULLET]: './assets/audio/laser_bullet.wav',
+  [SoundTypesEnum.LASER_BULLET_IMPACT]: './assets/audio/laser_bullet_impact.ogg'
+};
 
 /**
  * Sound constants.
  */
 
-const hardCollisionSound = new Howl({
-  src: ['./assets/audio/hard_collision.wav']
-});
+export function playSound(soundType: SoundTypesEnum): Howl {
+  const sound = new Howl({
+    src: SoundTypeSources[soundType]
+  });
 
-const laserBulletSound = new Howl({
-  src: ['./assets/audio/laser_bullet.wav']
-});
+  sound.play();
+  return sound;
+}
 
-const laserBulletImpactSound = new Howl({
-  src: ['./assets/audio/laser_bullet_impact.ogg']
-});
+export function playSoundAtRandom(soundType: SoundTypesEnum): Howl {
+  const sound = new Howl({
+    src: SoundTypeSources[soundType],
+    volume: 0.8,
+    loop: true
+  });
 
-const sounds = {
-  [SoundTypesEnum.HARD_COLLISION]: hardCollisionSound,
-  [SoundTypesEnum.LASER_BULLET]: laserBulletSound,
-  [SoundTypesEnum.LASER_BULLET_IMPACT]: laserBulletImpactSound
-};
-
-export function playSound(soundType: SoundTypesEnum): void {
-  sounds[soundType].play();
+  sound.seek(Math.floor(Math.random() * sound.duration()));
+  sound.play();
+  return sound;
 }

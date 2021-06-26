@@ -1,3 +1,4 @@
+import {Howl} from 'howler';
 import Matter from 'matter-js';
 
 import {Dispatch} from '../store/gameReducer';
@@ -5,6 +6,7 @@ import {KeyboardState} from '../store/keyboard/reducer';
 import {updatePlayerPidStateAction} from '../store/player/action';
 import {Coordinate, KeyCodesEnum} from '../type';
 import {computeAngleBetween, computeBoundAngle} from './';
+import {playSoundAtRandom, SoundTypesEnum} from './audio';
 import {calculateDirectionFromOpposingKeys} from './keyboard';
 import {createComputeNextPidState, PidState} from './pid';
 import {calculatePositionRelativeToViewport} from './viewport';
@@ -74,6 +76,8 @@ function computePlayerAngleError(
   return angleBetween / Math.PI;
 }
 
+// TODO: Should set this more explicitly.
+let thrusterSound: Howl | undefined;
 export function addForceToPlayerMatterBodyFromKeyboard(keyboard: KeyboardState, playerMatterBody: Matter.Body): void {
   const {keyStateMap} = keyboard;
 
@@ -90,6 +94,15 @@ export function addForceToPlayerMatterBodyFromKeyboard(keyboard: KeyboardState, 
   const sideDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
   const sideThrusterForce = sideDirection * SIDE_THRUSTER_FORCE;
   addSideForceToPlayerMatterBody(playerMatterBody, sideThrusterForce);
+
+  if (straightThrusterForce === 0 && sideThrusterForce === 0) {
+    thrusterSound?.stop();
+    thrusterSound = undefined;
+    return;
+  }
+
+  if (thrusterSound) return;
+  thrusterSound = playSoundAtRandom(SoundTypesEnum.ROCKET_THRUST);
 }
 
 function addStraightForceToPlayerMatterBody(playerMatterBody: Matter.Body, straightThrusterForce: number): void {
