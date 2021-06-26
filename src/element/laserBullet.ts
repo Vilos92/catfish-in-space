@@ -49,6 +49,7 @@ export function createLaserBulletGameElement(
 
   return {
     id: createUuid(),
+    timestamp: Date.now(),
     coordinate: initialLaserCoordinate,
     rotation: playerRotation,
     matterBody: laserMatter,

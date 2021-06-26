@@ -32,6 +32,7 @@ export function createPlayerGameElement(viewportCoordinate: Coordinate): Physics
 
   return {
     id: createUuid(),
+    timestamp: Date.now(),
     coordinate: initialPlayerCoordinate,
     rotation: 0,
     matterBody: spaceshipMatter,

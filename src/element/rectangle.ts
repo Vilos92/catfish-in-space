@@ -30,6 +30,7 @@ export function createRectangleGameElement(viewportCoordinate: Coordinate, coord
 
   return {
     id: createUuid(),
+    timestamp: Date.now(),
     coordinate: coordinate,
     rotation,
     matterBody: matter,

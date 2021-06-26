@@ -5,6 +5,7 @@ import {createApp, onLoad, onResize, setupCollisions, setupKeybinds, setupWorld}
 import {setupWindowHooks} from './createApp';
 import {calculateElementCenterCoordinate, createGameOverTextDisplayElement} from './element/ui';
 import {playerLoop} from './gameLoop/player';
+import {projectileLoop} from './gameLoop/projectile';
 import {updateStarFieldAAction, updateStarFieldBAction} from './store/backgroundStage/action';
 import {getStarFieldA, getStarFieldB} from './store/backgroundStage/selector';
 import {removeGameElementByIdAction} from './store/collision/action';
@@ -109,6 +110,9 @@ export function gameLoop(
 
   // Handle player loop first, to account for keyboard inputs to apply changes to the matter body.
   playerLoop(getState, dispatch, world, renderer, stage);
+
+  // Handle prune loop, to remove any elements which have expired timers.
+  projectileLoop(getState, dispatch, world);
 
   // Handle health next, to destroy game elements which have 0 or lower health.
   healthLoop(getState, dispatch, world);

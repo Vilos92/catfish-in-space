@@ -85,6 +85,8 @@ export interface DisplayElement extends Element {
 export interface LiveElement extends DisplayElement {
   // A unique id which can be used to update elements directly.
   id: string;
+  // Timestamp at which the element was created - used for pruning things like bullets.
+  timestamp: number;
   // This represents how much damage the element can receive before
   // being destroyed. An undefined value means the element is indestructible.
   health?: number;
