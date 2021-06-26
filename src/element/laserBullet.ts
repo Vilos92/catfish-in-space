@@ -41,7 +41,8 @@ export function createLaserBulletGameElement(
     {
       // Approximate mass of Falcon 9.
       mass: 0.1,
-      angle: playerRotation
+      angle: playerRotation,
+      frictionAir: 0
     }
   );
 

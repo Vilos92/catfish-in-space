@@ -29,7 +29,7 @@ export function startGame(): void {
   // Create a Matter engine.
   const engine = Matter.Engine.create();
   // Disable gravity.
-  engine.world.gravity.y = 0;
+  engine.gravity.y = 0;
 
   // Attach hooks to Matter.
   setupCollisions(getState, store.dispatch, engine);

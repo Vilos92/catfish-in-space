@@ -25,7 +25,8 @@ export function createRectangleGameElement(viewportCoordinate: Coordinate, coord
 
   const matter = Matter.Bodies.rectangle(coordinate.x, coordinate.y, graphics.width, graphics.height, {
     mass: 550000,
-    angle: rotation
+    angle: rotation,
+    frictionAir: 0
   });
 
   return {

@@ -26,7 +26,8 @@ export function createPlayerGameElement(viewportCoordinate: Coordinate): Physics
     spaceshipPixi.height,
     {
       // Approximate mass of Falcon 9.
-      mass: 550000
+      mass: 550000,
+      frictionAir: 0
     }
   );
 
