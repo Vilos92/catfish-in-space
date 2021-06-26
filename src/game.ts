@@ -174,7 +174,15 @@ function playerLoop(
   const {matterBody: playerMatterBody} = playerGameElement;
 
   // Apply forces from keyboard presses, before updating state with values from matter.
-  addForceToPlayerMatterBodyFromKeyboard(dispatch, keyboard, playerMatterBody, player.thrusterSound);
+  addForceToPlayerMatterBodyFromKeyboard(
+    dispatch,
+    keyboard,
+    viewport.coordinate,
+    viewport.dimension,
+    playerMatterBody,
+    player.gameElement.coordinate,
+    player.thrusterSound
+  );
 
   const mouseCoordinate: Coordinate = renderer.plugins.interaction.mouse.global;
 
@@ -356,6 +364,9 @@ function audioLoop(getState: GetState): void {
   const viewport = getViewport(state);
 
   if (!player.gameElement) return;
+
+  // If player is dead, should kill the thruster sound.
+  // TODO: Disable force controls when player is dead.
 
   const playerCoordinate = player.gameElement.coordinate;
 

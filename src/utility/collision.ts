@@ -5,7 +5,7 @@ import {Dispatch, GetState} from 'src/store/gameReducer';
 import {getViewport} from 'src/store/viewport/selector';
 
 import {CollisionTypesEnum, Coordinate, Dimension, PhysicsElement} from '../type';
-import {playSoundAtCoordinate, SoundTypesEnum} from './audio';
+import {createSound, soundAtCoordinate, SoundTypesEnum} from './audio';
 import {calculatePositionRelativeToViewportCenter} from './viewport';
 
 /**
@@ -96,9 +96,14 @@ function handleCollisionSound(
   );
 
   if (collisionTypeA === CollisionTypesEnum.PROJECTILE || collisionTypeB === CollisionTypesEnum.PROJECTILE) {
-    playSoundAtCoordinate(SoundTypesEnum.LASER_BULLET_IMPACT, viewportDimension, playerPositionRelativeToCenter);
+    const soundA = createSound(SoundTypesEnum.LASER_BULLET_IMPACT);
+    const sound = soundAtCoordinate(soundA, playerPositionRelativeToCenter, viewportCoordinate, viewportDimension);
+    sound.play();
+
     return;
   }
 
-  playSoundAtCoordinate(SoundTypesEnum.HARD_COLLISION, viewportDimension, playerPositionRelativeToCenter);
+  const soundA = createSound(SoundTypesEnum.HARD_COLLISION);
+  const sound = soundAtCoordinate(soundA, playerPositionRelativeToCenter, viewportCoordinate, viewportDimension);
+  sound.play();
 }

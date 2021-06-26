@@ -8,9 +8,9 @@ import {
   updatePlayerPidStateAction,
   updatePlayerThrusterSoundAction
 } from '../store/player/action';
-import {Coordinate, KeyCodesEnum} from '../type';
+import {Coordinate, Dimension, KeyCodesEnum} from '../type';
 import {computeAngleBetween, computeBoundAngle} from './';
-import {playSoundAtRandom, SoundTypesEnum} from './audio';
+import {createSound, soundAtCoordinate, soundAtRandom, SoundTypesEnum} from './audio';
 import {calculateDirectionFromOpposingKeys} from './keyboard';
 import {createComputeNextPidState, PidState} from './pid';
 import {calculatePositionRelativeToViewport} from './viewport';
@@ -83,7 +83,10 @@ function computePlayerAngleError(
 export function addForceToPlayerMatterBodyFromKeyboard(
   dispatch: Dispatch,
   keyboard: KeyboardState,
+  viewportCoordinate: Coordinate,
+  viewportDimension: Dimension,
   playerMatterBody: Matter.Body,
+  playerCoordinate: Coordinate,
   playerThrusterSound?: Howl
 ): void {
   const {keyStateMap} = keyboard;
@@ -108,13 +111,25 @@ export function addForceToPlayerMatterBodyFromKeyboard(
     return;
   }
 
-  if (playerThrusterSound) return;
-  const newPlayerThrusterSound = playSoundAtRandom(SoundTypesEnum.ROCKET_THRUST, {
-    volume: 0.8,
-    loop: true
-  });
+  if (!playerThrusterSound) {
+    const newPlayerThrusterSoundA = createSound(SoundTypesEnum.ROCKET_THRUST, {
+      volume: 0.5,
+      loop: true
+    });
+    const newPlayerThrusterSound = soundAtRandom(newPlayerThrusterSoundA);
+    const newPlayerThrusterSound2 = soundAtCoordinate(
+      newPlayerThrusterSound,
+      playerCoordinate,
+      viewportCoordinate,
+      viewportDimension
+    );
+    newPlayerThrusterSound2.play();
 
-  dispatch(updatePlayerThrusterSoundAction(newPlayerThrusterSound));
+    dispatch(updatePlayerThrusterSoundAction(newPlayerThrusterSound));
+    return;
+  } else {
+    soundAtCoordinate(playerThrusterSound, playerCoordinate, viewportCoordinate, viewportDimension);
+  }
 }
 
 function addStraightForceToPlayerMatterBody(playerMatterBody: Matter.Body, straightThrusterForce: number): void {

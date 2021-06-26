@@ -58,8 +58,8 @@ export function calculatePositionRelativeToViewportCenter(
 
 function calculateViewportCenter(viewportCoordinate: Coordinate, viewportDimension: Dimension): Coordinate {
   return {
-    x: viewportCoordinate.x / viewportDimension.width,
-    y: viewportCoordinate.y / viewportDimension.height
+    x: viewportCoordinate.x + viewportDimension.width / 2,
+    y: viewportCoordinate.y + viewportDimension.height / 2
   };
 }
 

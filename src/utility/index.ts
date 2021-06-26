@@ -4,7 +4,7 @@ import {pushGameElementAction} from 'src/store/gameElement/action';
 import {v4 as uuidv4} from 'uuid';
 
 import {Dispatch} from '../store/gameReducer';
-import {Dimension, GameElement, isPhysicsElement, PixiSprite} from '../type';
+import {Coordinate, Dimension, GameElement, isPhysicsElement, PixiSprite} from '../type';
 
 /**
  * Helpers.
@@ -35,6 +35,14 @@ export function computeAngleBetween(angleA: number, angleB: number): number {
   else if (angleDiff < -Math.PI) return 2 * Math.PI + angleDiff;
 
   return angleDiff;
+}
+
+/**
+ * Compute the magnitude of a Coordinate or Vector, which is the distance
+ * from that position to the root of the coordinate system.
+ */
+export function computeMagnitude(coordinate: Coordinate): number {
+  return Math.sqrt(Math.pow(coordinate.x, 2) + Math.pow(coordinate.y, 2));
 }
 
 export function addGameElement(
