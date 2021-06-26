@@ -11,13 +11,14 @@ import {
   clearPlayerGameElementAction,
   clearPlayerThrusterSoundAction,
   updatePlayerGameElementAction,
+  updatePlayerPrimaryFireTimestampAction,
   updatePlayerThrusterSoundAction
 } from '../store/player/action';
 import {getPlayer} from '../store/player/selector';
 import {getViewport} from '../store/viewport/selector';
 import {Coordinate, Dimension, isPhysicsElement, MouseButtonCodesEnum, PhysicsElement, Renderer} from '../type';
 import {createSound, setSoundCoordinate, setSoundSeekAtRandom, SoundTypesEnum} from '../utility/audio';
-import {firePlayerLaserBullet} from '../utility/laserBullet';
+import {fireBufferPeriod, firePlayerLaserBullet, playLaserBulletSound} from '../utility/laserBullet';
 import {
   addForceToPlayerMatterBodyFromKeyboard,
   addForceToPlayerMatterBodyFromMouseCoordinate
@@ -85,17 +86,48 @@ export function playerLoop(
   dispatch(updatePlayerGameElementAction(updatedPlayerGameElement));
 
   // Lasers go pew.
-  if (mouse.buttonStateMap[MouseButtonCodesEnum.MOUSE_BUTTON_PRIMARY].isActive)
-    firePlayerLaserBullet(
+  if (mouse.buttonStateMap[MouseButtonCodesEnum.MOUSE_BUTTON_PRIMARY].isActive) {
+    handleFireLaserBullet(
       dispatch,
       world,
       stage,
       viewport.coordinate,
       viewport.dimension,
-      player.primaryFireTimestamp,
-      player.gameElement.pixiSprite,
-      player.gameElement.matterBody
+      player.gameElement,
+      player.primaryFireTimestamp
     );
+  }
+}
+
+/**
+ * Determine whether the player can fire a laser bullet given their last fired timestamp,
+ * and also handle playing the corresponding audio.
+ */
+function handleFireLaserBullet(
+  dispatch: Dispatch,
+  world: Matter.World,
+  stage: PIXI.Container,
+  viewportCoordinate: Coordinate,
+  viewportDimension: Dimension,
+  playerGameElement: PhysicsElement,
+  primaryFireTimestamp: number
+) {
+  const now = Date.now();
+
+  if (now > primaryFireTimestamp + fireBufferPeriod) {
+    const laserBullet = firePlayerLaserBullet(
+      dispatch,
+      world,
+      stage,
+      viewportCoordinate,
+      playerGameElement.pixiSprite,
+      playerGameElement.matterBody
+    );
+
+    playLaserBulletSound(laserBullet.coordinate, viewportCoordinate, viewportDimension);
+
+    dispatch(updatePlayerPrimaryFireTimestampAction(now));
+  }
 }
 
 /**
