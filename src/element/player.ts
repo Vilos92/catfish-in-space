@@ -1,6 +1,7 @@
 import Matter from 'matter-js';
 import * as PIXI from 'pixi.js';
 
+import nightraiderfixedShape from '../../assets/sprites/nightraiderfixed.json';
 import {CollisionTypesEnum, Coordinate, PhysicsElement} from '../type';
 import {createUuid} from '../utility';
 import {calculatePositionRelativeToViewport} from '../utility/viewport';
@@ -17,13 +18,11 @@ export function createPlayerGameElement(viewportCoordinate: Coordinate): Physics
 
   spaceshipPixi.position.set(spaceshipPosition.x, spaceshipPosition.y);
 
-  const spaceshipMatter = Matter.Bodies.rectangle(
+  const spaceshipMatter = Matter.Bodies.fromVertices(
     // Game and matter coordinates have a one-to-one mapping.
     initialPlayerCoordinate.x,
     initialPlayerCoordinate.y,
-    // We use dimensions of our sprite.
-    spaceshipPixi.width,
-    spaceshipPixi.height,
+    nightraiderfixedShape.nightraiderfixed.fixtures[0].vertices,
     {
       // Approximate mass of Falcon 9.
       mass: 550000

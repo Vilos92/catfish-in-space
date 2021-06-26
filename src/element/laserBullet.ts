@@ -1,6 +1,7 @@
 import Matter from 'matter-js';
 import * as PIXI from 'pixi.js';
 
+import laserBullet1Shape from '../../assets/sprites/laserBullet1.json';
 import {CollisionTypesEnum, Coordinate, GameElement, Velocity} from '../type';
 import {createUuid} from '../utility';
 import {calculatePositionRelativeToViewport} from '../utility/viewport';
@@ -32,13 +33,11 @@ export function createLaserBulletGameElement(
   laserPixi.position.set(laserPosition.x, laserPosition.y);
   laserPixi.rotation = playerRotation;
 
-  const laserMatter = Matter.Bodies.rectangle(
+  const laserMatter = Matter.Bodies.circle(
     // Game and matter coordinates have a one-to-one mapping.
     initialLaserCoordinate.x,
     initialLaserCoordinate.y,
-    // We use dimensions of our sprite.
-    laserPixi.width,
-    laserPixi.height,
+    laserBullet1Shape.laserBullet1.fixtures[0].circle.radius,
     {
       // Approximate mass of Falcon 9.
       mass: 0.1,
