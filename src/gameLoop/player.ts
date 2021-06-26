@@ -40,17 +40,18 @@ export function playerLoop(
   const viewport = getViewport(state);
   const physicsElementByMatterId = getPhysicsElementByMatterId(state);
 
+  // If there is not currently a player Game Element, ensure audio is stopped and otherwise do nothing.
   if (!player.gameElement) {
     stopThrusterAudio(dispatch, player.thrusterSound);
-
     return;
   }
 
   const currentPlayerGameElement = player.gameElement;
 
-  // Align our player Game Element with the Game Elements state.
+  // Align our player Game Element with the Game Element state.
   const playerGameElement = physicsElementByMatterId.get(currentPlayerGameElement.matterBody.id);
 
+  // If player has been destroyed in Game Elements state, we should clear it from Player state as well.
   if (!playerGameElement || !isPhysicsElement(playerGameElement)) {
     dispatch(clearPlayerGameElementAction());
     dispatch(updateIsGameOverAction(true));
