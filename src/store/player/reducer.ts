@@ -25,6 +25,9 @@ export const playerReducer: Reducer<PlayerState, PlayerAction> = (
     case PlayerActionTypesEnum.UPDATE_PLAYER_GAME_ELEMENT_ACTION: {
       return {...state, gameElement: action.physicsElement};
     }
+    case PlayerActionTypesEnum.CLEAR_PLAYER_GAME_ELEMENT_ACTION: {
+      return {...state, gameElement: undefined};
+    }
     case PlayerActionTypesEnum.UPDATE_PLAYER_PID_STATE_ACTION: {
       return {...state, pidState: action.pidState};
     }

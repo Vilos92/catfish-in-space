@@ -3,6 +3,7 @@ import {PidState} from '../../utility/pid';
 
 export enum PlayerActionTypesEnum {
   UPDATE_PLAYER_GAME_ELEMENT_ACTION = 'UPDATE_PLAYER_GAME_ELEMENT_ACTION',
+  CLEAR_PLAYER_GAME_ELEMENT_ACTION = 'CLEAR_PLAYER_GAME_ELEMENT_ACTION',
   UPDATE_PLAYER_PID_STATE_ACTION = 'UPDATE_PLAYER_PID_STATE_ACTION',
   UPDATE_PLAYER_IS_VIEWPORT_LOCKED_ACTION = 'UPDATE_PLAYER_IS_VIEWPORT_LOCKED_ACTION',
   UPDATE_PLAYER_PRIMARY_FIRE_TIMESTAMP_ACTION = 'UPDATE_PLAYER_PRIMARY_FIRE_TIMESTAMP_ACTION'
@@ -11,6 +12,10 @@ export enum PlayerActionTypesEnum {
 export interface UpdatePlayerGameElementAction {
   type: PlayerActionTypesEnum.UPDATE_PLAYER_GAME_ELEMENT_ACTION;
   physicsElement: PhysicsElement;
+}
+
+export interface ClearPlayerGameElementAction {
+  type: PlayerActionTypesEnum.CLEAR_PLAYER_GAME_ELEMENT_ACTION;
 }
 
 export interface UpdatePlayerPidStateAction {
@@ -30,6 +35,7 @@ export interface UpdatePlayerPrimaryFireTimestamp {
 
 export type PlayerAction =
   | UpdatePlayerGameElementAction
+  | ClearPlayerGameElementAction
   | UpdatePlayerPidStateAction
   | UpdatePlayerIsViewportLockedAction
   | UpdatePlayerPrimaryFireTimestamp;
@@ -38,6 +44,12 @@ export function updatePlayerGameElementAction(physicsElement: PhysicsElement): U
   return {
     type: PlayerActionTypesEnum.UPDATE_PLAYER_GAME_ELEMENT_ACTION,
     physicsElement
+  };
+}
+
+export function clearPlayerGameElementAction(): ClearPlayerGameElementAction {
+  return {
+    type: PlayerActionTypesEnum.CLEAR_PLAYER_GAME_ELEMENT_ACTION
   };
 }
 

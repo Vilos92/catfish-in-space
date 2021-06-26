@@ -4,6 +4,7 @@ import {backgroundStageReducer} from './backgroundStage/reducer';
 import {collisionReducer} from './collision/reducer';
 import {gameElementReducer} from './gameElement/reducer';
 import {keyboardReducer} from './keyboard/reducer';
+import {matchReducer} from './match/reducer';
 import {mouseReducer} from './mouse/reducer';
 import {playerReducer} from './player/reducer';
 import {viewportReducer} from './viewport/reducer';
@@ -13,6 +14,7 @@ const rootReducer = combineReducers({
   collision: collisionReducer,
   gameElement: gameElementReducer,
   keyboard: keyboardReducer,
+  match: matchReducer,
   mouse: mouseReducer,
   player: playerReducer,
   viewport: viewportReducer

@@ -65,6 +65,8 @@ export function setupCollisions(getState: GetState, dispatch: Dispatch, engine: 
       const physicsElementA = physicsElementByMatterId.get(collisionPair.bodyA.id);
       const physicsElementB = physicsElementByMatterId.get(collisionPair.bodyB.id);
 
+      console.log(physicsElementByMatterId, collisionPair.bodyA, physicsElementB);
+
       if (!physicsElementA || !physicsElementB) return;
 
       handlePhysicsCollision(getState, dispatch, physicsElementA, physicsElementB);

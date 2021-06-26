@@ -1,4 +1,3 @@
-// import {Howl} from 'howler';
 import Matter from 'matter-js';
 import * as PIXI from 'pixi.js';
 
@@ -11,12 +10,18 @@ import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements, getPhysicsElementByMatterId} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
 import {getKeyboard} from './store/keyboard/selector';
+import {updateGameOverElementAction, updateIsGameOverAction} from './store/match/action';
+import {getMatch} from './store/match/selector';
 import {getMouse} from './store/mouse/selector';
-import {updatePlayerGameElementAction, updatePlayerIsViewportLockedAction} from './store/player/action';
+import {
+  clearPlayerGameElementAction,
+  updatePlayerGameElementAction,
+  updatePlayerIsViewportLockedAction
+} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
-import {Coordinate, isPhysicsElement, MouseButtonCodesEnum, PhysicsElement, Renderer} from './type';
+import {Coordinate, DisplayElement, isPhysicsElement, MouseButtonCodesEnum, PhysicsElement, Renderer} from './type';
 import {createComputeIsKeyClicked} from './utility/keyboard';
 import {firePlayerLaserBullet} from './utility/laserBullet';
 import {
@@ -106,7 +111,7 @@ export function gameLoop(
   stage: PIXI.Container,
   backgroundStage: PIXI.Container
 ): void {
-  // 1. Optionally draw debug wire frames from the Matter world.
+  // Optionally draw debug wire frames from the Matter world.
   debugLoop(getState, world, stage);
 
   // Handle player loop first, to account for keyboard inputs to apply changes to the matter body.
@@ -126,6 +131,9 @@ export function gameLoop(
 
   // Draw the star field.
   backgroundStageLoop(getState, dispatch, backgroundStage);
+
+  // Draw any UI elements on top.
+  uiLoop(getState, dispatch, stage);
 
   renderer.render(stage);
 }
@@ -153,7 +161,8 @@ function playerLoop(
   const playerGameElement = physicsElementByMatterId.get(currentPlayerGameElement.matterBody.id);
 
   if (!playerGameElement || !isPhysicsElement(playerGameElement)) {
-    console.log('Game Over');
+    dispatch(clearPlayerGameElementAction());
+    dispatch(updateIsGameOverAction(true));
     return;
   }
 
@@ -297,6 +306,47 @@ function backgroundStageLoop(getState: GetState, dispatch: Dispatch, backgroundS
 
   dispatch(updateStarFieldAAction(updatedStarFieldA));
   dispatch(updateStarFieldBAction(updatedStarFieldB));
+}
+
+function uiLoop(getState: GetState, dispatch: Dispatch, stage: PIXI.Container): void {
+  const state = getState();
+  const match = getMatch(state);
+
+  if (!match.isGameOver) return;
+
+  if (match.gameOverElement) return;
+
+  const style = new PIXI.TextStyle({
+    fontFamily: 'Arial',
+    fontSize: 48,
+    fontWeight: 'bold',
+    fill: ['#ffffff', '#65dc98'], // gradient
+    stroke: '#4a1850',
+    strokeThickness: 5,
+    dropShadowDistance: 6,
+    wordWrap: true,
+    wordWrapWidth: 440,
+    lineJoin: 'round'
+  });
+
+  const gameOverText = new PIXI.Text('GAME OVER', style);
+
+  const gameOverTextCoordinate = {
+    x: getState().viewport.dimension.width / 2 - gameOverText.width / 2,
+    y: getState().viewport.dimension.height / 2 - gameOverText.height / 2
+  };
+
+  gameOverText.position.set(gameOverTextCoordinate.x, gameOverTextCoordinate.y);
+
+  const gameOverTextElement: DisplayElement = {
+    pixiSprite: gameOverText,
+    coordinate: gameOverTextCoordinate,
+    rotation: 0
+  };
+
+  stage.addChild(gameOverText);
+
+  dispatch(updateGameOverElementAction(gameOverTextElement));
 }
 
 function debugLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {
