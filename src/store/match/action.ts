@@ -2,7 +2,8 @@ import {DisplayElement} from 'src/type';
 
 export enum MatchActionTypesEnum {
   UPDATE_IS_GAME_OVER_ACTION = 'UPDATE_IS_GAME_OVER_ACTION',
-  UPDATE_GAME_OVER_ELEMENT_ACTION = 'UPDATE_GAME_OVER_ELEMENT_ACTION'
+  UPDATE_GAME_OVER_ELEMENT_ACTION = 'UPDATE_GAME_OVER_ELEMENT_ACTION',
+  CLEAR_GAME_OVER_ELEMENT_ACTION = 'CLEAR_GAME_OVER_ELEMENT_ACTION'
 }
 
 export interface UpdateIsGameOverAction {
@@ -15,7 +16,11 @@ export interface UpdateGameOverElementAction {
   gameOverElement: DisplayElement;
 }
 
-export type MatchAction = UpdateIsGameOverAction | UpdateGameOverElementAction;
+export interface ClearGameOverElementAction {
+  type: MatchActionTypesEnum.CLEAR_GAME_OVER_ELEMENT_ACTION;
+}
+
+export type MatchAction = UpdateIsGameOverAction | UpdateGameOverElementAction | ClearGameOverElementAction;
 
 export function updateIsGameOverAction(isGameOver: boolean): UpdateIsGameOverAction {
   return {
@@ -28,5 +33,11 @@ export function updateGameOverElementAction(gameOverElement: DisplayElement): Up
   return {
     type: MatchActionTypesEnum.UPDATE_GAME_OVER_ELEMENT_ACTION,
     gameOverElement
+  };
+}
+
+export function clearGameOverElementAction(): ClearGameOverElementAction {
+  return {
+    type: MatchActionTypesEnum.CLEAR_GAME_OVER_ELEMENT_ACTION
   };
 }

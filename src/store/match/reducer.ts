@@ -28,6 +28,10 @@ export const matchReducer: Reducer<MatchState, MatchAction> = produce((state: Ma
       state.gameOverElement = gameOverElement;
       break;
     }
+    case MatchActionTypesEnum.CLEAR_GAME_OVER_ELEMENT_ACTION: {
+      state.gameOverElement = undefined;
+      break;
+    }
     default:
   }
 }, initialState);

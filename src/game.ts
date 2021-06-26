@@ -1,8 +1,9 @@
 import Matter from 'matter-js';
 import * as PIXI from 'pixi.js';
 
-import {createApp, onLoad, onResize, setupCollisions, setupKeybinds} from './createApp';
+import {createApp, onLoad, onResize, setupCollisions, setupKeybinds, setupWorld} from './createApp';
 import {setupWindowHooks} from './createApp';
+import {createGameOverTextDisplayElement} from './element/ui';
 import {updateStarFieldAAction, updateStarFieldBAction} from './store/backgroundStage/action';
 import {getStarFieldA, getStarFieldB} from './store/backgroundStage/selector';
 import {removeGameElementByIdAction} from './store/collision/action';
@@ -10,7 +11,7 @@ import {updateGameElementsAction} from './store/gameElement/action';
 import {getGameElements, getPhysicsElementByMatterId} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
 import {getKeyboard} from './store/keyboard/selector';
-import {updateGameOverElementAction, updateIsGameOverAction} from './store/match/action';
+import {clearGameOverElementAction, updateGameOverElementAction, updateIsGameOverAction} from './store/match/action';
 import {getMatch} from './store/match/selector';
 import {getMouse} from './store/mouse/selector';
 import {
@@ -21,7 +22,7 @@ import {
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
-import {Coordinate, DisplayElement, isPhysicsElement, MouseButtonCodesEnum, PhysicsElement, Renderer} from './type';
+import {Coordinate, isPhysicsElement, MouseButtonCodesEnum, PhysicsElement, Renderer} from './type';
 import {createComputeIsKeyClicked} from './utility/keyboard';
 import {firePlayerLaserBullet} from './utility/laserBullet';
 import {
@@ -132,7 +133,7 @@ export function gameLoop(
   backgroundStageLoop(getState, dispatch, backgroundStage);
 
   // Draw any UI elements on top.
-  uiLoop(getState, dispatch, stage);
+  uiLoop(getState, dispatch, world, stage);
 
   renderer.render(stage);
 }
@@ -307,45 +308,60 @@ function backgroundStageLoop(getState: GetState, dispatch: Dispatch, backgroundS
   dispatch(updateStarFieldBAction(updatedStarFieldB));
 }
 
-function uiLoop(getState: GetState, dispatch: Dispatch, stage: PIXI.Container): void {
+function uiLoop(getState: GetState, dispatch: Dispatch, world: Matter.World, stage: PIXI.Container): void {
   const state = getState();
+  const viewport = getViewport(state);
   const match = getMatch(state);
+  const mouse = getMouse(state);
 
   if (!match.isGameOver) return;
 
+  // Restart match if user presses the primary key after the game has ended.
+  if (mouse.buttonStateMap[MouseButtonCodesEnum.MOUSE_BUTTON_PRIMARY].isActive) {
+    match.gameOverElement?.pixiSprite.destroy();
+    dispatch(clearGameOverElementAction());
+
+    // Clear game over and restart match.
+    dispatch(updateIsGameOverAction(false));
+    startMatch(getState, dispatch, world, stage);
+    return;
+  }
+
+  // Create a game over text if one does not already exist.
   if (match.gameOverElement) return;
 
-  const style = new PIXI.TextStyle({
-    fontFamily: 'Arial',
-    fontSize: 48,
-    fontWeight: 'bold',
-    fill: ['#ffffff', '#65dc98'], // gradient
-    stroke: '#4a1850',
-    strokeThickness: 5,
-    dropShadowDistance: 6,
-    wordWrap: true,
-    wordWrapWidth: 440,
-    lineJoin: 'round'
+  const gameOverText = createGameOverTextDisplayElement(viewport.dimension);
+
+  stage.addChild(gameOverText.pixiSprite);
+  dispatch(updateGameOverElementAction(gameOverText));
+}
+
+/**
+  Clear any resources for an ongoing match, and begin a new match.
+ */
+function startMatch(
+  getState: GetState,
+  dispatch: Dispatch,
+  world: Matter.World,
+  foregroundStage: PIXI.Container
+): void {
+  const state = getState();
+  const gameElements = getGameElements(state);
+
+  // Remove sprites from foreground.
+  foregroundStage.removeChildren();
+
+  // Remove Physics Bodies.
+  gameElements.forEach(gameElement => {
+    if (!isPhysicsElement(gameElement)) return;
+
+    Matter.World.remove(world, gameElement.matterBody);
   });
 
-  const gameOverText = new PIXI.Text('GAME OVER', style);
+  // Clear the Game Elements from the reducer.
+  dispatch(updateGameElementsAction([]));
 
-  const gameOverTextCoordinate = {
-    x: getState().viewport.dimension.width / 2 - gameOverText.width / 2,
-    y: getState().viewport.dimension.height / 2 - gameOverText.height / 2
-  };
-
-  gameOverText.position.set(gameOverTextCoordinate.x, gameOverTextCoordinate.y);
-
-  const gameOverTextElement: DisplayElement = {
-    pixiSprite: gameOverText,
-    coordinate: gameOverTextCoordinate,
-    rotation: 0
-  };
-
-  stage.addChild(gameOverText);
-
-  dispatch(updateGameOverElementAction(gameOverTextElement));
+  setupWorld(getState, dispatch, world, foregroundStage);
 }
 
 function debugLoop(getState: GetState, world: Matter.World, stage: PIXI.Container): void {

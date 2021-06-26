@@ -37,6 +37,7 @@ export function createPlayerGameElement(viewportCoordinate: Coordinate): Physics
     matterBody: spaceshipMatter,
     pixiSprite: spaceshipPixi,
     collisionType: CollisionTypesEnum.PLAYER,
-    health: 100
+    // health: 100
+    health: 1 // test
   };
 }

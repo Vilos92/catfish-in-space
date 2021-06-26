@@ -165,7 +165,12 @@ async function loadGameAssets(): Promise<void> {
 /**
  * Setup the stage of the game, by adding initial elements.
  */
-function setupWorld(getState: GetState, dispatch: Dispatch, world: Matter.World, foregroundStage: PIXI.Container) {
+export function setupWorld(
+  getState: GetState,
+  dispatch: Dispatch,
+  world: Matter.World,
+  foregroundStage: PIXI.Container
+): void {
   const state = getState();
   const viewport = getViewport(state);
 
