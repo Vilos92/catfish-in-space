@@ -125,7 +125,6 @@ export async function onLoad(
   getState: GetState,
   dispatch: Dispatch,
   world: Matter.World,
-  backgroundStage: PIXI.Container,
   foregroundStage: PIXI.Container,
   view: HTMLCanvasElement
 ): Promise<void> {

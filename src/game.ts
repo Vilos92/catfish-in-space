@@ -79,8 +79,7 @@ export function startGame(): void {
   resize();
 
   // Hook for initial loading of assets.
-  const onload = async (): Promise<void> =>
-    onLoad(getState, store.dispatch, engine.world, backgroundStage, foregroundStage, view);
+  const onload = async (): Promise<void> => onLoad(getState, store.dispatch, engine.world, foregroundStage, view);
 
   // Attach hooks to window.
   setupWindowHooks(onload, resize);
