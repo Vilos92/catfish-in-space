@@ -1,20 +1,17 @@
 import Matter, {Events} from 'matter-js';
 import * as PIXI from 'pixi.js';
 
-import {createPlayerGameElement} from './element/player';
-import {createRectangleGameElement} from './element/rectangle';
 import {getPhysicsElementByMatterId} from './store/gameElement/selector';
 import {Dispatch, GetState} from './store/gameReducer';
 import {keyDownAction, keyUpAction} from './store/keyboard/action';
 import {mouseButtonDownAction, mouseButtonUpAction} from './store/mouse/action';
-import {updatePlayerGameElementAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
 import {Callback, CallbackWithArg, KeyCodesEnum, Renderer} from './type';
-import {addGameElement} from './utility';
 import {handlePhysicsCollision} from './utility/collision';
 import {calculatePositionRelativeToViewport, calculateViewportCoordinate} from './utility/viewport';
+import {setupWorld} from './utility/world';
 
 /**
  * Browser.
@@ -158,28 +155,4 @@ async function loadGameAssets(): Promise<void> {
 
     loader.load();
   });
-}
-
-/**
- * Setup the stage of the game, by adding initial elements.
- */
-export function setupWorld(
-  getState: GetState,
-  dispatch: Dispatch,
-  world: Matter.World,
-  foregroundStage: PIXI.Container
-): void {
-  const state = getState();
-  const viewport = getViewport(state);
-
-  const player = createPlayerGameElement(viewport.coordinate);
-  dispatch(updatePlayerGameElementAction(player));
-  addGameElement(dispatch, world, foregroundStage, player);
-
-  const testRectangle1 = createRectangleGameElement(viewport.coordinate, {x: 600, y: -100});
-  const testRectangle2 = createRectangleGameElement(viewport.coordinate, {x: -600, y: 100});
-  const testRectangle3 = createRectangleGameElement(viewport.coordinate, {x: -1000, y: 100});
-  addGameElement(dispatch, world, foregroundStage, testRectangle1);
-  addGameElement(dispatch, world, foregroundStage, testRectangle2);
-  addGameElement(dispatch, world, foregroundStage, testRectangle3);
 }
