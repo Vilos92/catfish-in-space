@@ -4,7 +4,7 @@ import {pushGameElementAction} from 'src/store/gameElement/action';
 import {v4 as uuidv4} from 'uuid';
 
 import {Dispatch} from '../store/gameReducer';
-import {GameElement, isPhysicsElement} from '../type';
+import {Dimension, GameElement, isPhysicsElement, PixiSprite} from '../type';
 
 /**
  * Helpers.
@@ -48,4 +48,11 @@ export function addGameElement(
   stage.addChild(gameElement.pixiSprite);
 
   dispatch(pushGameElementAction(gameElement));
+}
+
+export function computePixiSpriteDimension(pixiSprite: PixiSprite): Dimension {
+  return {
+    width: pixiSprite.width,
+    height: pixiSprite.height
+  };
 }

@@ -79,7 +79,7 @@ interface Element {
  * Element which is extended to have a display component.
  */
 export interface DisplayElement extends Element {
-  pixiSprite: PIXI.DisplayObject;
+  pixiSprite: PixiSprite;
 }
 
 export interface LiveElement extends DisplayElement {
@@ -116,5 +116,11 @@ export function isPhysicsElement(gameElement: GameElement): gameElement is Physi
 /**
  * PIXI.
  */
+
+/**
+ * PixiSprite is used instead of PIXI.DisplayObject, as we only use PIXI elements
+ * which have properties such as width and height.
+ */
+export type PixiSprite = PIXI.Graphics | PIXI.Sprite | PIXI.Text;
 
 export type Renderer = PIXI.Renderer | PIXI.AbstractRenderer;

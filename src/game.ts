@@ -3,7 +3,7 @@ import * as PIXI from 'pixi.js';
 
 import {createApp, onLoad, onResize, setupCollisions, setupKeybinds, setupWorld} from './createApp';
 import {setupWindowHooks} from './createApp';
-import {createGameOverTextDisplayElement} from './element/ui';
+import {calculateElementCenterCoordinate, createGameOverTextDisplayElement} from './element/ui';
 import {updateStarFieldAAction, updateStarFieldBAction} from './store/backgroundStage/action';
 import {getStarFieldA, getStarFieldB} from './store/backgroundStage/selector';
 import {removeGameElementByIdAction} from './store/collision/action';
@@ -23,6 +23,7 @@ import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
 import {Coordinate, isPhysicsElement, MouseButtonCodesEnum, PhysicsElement, Renderer} from './type';
+import {computePixiSpriteDimension} from './utility';
 import {createComputeIsKeyClicked} from './utility/keyboard';
 import {firePlayerLaserBullet} from './utility/laserBullet';
 import {
@@ -331,9 +332,18 @@ function uiLoop(getState: GetState, dispatch: Dispatch, world: Matter.World, sta
     return;
   }
 
-  // Create a game over text if one does not already exist.
-  if (match.gameOverElement) return;
+  // Reposition the existing game over text to be in the middle.
+  if (match.gameOverElement) {
+    const gameOverTextCoordinate = calculateElementCenterCoordinate(
+      viewport.dimension,
+      computePixiSpriteDimension(match.gameOverElement.pixiSprite)
+    );
 
+    match.gameOverElement.pixiSprite.position.set(gameOverTextCoordinate.x, gameOverTextCoordinate.y);
+    return;
+  }
+
+  // Create a game over text if one does not already exist.
   const gameOverText = createGameOverTextDisplayElement(viewport.dimension);
 
   stage.addChild(gameOverText.pixiSprite);
