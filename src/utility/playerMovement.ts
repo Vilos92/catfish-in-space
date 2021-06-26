@@ -20,9 +20,9 @@ import {calculatePositionRelativeToViewport} from './viewport';
  */
 
 // These forces are in Newtons / 1,000,000.
-const STRAIGHT_THRUSTER_FORCE = 1000;
-const SIDE_THRUSTER_FORCE = 500;
-const TURN_THRUSTER_FORCE = 10;
+const straightThrusterForceLimit = 1000;
+const sideThrusterForceLimit = 500;
+const turnThrusterForceLimit = 10;
 
 // PID tuning for the ship turn thrusters.
 const pidConfig = {
@@ -48,7 +48,7 @@ export function addForceToPlayerMatterBodyFromMouseCoordinate(
   const angleError = computePlayerAngleError(mouseCoordinate, viewportCoordinate, playerMatterBody);
   const nextPidState = computeNextPidState(pidState, angleError);
 
-  const sideThrusterForce = nextPidState.output * TURN_THRUSTER_FORCE;
+  const sideThrusterForce = nextPidState.output * turnThrusterForceLimit;
 
   // TODO: Compute the thrusterDistanceFromCenter based on the length of the ship.
   addSideForceToPlayerMatterBody(playerMatterBody, sideThrusterForce, -2.5);
@@ -95,14 +95,14 @@ export function addForceToPlayerMatterBodyFromKeyboard(
   const downIsActive = keyStateMap[KeyCodesEnum.KEY_S].isActive;
   const upIsActive = keyStateMap[KeyCodesEnum.KEY_W].isActive;
   const straightDirection = calculateDirectionFromOpposingKeys(downIsActive, upIsActive);
-  const straightThrusterForce = straightDirection * STRAIGHT_THRUSTER_FORCE;
+  const straightThrusterForce = straightDirection * straightThrusterForceLimit;
   addStraightForceToPlayerMatterBody(playerMatterBody, straightThrusterForce);
 
   // Strafing.
   const leftIsActive = keyStateMap[KeyCodesEnum.KEY_A].isActive;
   const rightIsActive = keyStateMap[KeyCodesEnum.KEY_D].isActive;
   const sideDirection = calculateDirectionFromOpposingKeys(leftIsActive, rightIsActive);
-  const sideThrusterForce = sideDirection * SIDE_THRUSTER_FORCE;
+  const sideThrusterForce = sideDirection * sideThrusterForceLimit;
   addSideForceToPlayerMatterBody(playerMatterBody, sideThrusterForce);
 
   if (straightThrusterForce === 0 && sideThrusterForce === 0) {

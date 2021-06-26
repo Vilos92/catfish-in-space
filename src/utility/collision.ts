@@ -1,3 +1,4 @@
+import {Howl} from 'howler';
 import {updateCollisionTimestampAction} from 'src/store/collision/action';
 import {getCollisionTimestamp} from 'src/store/collision/selector';
 import {updateGameElementAction} from 'src/store/gameElement/action';
@@ -6,14 +7,17 @@ import {getViewport} from 'src/store/viewport/selector';
 
 import {CollisionTypesEnum, Coordinate, Dimension, PhysicsElement} from '../type';
 import {createSound, soundAtCoordinate, SoundTypesEnum} from './audio';
-import {calculatePositionRelativeToViewportCenter} from './viewport';
 
 /**
  * Constants.
  */
 
 // Only allow four collisions a second between two bodies.
-const COLLISION_BUFFER_PERIOD = 250; // 0.25 seconds.
+const collisionBufferPeriod = 250; // 0.25 seconds.
+
+// Audio.
+const laserBulletImpactSound = createSound(SoundTypesEnum.LASER_BULLET_IMPACT);
+const hardCollisionSound = createSound(SoundTypesEnum.HARD_COLLISION);
 
 /**
  * Collision handling.
@@ -37,7 +41,7 @@ export function handlePhysicsCollision(
   const collisionTimestamp = getCollisionTimestamp(state, idTuple[0], idTuple[1]);
 
   const collisionTimestampRenewed =
-    collisionTimestamp === undefined || now > collisionTimestamp + COLLISION_BUFFER_PERIOD;
+    collisionTimestamp === undefined || now > collisionTimestamp + collisionBufferPeriod;
 
   if (!collisionTimestampRenewed) return;
 
@@ -89,21 +93,15 @@ function handleCollisionSound(
   collisionTypeA: CollisionTypesEnum,
   collisionTypeB: CollisionTypesEnum
 ) {
-  const playerPositionRelativeToCenter = calculatePositionRelativeToViewportCenter(
-    collisionCoordinate,
-    viewportCoordinate,
-    viewportDimension
-  );
+  const sound = computeCollisionSound(collisionTypeA, collisionTypeB);
 
-  if (collisionTypeA === CollisionTypesEnum.PROJECTILE || collisionTypeB === CollisionTypesEnum.PROJECTILE) {
-    const soundA = createSound(SoundTypesEnum.LASER_BULLET_IMPACT);
-    const sound = soundAtCoordinate(soundA, playerPositionRelativeToCenter, viewportCoordinate, viewportDimension);
-    sound.play();
+  const spatialSound = soundAtCoordinate(sound, collisionCoordinate, viewportCoordinate, viewportDimension);
+  spatialSound.play();
+}
 
-    return;
-  }
+function computeCollisionSound(collisionTypeA: CollisionTypesEnum, collisionTypeB: CollisionTypesEnum): Howl {
+  if (collisionTypeA === CollisionTypesEnum.PROJECTILE || collisionTypeB === CollisionTypesEnum.PROJECTILE)
+    return laserBulletImpactSound;
 
-  const soundA = createSound(SoundTypesEnum.HARD_COLLISION);
-  const sound = soundAtCoordinate(soundA, playerPositionRelativeToCenter, viewportCoordinate, viewportDimension);
-  sound.play();
+  return hardCollisionSound;
 }
