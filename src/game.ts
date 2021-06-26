@@ -25,7 +25,6 @@ import {createComputeIsKeyClicked} from './utility/keyboard';
 import {BACKGROUND_PARALLAX_SCALE_A, BACKGROUND_PARALLAX_SCALE_B, updateStarField} from './utility/star';
 import {
   calculatePositionRelativeToViewport,
-  calculatePositionRelativeToViewportCenter,
   calculateUpdatedViewportCoordinateFromKeyboard,
   calculateViewportCoordinate
 } from './utility/viewport';
@@ -128,9 +127,6 @@ export function gameLoop(
 
   // Draw any UI elements on top.
   uiLoop(getState, dispatch, world, stage);
-
-  // Make updates to sound elements to account for spatial audio.
-  audioLoop(getState);
 
   renderer.render(stage);
 }
@@ -275,31 +271,6 @@ function uiLoop(getState: GetState, dispatch: Dispatch, world: Matter.World, sta
 
   stage.addChild(gameOverText.pixiSprite);
   dispatch(updateGameOverElementAction(gameOverText));
-}
-
-/**
- * Reposition spatial sound elements relative to the center of the viewport.
- */
-function audioLoop(getState: GetState): void {
-  const state = getState();
-  const player = getPlayer(state);
-  const viewport = getViewport(state);
-
-  if (!player.gameElement) return;
-
-  const playerCoordinate = player.gameElement.coordinate;
-
-  const playerPositionRelativeToCenter = calculatePositionRelativeToViewportCenter(
-    playerCoordinate,
-    viewport.coordinate,
-    viewport.dimension
-  );
-
-  player.thrusterSound?.pos(
-    playerPositionRelativeToCenter.x / viewport.dimension.width,
-    playerPositionRelativeToCenter.y / viewport.dimension.height,
-    0
-  );
 }
 
 /**

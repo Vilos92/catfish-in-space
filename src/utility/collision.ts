@@ -6,7 +6,7 @@ import {Dispatch, GetState} from 'src/store/gameReducer';
 import {getViewport} from 'src/store/viewport/selector';
 
 import {CollisionTypesEnum, Coordinate, Dimension, PhysicsElement} from '../type';
-import {createSound, soundAtCoordinate, SoundTypesEnum} from './audio';
+import {createSound, setSoundCoordinate, SoundTypesEnum} from './audio';
 
 /**
  * Constants.
@@ -95,7 +95,7 @@ function handleCollisionSound(
 ) {
   const sound = computeCollisionSound(collisionTypeA, collisionTypeB);
 
-  const spatialSound = soundAtCoordinate(sound, collisionCoordinate, viewportCoordinate, viewportDimension);
+  const spatialSound = setSoundCoordinate(sound, collisionCoordinate, viewportCoordinate, viewportDimension);
   spatialSound.play();
 }
 

@@ -16,7 +16,7 @@ import {
 import {getPlayer} from '../store/player/selector';
 import {getViewport} from '../store/viewport/selector';
 import {Coordinate, Dimension, isPhysicsElement, MouseButtonCodesEnum, PhysicsElement, Renderer} from '../type';
-import {createSound, soundAtCoordinate, soundAtRandom, SoundTypesEnum} from '../utility/audio';
+import {createSound, setSoundCoordinate, setSoundSeekAtRandom, SoundTypesEnum} from '../utility/audio';
 import {firePlayerLaserBullet} from '../utility/laserBullet';
 import {
   addForceToPlayerMatterBodyFromKeyboard,
@@ -91,6 +91,7 @@ export function playerLoop(
       world,
       stage,
       viewport.coordinate,
+      viewport.dimension,
       player.primaryFireTimestamp,
       player.gameElement.pixiSprite,
       player.gameElement.matterBody
@@ -110,17 +111,13 @@ function handleThrusterAudio(
   const {coordinate: playerCoordinate} = playerGameElement;
 
   if (!thrusterSound) {
-    thrusterSound = createSound(SoundTypesEnum.ROCKET_THRUST, {
-      volume: 0.5,
-      loop: true
-    });
-    thrusterSound = soundAtRandom(thrusterSound);
+    thrusterSound = createThrusterSound();
     thrusterSound.play();
 
     dispatch(updatePlayerThrusterSoundAction(thrusterSound));
   }
 
-  soundAtCoordinate(thrusterSound, playerCoordinate, viewportCoordinate, viewportDimension);
+  setSoundCoordinate(thrusterSound, playerCoordinate, viewportCoordinate, viewportDimension);
 }
 
 /**
@@ -129,4 +126,15 @@ function handleThrusterAudio(
 function stopThrusterAudio(dispatch: Dispatch, thrusterSound?: Howl): void {
   thrusterSound?.stop();
   dispatch(clearPlayerThrusterSoundAction());
+}
+
+/**
+ * Create a looping thruster sound with reduced volumea
+ */
+function createThrusterSound(): Howl {
+  const thrusterSound = createSound(SoundTypesEnum.ROCKET_THRUST, {
+    volume: 0.5,
+    loop: true
+  });
+  return setSoundSeekAtRandom(thrusterSound);
 }

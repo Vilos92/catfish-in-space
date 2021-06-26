@@ -4,9 +4,9 @@ import * as PIXI from 'pixi.js';
 import {createLaserBulletGameElement} from '../element/laserBullet';
 import {Dispatch} from '../store/gameReducer';
 import {updatePlayerPrimaryFireTimestampAction} from '../store/player/action';
-import {Coordinate} from '../type';
+import {Coordinate, Dimension} from '../type';
 import {addGameElement} from '.';
-import {playSound, SoundTypesEnum} from './audio';
+import {createSound, setSoundCoordinate, SoundTypesEnum} from './audio';
 
 /**
  * Constants.
@@ -23,6 +23,7 @@ export function firePlayerLaserBullet(
   world: Matter.World,
   stage: PIXI.Container,
   viewportCoordinate: Coordinate,
+  viewportDimension: Dimension,
   playerPrimaryFireTimestamp: number,
   playerPixiSprite: PIXI.DisplayObject,
   playerMatterBody: Matter.Body
@@ -41,5 +42,13 @@ export function firePlayerLaserBullet(
   addGameElement(dispatch, world, stage, laserBullet);
   dispatch(updatePlayerPrimaryFireTimestampAction(now));
 
-  playSound(SoundTypesEnum.LASER_BULLET);
+  // Fire laser bullet relative to current viewport.
+  const laserBulletSound = createSound(SoundTypesEnum.LASER_BULLET);
+  const spatialSound = setSoundCoordinate(
+    laserBulletSound,
+    laserBullet.coordinate,
+    viewportCoordinate,
+    viewportDimension
+  );
+  spatialSound.play();
 }

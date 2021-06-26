@@ -7,6 +7,7 @@ import {PlayerAction, PlayerActionTypesEnum} from './action';
 
 export interface PlayerState {
   gameElement?: PhysicsElement;
+  // We store the thruster sound as we must recompute its position.
   thrusterSound?: Howl;
   pidState: PidState;
   isViewportLocked: boolean;

@@ -45,14 +45,7 @@ export function createSound(soundType: SoundTypesEnum, howlOptions: HowlOptions 
   });
 }
 
-export function playSound(soundType: SoundTypesEnum): Howl {
-  const sound = createSound(soundType);
-  sound.play();
-
-  return sound;
-}
-
-export function soundAtCoordinate(
+export function setSoundCoordinate(
   sound: Howl,
   coordinate: Coordinate,
   viewportCoordinate: Coordinate,
@@ -65,6 +58,8 @@ export function soundAtCoordinate(
   const shouldMute = spatialDistance > spatialSilenceLimit;
   sound.mute(shouldMute);
 
+  sound.pos(spatialCoordinate.x, spatialCoordinate.y, 0);
+
   return sound;
 }
 
@@ -73,9 +68,8 @@ export function soundAtCoordinate(
  * location in the sound to start from.
  * NOTE: Does not loop by default, this can be provided through howlOptions.
  */
-export function soundAtRandom(sound: Howl): Howl {
+export function setSoundSeekAtRandom(sound: Howl): Howl {
   sound.seek(Math.floor(Math.random() * sound.duration()));
-  sound.play();
 
   return sound;
 }
