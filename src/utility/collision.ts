@@ -2,9 +2,11 @@ import {updateCollisionTimestampAction} from 'src/store/collision/action';
 import {getCollisionTimestamp} from 'src/store/collision/selector';
 import {updateGameElementAction} from 'src/store/gameElement/action';
 import {Dispatch, GetState} from 'src/store/gameReducer';
+import {getViewport} from 'src/store/viewport/selector';
 
-import {CollisionTypesEnum, PhysicsElement} from '../type';
-import {playSound, SoundTypesEnum} from './audio';
+import {CollisionTypesEnum, Coordinate, Dimension, PhysicsElement} from '../type';
+import {playSoundAtCoordinate, SoundTypesEnum} from './audio';
+import {calculatePositionRelativeToViewportCenter} from './viewport';
 
 /**
  * Constants.
@@ -24,6 +26,7 @@ export function handlePhysicsCollision(
   physicsElementB: PhysicsElement
 ): void {
   const state = getState();
+  const viewport = getViewport(state);
 
   const now = Date.now();
 
@@ -43,7 +46,13 @@ export function handlePhysicsCollision(
   applyPhysicsCollision(dispatch, physicsElementA, physicsElementB);
   applyPhysicsCollision(dispatch, physicsElementB, physicsElementA);
 
-  handleCollisionSound(physicsElementA.collisionType, physicsElementB.collisionType);
+  handleCollisionSound(
+    viewport.coordinate,
+    viewport.dimension,
+    physicsElementA.coordinate,
+    physicsElementA.collisionType,
+    physicsElementB.collisionType
+  );
 }
 
 function applyPhysicsCollision(
@@ -73,11 +82,23 @@ function applyPhysicsCollision(
   }
 }
 
-function handleCollisionSound(collisionTypeA: CollisionTypesEnum, collisionTypeB: CollisionTypesEnum) {
+function handleCollisionSound(
+  viewportCoordinate: Coordinate,
+  viewportDimension: Dimension,
+  collisionCoordinate: Coordinate,
+  collisionTypeA: CollisionTypesEnum,
+  collisionTypeB: CollisionTypesEnum
+) {
+  const playerPositionRelativeToCenter = calculatePositionRelativeToViewportCenter(
+    collisionCoordinate,
+    viewportCoordinate,
+    viewportDimension
+  );
+
   if (collisionTypeA === CollisionTypesEnum.PROJECTILE || collisionTypeB === CollisionTypesEnum.PROJECTILE) {
-    playSound(SoundTypesEnum.LASER_BULLET_IMPACT);
+    playSoundAtCoordinate(SoundTypesEnum.LASER_BULLET_IMPACT, viewportDimension, playerPositionRelativeToCenter);
     return;
   }
 
-  playSound(SoundTypesEnum.HARD_COLLISION);
+  playSoundAtCoordinate(SoundTypesEnum.HARD_COLLISION, viewportDimension, playerPositionRelativeToCenter);
 }

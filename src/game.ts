@@ -32,6 +32,7 @@ import {
 import {BACKGROUND_PARALLAX_SCALE_A, BACKGROUND_PARALLAX_SCALE_B, updateStarField} from './utility/star';
 import {
   calculatePositionRelativeToViewport,
+  calculatePositionRelativeToViewportCenter,
   calculateUpdatedViewportCoordinateFromKeyboard,
   calculateViewportCoordinate
 } from './utility/viewport';
@@ -348,14 +349,10 @@ function audioLoop(getState: GetState): void {
 
   const playerCoordinate = player.gameElement.coordinate;
 
-  const viewportCenterCoordinate: Coordinate = {
-    x: viewport.coordinate.x + viewport.dimension.width / 2,
-    y: viewport.coordinate.y + viewport.dimension.height / 2
-  };
-
-  const playerPositionRelativeToCenter = calculatePositionRelativeToViewport(
+  const playerPositionRelativeToCenter = calculatePositionRelativeToViewportCenter(
     playerCoordinate,
-    viewportCenterCoordinate
+    viewport.coordinate,
+    viewport.dimension
   );
 
   player.thrusterSound?.pos(

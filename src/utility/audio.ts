@@ -1,4 +1,5 @@
 import {Howl, HowlOptions} from 'howler';
+import {Coordinate, Dimension} from 'src/type';
 
 /**
  * Types.
@@ -31,6 +32,22 @@ export function playSound(soundType: SoundTypesEnum): Howl {
   return sound;
 }
 
+export function playSoundAtCoordinate(
+  soundType: SoundTypesEnum,
+  viewportDimension: Dimension,
+  coordinate: Coordinate
+): Howl {
+  const sound = playSound(soundType);
+  sound.pos(coordinate.x / viewportDimension.width, coordinate.y / viewportDimension.height, 0);
+
+  return sound;
+}
+
+/**
+ * For sounds which are played for longer durations but intermittently, find a random
+ * location in the sound and start from there.
+ * NOTE: Does not loop by default, this can be provided through howlOptions.
+ */
 export function playSoundAtRandom(soundType: SoundTypesEnum, howlOptions: HowlOptions): Howl {
   const sound = new Howl({
     src: SoundTypeSources[soundType],

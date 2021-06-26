@@ -42,6 +42,28 @@ export function calculateParallaxViewportCoordinate(viewportCoordinate: Coordina
 }
 
 /**
+ * Determine the position relative to the center of the viewport by computing a sprite's position relative to the center.
+ * Needed for spatial audio, where the center of the viewport is the listener.
+ */
+export function calculatePositionRelativeToViewportCenter(
+  coordinate: Coordinate,
+  viewportCoordinate: Coordinate,
+  viewportDimension: Dimension
+): Coordinate {
+  return calculatePositionRelativeToViewport(
+    coordinate,
+    calculateViewportCenter(viewportCoordinate, viewportDimension)
+  );
+}
+
+function calculateViewportCenter(viewportCoordinate: Coordinate, viewportDimension: Dimension): Coordinate {
+  return {
+    x: viewportCoordinate.x / viewportDimension.width,
+    y: viewportCoordinate.y / viewportDimension.height
+  };
+}
+
+/**
  * Movement of viewport from keyboard inputs.
  */
 
