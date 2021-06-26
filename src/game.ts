@@ -4,32 +4,24 @@ import * as PIXI from 'pixi.js';
 import {createApp, onLoad, onResize, setupCollisions, setupKeybinds, setupWorld} from './createApp';
 import {setupWindowHooks} from './createApp';
 import {calculateElementCenterCoordinate, createGameOverTextDisplayElement} from './element/ui';
+import {playerLoop} from './gameLoop/player';
 import {updateStarFieldAAction, updateStarFieldBAction} from './store/backgroundStage/action';
 import {getStarFieldA, getStarFieldB} from './store/backgroundStage/selector';
 import {removeGameElementByIdAction} from './store/collision/action';
 import {updateGameElementsAction} from './store/gameElement/action';
-import {getGameElements, getPhysicsElementByMatterId} from './store/gameElement/selector';
+import {getGameElements} from './store/gameElement/selector';
 import {Dispatch, GetState, store} from './store/gameReducer';
 import {getKeyboard} from './store/keyboard/selector';
 import {clearGameOverElementAction, updateGameOverElementAction, updateIsGameOverAction} from './store/match/action';
 import {getMatch} from './store/match/selector';
 import {getMouse} from './store/mouse/selector';
-import {
-  clearPlayerGameElementAction,
-  updatePlayerGameElementAction,
-  updatePlayerIsViewportLockedAction
-} from './store/player/action';
+import {updatePlayerIsViewportLockedAction} from './store/player/action';
 import {getPlayer} from './store/player/selector';
 import {updateViewportCoordinateAction} from './store/viewport/action';
 import {getViewport} from './store/viewport/selector';
-import {Coordinate, isPhysicsElement, MouseButtonCodesEnum, PhysicsElement, Renderer} from './type';
+import {Coordinate, isPhysicsElement, MouseButtonCodesEnum, Renderer} from './type';
 import {computePixiSpriteDimension} from './utility';
 import {createComputeIsKeyClicked} from './utility/keyboard';
-import {firePlayerLaserBullet} from './utility/laserBullet';
-import {
-  addForceToPlayerMatterBodyFromKeyboard,
-  addForceToPlayerMatterBodyFromMouseCoordinate
-} from './utility/playerMovement';
 import {BACKGROUND_PARALLAX_SCALE_A, BACKGROUND_PARALLAX_SCALE_B, updateStarField} from './utility/star';
 import {
   calculatePositionRelativeToViewport,
@@ -141,79 +133,6 @@ export function gameLoop(
   audioLoop(getState);
 
   renderer.render(stage);
-}
-
-// Set forces on player matter from keyboard inputs, and update player coordinate
-// to be aligned with the matter position.
-function playerLoop(
-  getState: GetState,
-  dispatch: Dispatch,
-  world: Matter.World,
-  renderer: Renderer,
-  stage: PIXI.Container
-): void {
-  const state = getState();
-  const keyboard = getKeyboard(state);
-  const mouse = getMouse(state);
-  const player = getPlayer(state);
-  const viewport = getViewport(state);
-  const physicsElementByMatterId = getPhysicsElementByMatterId(state);
-
-  if (!player.gameElement) return;
-  const currentPlayerGameElement = player.gameElement;
-
-  // Align our player Physics Element with the Game Elements state.
-  const playerGameElement = physicsElementByMatterId.get(currentPlayerGameElement.matterBody.id);
-
-  if (!playerGameElement || !isPhysicsElement(playerGameElement)) {
-    dispatch(clearPlayerGameElementAction());
-    dispatch(updateIsGameOverAction(true));
-    return;
-  }
-
-  const {matterBody: playerMatterBody} = playerGameElement;
-
-  // Apply forces from keyboard presses, before updating state with values from matter.
-  addForceToPlayerMatterBodyFromKeyboard(
-    dispatch,
-    keyboard,
-    viewport.coordinate,
-    viewport.dimension,
-    playerMatterBody,
-    player.gameElement.coordinate,
-    player.thrusterSound
-  );
-
-  const mouseCoordinate: Coordinate = renderer.plugins.interaction.mouse.global;
-
-  addForceToPlayerMatterBodyFromMouseCoordinate(
-    dispatch,
-    mouseCoordinate,
-    viewport.coordinate,
-    playerMatterBody,
-    player.pidState
-  );
-
-  // We must update the player GameElement here to account for the coordinate
-  // and rotation needed by the viewport. The sprite loop is responsible for
-  // other operations regarding presentation.
-  const coordinate: Coordinate = playerMatterBody.position;
-  const rotation = playerMatterBody.angle % (2 * Math.PI);
-
-  const updatedPlayerGameElement: PhysicsElement = {...playerGameElement, coordinate, rotation};
-  dispatch(updatePlayerGameElementAction(updatedPlayerGameElement));
-
-  // Lasers go pew.
-  if (mouse.buttonStateMap[MouseButtonCodesEnum.MOUSE_BUTTON_PRIMARY].isActive)
-    firePlayerLaserBullet(
-      dispatch,
-      world,
-      stage,
-      viewport.coordinate,
-      player.primaryFireTimestamp,
-      player.gameElement.pixiSprite,
-      player.gameElement.matterBody
-    );
 }
 
 // Destroy Game Elements which have 0 or lower health, and remove from state.

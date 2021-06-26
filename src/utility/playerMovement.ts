@@ -1,16 +1,10 @@
-import {Howl} from 'howler';
 import Matter from 'matter-js';
 
 import {Dispatch} from '../store/gameReducer';
 import {KeyboardState} from '../store/keyboard/reducer';
-import {
-  clearPlayerThrusterSoundAction,
-  updatePlayerPidStateAction,
-  updatePlayerThrusterSoundAction
-} from '../store/player/action';
-import {Coordinate, Dimension, KeyCodesEnum} from '../type';
+import {updatePlayerPidStateAction} from '../store/player/action';
+import {Coordinate, KeyCodesEnum} from '../type';
 import {computeAngleBetween, computeBoundAngle} from './';
-import {createSound, soundAtCoordinate, soundAtRandom, SoundTypesEnum} from './audio';
 import {calculateDirectionFromOpposingKeys} from './keyboard';
 import {createComputeNextPidState, PidState} from './pid';
 import {calculatePositionRelativeToViewport} from './viewport';
@@ -81,14 +75,9 @@ function computePlayerAngleError(
 }
 
 export function addForceToPlayerMatterBodyFromKeyboard(
-  dispatch: Dispatch,
   keyboard: KeyboardState,
-  viewportCoordinate: Coordinate,
-  viewportDimension: Dimension,
-  playerMatterBody: Matter.Body,
-  playerCoordinate: Coordinate,
-  playerThrusterSound?: Howl
-): void {
+  playerMatterBody: Matter.Body
+): boolean {
   const {keyStateMap} = keyboard;
 
   // Forward and back.
@@ -105,31 +94,7 @@ export function addForceToPlayerMatterBodyFromKeyboard(
   const sideThrusterForce = sideDirection * sideThrusterForceLimit;
   addSideForceToPlayerMatterBody(playerMatterBody, sideThrusterForce);
 
-  if (straightThrusterForce === 0 && sideThrusterForce === 0) {
-    playerThrusterSound?.stop();
-    dispatch(clearPlayerThrusterSoundAction());
-    return;
-  }
-
-  if (!playerThrusterSound) {
-    const newPlayerThrusterSoundA = createSound(SoundTypesEnum.ROCKET_THRUST, {
-      volume: 0.5,
-      loop: true
-    });
-    const newPlayerThrusterSound = soundAtRandom(newPlayerThrusterSoundA);
-    const newPlayerThrusterSound2 = soundAtCoordinate(
-      newPlayerThrusterSound,
-      playerCoordinate,
-      viewportCoordinate,
-      viewportDimension
-    );
-    newPlayerThrusterSound2.play();
-
-    dispatch(updatePlayerThrusterSoundAction(newPlayerThrusterSound));
-    return;
-  } else {
-    soundAtCoordinate(playerThrusterSound, playerCoordinate, viewportCoordinate, viewportDimension);
-  }
+  return straightThrusterForce !== 0 || sideThrusterForce !== 0;
 }
 
 function addStraightForceToPlayerMatterBody(playerMatterBody: Matter.Body, straightThrusterForce: number): void {
