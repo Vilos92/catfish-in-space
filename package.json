@@ -68,7 +68,7 @@
         "jest": "^26.6.3",
         "jest-canvas-mock": "^2.3.1",
         "jsdom": "^16.6.0",
-        "mini-css-extract-plugin": "^1.6.0",
+        "mini-css-extract-plugin": "^1.6.1",
         "optimize-css-assets-webpack-plugin": "^6.0.1",
         "prettier": "^2.3.1",
         "pretty-quick": "^3.1.1",
