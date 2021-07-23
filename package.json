@@ -43,7 +43,7 @@
         "@types/jest": "^26.0.23",
         "@types/matter-js": "^0.17.1",
         "@types/mini-css-extract-plugin": "^1.4.2",
-        "@types/node": "^15.12.4",
+        "@types/node": "^16.4.1",
         "@types/optimize-css-assets-webpack-plugin": "^5.0.3",
         "@types/redux": "^3.6.0",
         "@types/terser-webpack-plugin": "^5.0.3",
