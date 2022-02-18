@@ -4,12 +4,12 @@ const path = require('path');
 
 const fs = require('fs');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf-8'));
 
-module.exports = (env) => {
+module.exports = env => {
   return {
     mode: env.mode,
 
@@ -45,7 +45,7 @@ module.exports = (env) => {
     },
 
     output: {
-      path: path.resolve(__dirname, 'dist'),
+      path: path.resolve(__dirname, 'build'),
       filename: 'game.[contenthash].js'
     },
 
@@ -54,20 +54,15 @@ module.exports = (env) => {
         filename: '[name].[contenthash].css'
       }),
 
-      new OptimizeCssAssetsPlugin({
-        assetNameRegExp: /\.css$/i,
-        cssProcessor: require('cssnano'),
-        cssProcessorPluginOptions: {
-          preset: ['default', {discardComments: {removeAll: true}}]
-        },
-        canPrint: true
-      }),
-
       new webpack.DefinePlugin({
         VERSION: JSON.stringify(pkg.version + 'r')
       }),
 
       new webpack.ProgressPlugin()
-    ]
+    ],
+
+    optimization: {
+      minimizer: [new CssMinimizerPlugin()]
+    }
   };
 };

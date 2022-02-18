@@ -8,7 +8,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf-8'));
 
-module.exports = (env) => {
+module.exports = env => {
   const devConfig = {
     mode: env.mode,
 
@@ -35,7 +35,7 @@ module.exports = (env) => {
     },
 
     output: {
-      path: path.resolve(__dirname, 'dist'),
+      path: path.resolve(__dirname, 'build'),
       filename: '[name].js'
     },
 
