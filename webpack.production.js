@@ -45,7 +45,7 @@ module.exports = env => {
     },
 
     output: {
-      path: path.resolve(__dirname, 'build'),
+      path: path.resolve(__dirname, 'public'),
       filename: 'game.[contenthash].js'
     },
 
